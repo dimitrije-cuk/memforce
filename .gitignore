@@ -21,3 +21,6 @@ output.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Build logs
+*.log
