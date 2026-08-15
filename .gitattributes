@@ -1,0 +1,6 @@
+* text=auto
+
+# The hook is executed by sh; CRLF breaks the shebang on macOS and Linux.
+.githooks/** text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
