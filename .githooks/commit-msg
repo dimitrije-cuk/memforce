@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# Read the commit message from the file supplied by Git.
+commit_msg_file="$1"
+
+# A commit template can put comments or blank lines above the real message.
+commit_message=$(grep -v '^#' "$commit_msg_file" | sed -n '/[^[:space:]]/{p;q}')
+
+fail() {
+    echo "ERROR: $1"
+    echo "Commit message rule: type: subject"
+    echo "Example: feat: add login support"
+    exit 1
+}
+
+# Git writes these messages itself and they cannot follow the rule.
+case "$commit_message" in
+    "Merge "*|"Revert "*|fixup!*|squash!*)
+        exit 0
+        ;;
+esac
+
+# format: message must contain a separator.
+case "$commit_message" in
+    *:*)
+        ;;
+    *)
+        fail "Expected 'type: subject'. Got: $commit_message"
+        ;;
+esac
+
+# Split on the first colon: type: subject
+type=${commit_message%%:*}
+subject=${commit_message#*:}
+
+# Drop the optional scope and breaking-change marker: feat(api)! -> feat
+type=${type%%(*}
+type=${type%!}
+
+# type-empty: type must be present.
+if [ -z "$type" ]; then
+    fail "Commit type must not be empty."
+fi
+
+# type-enum: type must be one of the allowed values.
+case "$type" in
+    feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)
+        ;;
+    *)
+        echo "ERROR: Invalid commit type: '$type'"
+        echo "Allowed types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+        exit 1
+        ;;
+esac
+
+# subject-empty: subject must hold at least one non-whitespace character.
+case "$subject" in
+    *[![:space:]]*)
+        ;;
+    *)
+        fail "Commit subject must not be empty."
+        ;;
+esac
+
+exit 0
