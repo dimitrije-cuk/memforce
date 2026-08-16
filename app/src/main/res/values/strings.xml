@@ -11,4 +11,21 @@
 
     <string name="menu_greeting">Signed in as %1$s</string>
     <string name="menu_sign_out">Sign out</string>
+    <string name="menu_tags">Tags</string>
+
+    <string name="action_add">Add</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+
+    <string name="search_by_name">Search by name</string>
+    <string name="search_wildcard_help">Use %% for any characters and _ for a single character</string>
+    <string name="empty_no_results">Nothing matches this search</string>
+
+    <string name="tag_name">Tag name</string>
+    <string name="tag_title_new">New tag</string>
+    <string name="tag_title_edit">Edit tag</string>
+    <string name="tag_name_taken">A tag with this name already exists</string>
+    <string name="tag_delete_title">Delete %1$s?</string>
+    <string name="tag_delete_message">The tag is removed from every question and category that uses it.</string>
 </resources>

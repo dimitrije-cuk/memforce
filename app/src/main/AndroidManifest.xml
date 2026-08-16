@@ -20,6 +20,16 @@
         <activity
             android:name=".ui.MainActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".ui.tag.TagListActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+
+        <activity
+            android:name=".ui.tag.TagEditActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.tag.TagListActivity" />
     </application>
 
 </manifest>

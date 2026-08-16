@@ -9,6 +9,7 @@ import com.memforce.R;
 import com.memforce.databinding.ActivityMainBinding;
 import com.memforce.session.Session;
 import com.memforce.ui.login.LoginActivity;
+import com.memforce.ui.tag.TagListActivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
         ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         binding.greeting.setText(getString(R.string.menu_greeting, session.getUserName()));
+        binding.tagsButton.setOnClickListener(v -> startActivity(TagListActivity.createIntent(this)));
         binding.signOutButton.setOnClickListener(v -> {
             session.signOut();
             openLogin();
