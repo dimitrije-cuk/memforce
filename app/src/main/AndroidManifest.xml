@@ -50,6 +50,16 @@
             android:name=".ui.question.QuestionEditActivity"
             android:exported="false"
             android:parentActivityName=".ui.question.QuestionListActivity" />
+
+        <activity
+            android:name=".ui.deck.DeckListActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+
+        <activity
+            android:name=".ui.deck.DeckEditActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.deck.DeckListActivity" />
     </application>
 
 </manifest>

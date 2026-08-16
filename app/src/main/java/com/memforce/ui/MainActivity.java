@@ -9,6 +9,7 @@ import com.memforce.R;
 import com.memforce.databinding.ActivityMainBinding;
 import com.memforce.session.Session;
 import com.memforce.ui.category.CategoryListActivity;
+import com.memforce.ui.deck.DeckListActivity;
 import com.memforce.ui.login.LoginActivity;
 import com.memforce.ui.question.QuestionListActivity;
 import com.memforce.ui.tag.TagListActivity;
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
         binding.tagsButton.setOnClickListener(v -> startActivity(TagListActivity.createIntent(this)));
         binding.categoriesButton.setOnClickListener(v -> startActivity(CategoryListActivity.createIntent(this)));
         binding.questionsButton.setOnClickListener(v -> startActivity(QuestionListActivity.createIntent(this)));
+        binding.decksButton.setOnClickListener(v -> startActivity(DeckListActivity.createIntent(this)));
         binding.signOutButton.setOnClickListener(v -> {
             session.signOut();
             openLogin();

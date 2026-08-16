@@ -34,6 +34,13 @@
         android:layout_marginTop="12dp"
         android:text="@string/menu_tags" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/decksButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/menu_decks" />
+
     <Space
         android:layout_width="match_parent"
         android:layout_height="0dp"

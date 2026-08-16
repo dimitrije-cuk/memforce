@@ -14,6 +14,7 @@
     <string name="menu_tags">Tags</string>
     <string name="menu_categories">Categories</string>
     <string name="menu_questions">Questions</string>
+    <string name="menu_decks">My decks</string>
 
     <string name="action_add">Add</string>
     <string name="action_save">Save</string>
@@ -53,4 +54,13 @@
     <string name="question_title_new">New question</string>
     <string name="question_title_edit">Edit question</string>
     <string name="question_delete_title">Delete this question?</string>
+
+    <string name="deck_name">Deck name</string>
+    <string name="deck_title_new">New deck</string>
+    <string name="deck_title_edit">Edit deck</string>
+    <string name="deck_select_questions">Select questions</string>
+    <string name="deck_no_questions_defined">No questions have been created yet.</string>
+    <string name="deck_name_taken">You already have a deck with this name</string>
+    <string name="deck_delete_title">Delete %1$s?</string>
+    <string name="deck_delete_message">The questions in the deck are kept.</string>
 </resources>
