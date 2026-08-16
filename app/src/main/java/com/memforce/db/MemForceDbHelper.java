@@ -14,8 +14,11 @@ public final class MemForceDbHelper extends SQLiteOpenHelper {
 
     private static MemForceDbHelper instance;
 
+    private final Context context;
+
     private MemForceDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context.getApplicationContext();
     }
 
     public static synchronized MemForceDbHelper getInstance(@NonNull Context context) {
@@ -96,6 +99,8 @@ public final class MemForceDbHelper extends SQLiteOpenHelper {
                 + "(" + DbContract.CategoryTags.TAG_ID + ")");
         db.execSQL("CREATE INDEX idx_deck_questions_question ON " + DbContract.DeckQuestions.TABLE
                 + "(" + DbContract.DeckQuestions.QUESTION_ID + ")");
+
+        DatabaseSeeder.seed(db, context);
     }
 
     @Override
