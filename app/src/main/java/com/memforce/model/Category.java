@@ -2,7 +2,7 @@ package com.memforce.model;
 
 import androidx.annotation.NonNull;
 
-public class Category {
+public class Category implements Named {
 
     private final long id;
     private final String name;
@@ -14,11 +14,13 @@ public class Category {
         this.tagsLabel = tagsLabel;
     }
 
+    @Override
     public long getId() {
         return id;
     }
 
     @NonNull
+    @Override
     public String getName() {
         return name;
     }

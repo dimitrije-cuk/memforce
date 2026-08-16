@@ -12,6 +12,7 @@
     <string name="menu_greeting">Signed in as %1$s</string>
     <string name="menu_sign_out">Sign out</string>
     <string name="menu_tags">Tags</string>
+    <string name="menu_categories">Categories</string>
 
     <string name="action_add">Add</string>
     <string name="action_save">Save</string>
@@ -20,7 +21,14 @@
 
     <string name="search_by_name">Search by name</string>
     <string name="search_wildcard_help">Use %% for any characters and _ for a single character</string>
+    <string name="search_filter_by_tag">Filter by tag</string>
+    <string name="filter_any_tag">Any tag</string>
     <string name="empty_no_results">Nothing matches this search</string>
+
+    <string name="tags_select">Select tags</string>
+    <string name="tags_selected">Tags: %1$s</string>
+    <string name="tags_none_selected">No tags selected</string>
+    <string name="tags_none_defined">No tags have been created yet.</string>
 
     <string name="tag_name">Tag name</string>
     <string name="tag_title_new">New tag</string>
@@ -28,4 +36,10 @@
     <string name="tag_name_taken">A tag with this name already exists</string>
     <string name="tag_delete_title">Delete %1$s?</string>
     <string name="tag_delete_message">The tag is removed from every question and category that uses it.</string>
+
+    <string name="category_name">Category name</string>
+    <string name="category_title_new">New category</string>
+    <string name="category_title_edit">Edit category</string>
+    <string name="category_name_taken">A category with this name already exists</string>
+    <string name="category_delete_title">Delete %1$s?</string>
 </resources>
