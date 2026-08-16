@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">MemForce</string>
+
+    <string name="error_required">Required</string>
+
+    <string name="login_hint">New users are registered automatically</string>
+    <string name="login_user_name">User name</string>
+    <string name="login_password">Password</string>
+    <string name="login_sign_in">Sign in</string>
+    <string name="login_wrong_password">Wrong password for this user</string>
 </resources>
