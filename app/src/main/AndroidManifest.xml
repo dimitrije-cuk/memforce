@@ -40,6 +40,16 @@
             android:name=".ui.category.CategoryEditActivity"
             android:exported="false"
             android:parentActivityName=".ui.category.CategoryListActivity" />
+
+        <activity
+            android:name=".ui.question.QuestionListActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+
+        <activity
+            android:name=".ui.question.QuestionEditActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.question.QuestionListActivity" />
     </application>
 
 </manifest>

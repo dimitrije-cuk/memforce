@@ -13,6 +13,7 @@
     <string name="menu_sign_out">Sign out</string>
     <string name="menu_tags">Tags</string>
     <string name="menu_categories">Categories</string>
+    <string name="menu_questions">Questions</string>
 
     <string name="action_add">Add</string>
     <string name="action_save">Save</string>
@@ -22,7 +23,9 @@
     <string name="search_by_name">Search by name</string>
     <string name="search_wildcard_help">Use %% for any characters and _ for a single character</string>
     <string name="search_filter_by_tag">Filter by tag</string>
+    <string name="search_filter_by_category">Filter by category</string>
     <string name="filter_any_tag">Any tag</string>
+    <string name="filter_any_category">Any category</string>
     <string name="empty_no_results">Nothing matches this search</string>
 
     <string name="tags_select">Select tags</string>
@@ -42,4 +45,12 @@
     <string name="category_title_edit">Edit category</string>
     <string name="category_name_taken">A category with this name already exists</string>
     <string name="category_delete_title">Delete %1$s?</string>
+
+    <string name="question_text">Question</string>
+    <string name="question_answer">Answer (optional)</string>
+    <string name="question_category">Category</string>
+    <string name="question_no_category">No category</string>
+    <string name="question_title_new">New question</string>
+    <string name="question_title_edit">Edit question</string>
+    <string name="question_delete_title">Delete this question?</string>
 </resources>
