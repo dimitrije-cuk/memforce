@@ -30,6 +30,8 @@ The goal of this assignment is to implement an application for entering and sear
 
   * **Searching for categories by tag**
 
+  * The application must support both **light and dark themes**
+
 * You may implement the above functionality however you see fit. One suggested approach is to use one activity (or fragment) for questions, one for categories, one for tags, and one for decks. Each activity/fragment should provide the ability to add new data, search existing data according to some criterion, delete items, and edit items.
 
 ## Notes
