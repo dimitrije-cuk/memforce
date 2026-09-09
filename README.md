@@ -19,9 +19,8 @@ gradlew.bat installDebug
 | Screen | Purpose |
 | --- | --- |
 | Login | Signs in; unknown users are registered on first use |
-| Main menu | Entry point to questions, categories, tags and decks |
-| Questions | Search by text, category and tag; add, edit, delete |
-| Categories | Search by name and tag; assign tags; add, edit, delete |
+| Main menu | Entry point to questions, tags and decks |
+| Questions | Search by text and tag; assign tags; add, edit, delete |
 | Tags | Search by name; add, edit, delete |
 | My decks | Search by name; pick questions; add, edit, delete |
 
@@ -39,22 +38,20 @@ An empty field lists everything.
 
 ## Data model
 
-Questions, categories and tags are shared by every user. Decks belong to the user that created them
+Questions and tags are shared by every user. Decks belong to the user that created them
 and are filtered by user id in every query.
 
 ```
 users        (id, name, password_hash, salt)
 tags         (id, name)
-categories   (id, name)
-questions    (id, name, answer, category_id -> categories, ON DELETE SET NULL)
+questions    (id, name, answer)
 decks        (id, name, user_id -> users, ON DELETE CASCADE)
 question_tags  (question_id, tag_id)     both ON DELETE CASCADE
-category_tags  (category_id, tag_id)     both ON DELETE CASCADE
 deck_questions (deck_id, question_id)    both ON DELETE CASCADE
 ```
 
-Deleting a tag removes it from the questions and categories that use it. Deleting a category leaves
-its questions in place without a category. Deleting a question removes it from every deck.
+Deleting a tag removes it from the questions that use it. Deleting a question removes it from
+every deck.
 
 Passwords are stored as PBKDF2 hashes with a per-user random salt.
 

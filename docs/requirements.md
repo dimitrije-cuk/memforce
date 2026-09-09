@@ -18,21 +18,15 @@ The goal of this assignment is to implement an application for entering and sear
 
   * **Adding, deleting, and editing questions**
 
-  * **Adding, deleting, and editing categories**
-
   * **Adding, deleting, and editing tags**
 
   * **Adding, deleting, and editing decks**
 
-  * **Searching for questions by category**
-
   * **Searching for questions by tag**
-
-  * **Searching for categories by tag**
 
   * The application must support both **light and dark themes**
 
-* You may implement the above functionality however you see fit. One suggested approach is to use one activity (or fragment) for questions, one for categories, one for tags, and one for decks. Each activity/fragment should provide the ability to add new data, search existing data according to some criterion, delete items, and edit items.
+* You may implement the above functionality however you see fit. One suggested approach is to use one activity (or fragment) for questions, one for tags, and one for decks. Each activity/fragment should provide the ability to add new data, search existing data according to some criterion, delete items, and edit items.
 
 ## Notes
 
@@ -53,11 +47,11 @@ The wildcard characters above can be used to perform more complex searches, such
 * `_br%` — any word that has **"b" in the second position and "r" in the third position**
 * `%__a` — a word with **at least three letters** that ends with **"a"**
 
-These wildcard searches should be supported when searching questions, categories, and tags.
+These wildcard searches should be supported when searching questions and tags.
 
 ### 3. Shared vs. Individual Data
 
-Keep in mind that **questions, categories, and tags** that are added, deleted, or edited must be visible to **all users**.
+Keep in mind that **questions and tags** that are added, deleted, or edited must be visible to **all users**.
 
 Decks, however, are **individual**. If a user creates, edits, or displays decks, those decks should only belong to and be visible to that user. Other users should create, edit, and display **their own decks**.
 
@@ -66,7 +60,6 @@ Decks, however, are **individual**. If a user creates, edits, or displays decks,
 The following tables are required:
 
 * **Users**
-* **Categories**
 * **Questions**
 * **Tags**
 * **Decks**
@@ -79,25 +72,18 @@ The required fields for these tables are:
 * `name`
 * `password`
 
-**b. Categories**
+**b. Tags**
+
+* `id`
+* `name`
+
+**c. Questions**
 
 * `id`
 * `name`
 * `tag`
 
-**c. Tags**
-
-* `id`
-* `name`
-
-**d. Questions**
-
-* `id`
-* `name`
-* `tag`
-* `category`
-
-**e. Decks**
+**d. Decks**
 
 * `id`
 * `name`
@@ -108,7 +94,6 @@ The initial database structure from point 4 (the tables and their fields) will n
 
 In particular, the database design should be extended as necessary to support:
 
-* relationships between questions and categories,
 * relationships between questions and tags,
 * relationships between decks and questions,
 * ownership of decks by individual users,
@@ -118,20 +103,20 @@ In particular, the database design should be extended as necessary to support:
 
 * **Logging into the system**, checking the username and password, and updating login information in the database for newly added users — **4 points**
 
-* Ability to **add a new category, tag, and question** — **2 points**
+* Ability to **add a new tag and question** — **2 points**
 
-* Ability to **edit an existing category, tag, and question** — **4 points**
+* Ability to **edit an existing tag and question** — **4 points**
 
 * Ability to **add and edit individual decks** — **4 points**
 
-* Ability to **delete categories and tags** — **2 points**
+* Ability to **delete tags** — **2 points**
 
-  * Keep in mind that deleting a category or tag requires you to **edit or delete the questions in which they appear**.
+  * Keep in mind that deleting a tag requires you to **edit or delete the questions in which it appears**.
 
 * Ability to **delete questions and decks** — **2 points**
 
-* Ability to **search for categories, tags, and questions by name** — **1 point**
+* Ability to **search for tags and questions by name** — **1 point**
 
-* Ability to **search for questions by category and tag** — **4 points**
+* Ability to **search for questions by tag** — **4 points**
 
 * Ability to **search individual decks** — **2 points**
