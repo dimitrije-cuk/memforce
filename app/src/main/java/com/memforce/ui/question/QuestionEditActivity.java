@@ -10,14 +10,11 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.memforce.R;
-import com.memforce.data.CategoryDao;
 import com.memforce.data.QuestionDao;
 import com.memforce.data.TagDao;
 import com.memforce.databinding.ActivityQuestionEditBinding;
-import com.memforce.model.Category;
 import com.memforce.model.Question;
 import com.memforce.model.Tag;
-import com.memforce.ui.common.FilterSpinner;
 import com.memforce.ui.common.TagPicker;
 
 import java.util.ArrayList;
@@ -30,9 +27,7 @@ public class QuestionEditActivity extends AppCompatActivity {
 
     private ActivityQuestionEditBinding binding;
     private QuestionDao questionDao;
-    private CategoryDao categoryDao;
     private TagDao tagDao;
-    private FilterSpinner<Category> categorySpinner;
     private long questionId = NO_ID;
     private final List<Long> selectedTagIds = new ArrayList<>();
 
@@ -50,14 +45,8 @@ public class QuestionEditActivity extends AppCompatActivity {
         binding = ActivityQuestionEditBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         questionDao = new QuestionDao(this);
-        categoryDao = new CategoryDao(this);
         tagDao = new TagDao(this);
         questionId = getIntent().getLongExtra(EXTRA_QUESTION_ID, NO_ID);
-
-        categorySpinner = new FilterSpinner<>(
-                binding.categorySpinner, getString(R.string.question_no_category), () -> {
-        });
-        categorySpinner.submit(categoryDao.search(null, null));
 
         if (questionId == NO_ID) {
             setTitle(R.string.question_title_new);
@@ -70,7 +59,6 @@ public class QuestionEditActivity extends AppCompatActivity {
             }
             binding.nameInput.setText(question.getName());
             binding.answerInput.setText(question.getAnswer());
-            selectCategory(question.getCategoryId());
             selectedTagIds.addAll(questionDao.tagIdsOf(questionId));
         }
         showSelectedTags();
@@ -82,19 +70,6 @@ public class QuestionEditActivity extends AppCompatActivity {
                     showSelectedTags();
                 }));
         binding.saveButton.setOnClickListener(v -> save());
-    }
-
-    private void selectCategory(@Nullable Long categoryId) {
-        if (categoryId == null) {
-            return;
-        }
-        List<Category> categories = categoryDao.search(null, null);
-        for (int i = 0; i < categories.size(); i++) {
-            if (categories.get(i).getId() == categoryId) {
-                binding.categorySpinner.setSelection(i + 1);
-                return;
-            }
-        }
     }
 
     private void showSelectedTags() {
@@ -116,12 +91,11 @@ public class QuestionEditActivity extends AppCompatActivity {
             return;
         }
         String answer = text(binding.answerInput.getText());
-        Long categoryId = categorySpinner.getSelectedId();
 
         if (questionId == NO_ID) {
-            questionDao.insert(name, answer.isEmpty() ? null : answer, categoryId, selectedTagIds);
+            questionDao.insert(name, answer.isEmpty() ? null : answer, selectedTagIds);
         } else {
-            questionDao.update(questionId, name, answer.isEmpty() ? null : answer, categoryId, selectedTagIds);
+            questionDao.update(questionId, name, answer.isEmpty() ? null : answer, selectedTagIds);
         }
         finish();
     }

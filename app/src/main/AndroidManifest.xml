@@ -32,16 +32,6 @@
             android:parentActivityName=".ui.tag.TagListActivity" />
 
         <activity
-            android:name=".ui.category.CategoryListActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.MainActivity" />
-
-        <activity
-            android:name=".ui.category.CategoryEditActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.category.CategoryListActivity" />
-
-        <activity
             android:name=".ui.question.QuestionListActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity" />

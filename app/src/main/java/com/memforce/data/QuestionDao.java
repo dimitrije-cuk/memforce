@@ -26,22 +26,15 @@ public class QuestionDao {
 
     /**
      * @param namePattern LIKE pattern applied to the question text
-     * @param categoryId  when set, only questions in this category are returned
      * @param tagId       when set, only questions carrying this tag are returned
      */
     @NonNull
-    public List<Question> search(@Nullable String namePattern,
-                                 @Nullable Long categoryId,
-                                 @Nullable Long tagId) {
+    public List<Question> search(@Nullable String namePattern, @Nullable Long tagId) {
         StringBuilder sql = new StringBuilder(baseSelect())
                 .append(" WHERE q.").append(DbContract.Questions.NAME).append(" LIKE ?");
 
         List<String> args = new ArrayList<>();
         args.add(SearchPatterns.like(namePattern));
-        if (categoryId != null) {
-            sql.append(" AND q.").append(DbContract.Questions.CATEGORY_ID).append(" = ?");
-            args.add(String.valueOf(categoryId));
-        }
         if (tagId != null) {
             sql.append(" AND q.").append(DbContract.Questions._ID)
                     .append(" IN (SELECT ").append(DbContract.QuestionTags.QUESTION_ID)
@@ -77,12 +70,8 @@ public class QuestionDao {
         return "SELECT q." + DbContract.Questions._ID
                 + ", q." + DbContract.Questions.NAME
                 + ", q." + DbContract.Questions.ANSWER
-                + ", q." + DbContract.Questions.CATEGORY_ID
-                + ", IFNULL(c." + DbContract.Categories.NAME + ", '')"
                 + ", IFNULL(GROUP_CONCAT(t." + DbContract.Tags.NAME + ", ', '), '')"
                 + " FROM " + DbContract.Questions.TABLE + " q"
-                + " LEFT JOIN " + DbContract.Categories.TABLE + " c"
-                + " ON c." + DbContract.Categories._ID + " = q." + DbContract.Questions.CATEGORY_ID
                 + " LEFT JOIN " + DbContract.QuestionTags.TABLE + " qt"
                 + " ON qt." + DbContract.QuestionTags.QUESTION_ID + " = q." + DbContract.Questions._ID
                 + " LEFT JOIN " + DbContract.Tags.TABLE + " t"
@@ -94,9 +83,7 @@ public class QuestionDao {
                 cursor.getLong(0),
                 cursor.getString(1),
                 cursor.isNull(2) ? null : cursor.getString(2),
-                cursor.isNull(3) ? null : cursor.getLong(3),
-                cursor.getString(4),
-                cursor.getString(5));
+                cursor.getString(3));
     }
 
     @NonNull
@@ -117,12 +104,11 @@ public class QuestionDao {
 
     public long insert(@NonNull String name,
                        @Nullable String answer,
-                       @Nullable Long categoryId,
                        @NonNull List<Long> tagIds) {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
         try {
-            long id = db.insert(DbContract.Questions.TABLE, null, toValues(name, answer, categoryId));
+            long id = db.insert(DbContract.Questions.TABLE, null, toValues(name, answer));
             if (id == -1) {
                 return -1;
             }
@@ -137,12 +123,11 @@ public class QuestionDao {
     public void update(long id,
                        @NonNull String name,
                        @Nullable String answer,
-                       @Nullable Long categoryId,
                        @NonNull List<Long> tagIds) {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
         try {
-            db.update(DbContract.Questions.TABLE, toValues(name, answer, categoryId),
+            db.update(DbContract.Questions.TABLE, toValues(name, answer),
                     DbContract.Questions._ID + " = ?", new String[]{String.valueOf(id)});
             replaceTags(db, id, tagIds);
             db.setTransactionSuccessful();
@@ -159,15 +144,10 @@ public class QuestionDao {
                 new String[]{String.valueOf(id)});
     }
 
-    private ContentValues toValues(String name, @Nullable String answer, @Nullable Long categoryId) {
+    private ContentValues toValues(String name, @Nullable String answer) {
         ContentValues values = new ContentValues();
         values.put(DbContract.Questions.NAME, name);
         values.put(DbContract.Questions.ANSWER, answer);
-        if (categoryId == null) {
-            values.putNull(DbContract.Questions.CATEGORY_ID);
-        } else {
-            values.put(DbContract.Questions.CATEGORY_ID, categoryId);
-        }
         return values;
     }
 

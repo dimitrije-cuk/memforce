@@ -68,7 +68,7 @@ public class DeckEditActivity extends AppCompatActivity {
     }
 
     private void pickQuestions() {
-        List<Question> questions = questionDao.search(null, null, null);
+        List<Question> questions = questionDao.search(null, null);
         if (questions.isEmpty()) {
             new MaterialAlertDialogBuilder(this)
                     .setMessage(R.string.deck_no_questions_defined)

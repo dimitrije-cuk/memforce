@@ -76,7 +76,7 @@ public class TagDao {
         }
     }
 
-    /** Assignments to questions and categories are removed by the schema's cascade rules. */
+    /** Assignments to questions are removed by the schema's cascade rules. */
     public void delete(long id) {
         helper.getWritableDatabase().delete(
                 DbContract.Tags.TABLE,

@@ -26,19 +26,10 @@ public final class DbContract {
         }
     }
 
-    public static final class Categories implements BaseColumns {
-        public static final String TABLE = "categories";
-        public static final String NAME = "name";
-
-        private Categories() {
-        }
-    }
-
     public static final class Questions implements BaseColumns {
         public static final String TABLE = "questions";
         public static final String NAME = "name";
         public static final String ANSWER = "answer";
-        public static final String CATEGORY_ID = "category_id";
 
         private Questions() {
         }
@@ -60,16 +51,6 @@ public final class DbContract {
         public static final String TAG_ID = "tag_id";
 
         private QuestionTags() {
-        }
-    }
-
-    /** Category to tag assignment; supports searching categories by tag. */
-    public static final class CategoryTags {
-        public static final String TABLE = "category_tags";
-        public static final String CATEGORY_ID = "category_id";
-        public static final String TAG_ID = "tag_id";
-
-        private CategoryTags() {
         }
     }
 

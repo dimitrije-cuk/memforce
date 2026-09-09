@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <plurals name="category_delete_message">
-        <item quantity="one">%1$d question keeps existing without a category.</item>
-        <item quantity="other">%1$d questions keep existing without a category.</item>
-    </plurals>
-
     <plurals name="deck_question_count">
         <item quantity="one">%1$d question</item>
         <item quantity="other">%1$d questions</item>

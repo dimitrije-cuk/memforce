@@ -31,20 +31,6 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="8dp"
-        android:text="@string/search_filter_by_category"
-        android:textAppearance="?attr/textAppearanceLabelMedium" />
-
-    <Spinner
-        android:id="@+id/categoryFilter"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="8dp"
         android:text="@string/search_filter_by_tag"
         android:textAppearance="?attr/textAppearanceLabelMedium" />
 
