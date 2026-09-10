@@ -55,6 +55,15 @@ every deck.
 
 Passwords are stored as PBKDF2 hashes with a per-user random salt.
 
+## Importing question sets
+
+Typing in questions one at a time doesn't scale for adding a whole topic at once. MemForce defines
+a JSON **question set** format — with tags at both the set level (applied to every question) and
+the individual-question level (applied to just one) — that a user can have an LLM chatbot fill in
+from a template and then import. See [docs/question-import-format.md](docs/question-import-format.md)
+for the format, schema, template, and example. As of this writing, only the format is specified;
+the in-app import action is planned as follow-up work.
+
 ## Repository
 
 Commit messages follow `type: subject`, enforced by the hook in `.githooks`. Run `setup-hooks.bat`

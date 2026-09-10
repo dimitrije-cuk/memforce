@@ -120,3 +120,24 @@ In particular, the database design should be extended as necessary to support:
 * Ability to **search for questions by tag** — **4 points**
 
 * Ability to **search individual decks** — **2 points**
+
+# Extensions Beyond the Assignment
+
+The following functionality is not part of the graded assignment above, but is specified here as
+an extension to make the app more useful in practice.
+
+## Bulk question import via JSON
+
+Manually typing in questions one at a time does not scale well when someone wants to add a whole
+topic's worth of quiz content. To make that easier, MemForce defines a JSON **question set**
+format that a user can ask an LLM chatbot to fill in (starting from a provided template) and then
+import into the app in one step.
+
+* The full format specification, JSON Schema, template, and example are in
+  [question-import-format.md](question-import-format.md).
+* Tags are supported at two levels in this format: **set-level tags**, inherited by every
+  question in the file, and **question-level tags**, which apply only to one question in addition
+  to the set-level tags. See [Tag inheritance](question-import-format.md#tag-inheritance).
+* Phase 1 (current) defines the format only. A later phase adds the in-app action that reads a
+  question-set file and writes it to the database; see
+  [Status](question-import-format.md#status).

@@ -1,0 +1,23 @@
+{
+  "formatVersion": "1.0",
+  "name": "World history basics",
+  "description": "A short mixed-era history set used as a worked example of the import format.",
+  "tags": ["history", "world-history"],
+  "questions": [
+    {
+      "question": "Who was the first emperor of Rome?",
+      "answer": "Augustus",
+      "tags": ["ancient-history", "1st-century-bc"]
+    },
+    {
+      "question": "In which year did the French Revolution begin?",
+      "answer": "1789",
+      "tags": ["18th-century", "france"]
+    },
+    {
+      "question": "Which renaissance artist painted the ceiling of the Sistine Chapel?",
+      "answer": "Michelangelo",
+      "tags": ["renaissance", "art"]
+    }
+  ]
+}

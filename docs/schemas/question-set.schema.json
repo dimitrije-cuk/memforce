@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://memforce.app/schemas/question-set.schema.json",
+  "title": "MemForce question set",
+  "description": "A batch of quiz questions that can be imported into MemForce. See docs/question-import-format.md for the full specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["formatVersion", "questions"],
+  "properties": {
+    "formatVersion": {
+      "type": "string",
+      "description": "Version of this question-set format. Bump only when the structure below changes incompatibly.",
+      "enum": ["1.0"]
+    },
+    "name": {
+      "type": "string",
+      "description": "Short human-readable label for the set, e.g. for a file listing. Not imported as data.",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional free-text summary of what the set covers. Not imported as data.",
+      "maxLength": 500
+    },
+    "tags": {
+      "type": "array",
+      "description": "Tags inherited by every question in this set (e.g. the subject area). Merged with each question's own tags at import time.",
+      "items": { "$ref": "#/definitions/tagName" },
+      "uniqueItems": true,
+      "default": []
+    },
+    "questions": {
+      "type": "array",
+      "description": "The questions to import. Must contain at least one entry.",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/question" }
+    }
+  },
+  "definitions": {
+    "tagName": {
+      "type": "string",
+      "description": "A tag name. Matching against existing tags is case-insensitive, so prefer lower-case kebab-case (e.g. \"world-history\") for readability and to avoid accidental near-duplicates.",
+      "minLength": 1,
+      "maxLength": 50,
+      "pattern": "^[^\\s].*[^\\s]$|^[^\\s]$"
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question"],
+      "properties": {
+        "question": {
+          "type": "string",
+          "description": "The question text. Maps to the question's name in MemForce.",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "answer": {
+          "type": ["string", "null"],
+          "description": "The answer text. Optional; MemForce allows questions without a stored answer.",
+          "maxLength": 2000
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags that apply only to this question, in addition to the set-level tags.",
+          "items": { "$ref": "#/definitions/tagName" },
+          "uniqueItems": true,
+          "default": []
+        }
+      }
+    }
+  }
+}
