@@ -1,5 +1,14 @@
 # Development environment
 
+| Field | Value |
+|---|---|
+| Document title | MemForce — Development environment |
+| Document identifier | MF-DEV-001 |
+| Version | 1.0 |
+| Date | 2026-09-10 |
+| Status | Draft — proposed for baseline **BL-1**, which is declared when the tag is applied ([MF-CMP-001, 4.3](configuration-management.md#43-baselines)) |
+| Satisfies | [REQ-POR-30](requirements.md#383-portability-and-maintainability) — a clean checkout builds with this toolchain and no further manual step |
+
 MemForce is a plain Android Gradle project, so a machine can build it once three things are
 true: a JDK 17 or newer is installed, the Android SDK holds the packages the build asks for,
 and `local.properties` tells Gradle where that SDK is.
