@@ -13,7 +13,6 @@
     <string name="menu_sign_out">Sign out</string>
     <string name="menu_tags">Tags</string>
     <string name="menu_questions">Questions</string>
-    <string name="menu_decks">My decks</string>
 
     <string name="action_add">Add</string>
     <string name="action_save">Save</string>
@@ -67,13 +66,4 @@
     <string name="import_error_duplicate_tag">%1$s repeats the tag %2$s.</string>
     <string name="import_error_unsupported_version">Format version %1$s cannot be read; this app reads version %2$s.</string>
     <string name="import_error_no_questions">questions must hold at least one question.</string>
-
-    <string name="deck_name">Deck name</string>
-    <string name="deck_title_new">New deck</string>
-    <string name="deck_title_edit">Edit deck</string>
-    <string name="deck_select_questions">Select questions</string>
-    <string name="deck_no_questions_defined">No questions have been created yet.</string>
-    <string name="deck_name_taken">You already have a deck with this name</string>
-    <string name="deck_delete_title">Delete %1$s?</string>
-    <string name="deck_delete_message">The questions in the deck are kept.</string>
 </resources>

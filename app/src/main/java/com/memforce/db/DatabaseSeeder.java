@@ -24,16 +24,14 @@ final class DatabaseSeeder {
     }
 
     static void seed(@NonNull SQLiteDatabase db, @NonNull Context context) {
-        // The seed file references these ids as deck owners, so they are fixed rather than generated.
-        insertUser(db, 1, "ana");
-        insertUser(db, 2, "marko");
+        insertUser(db, "ana");
+        insertUser(db, "marko");
         execAsset(db, context);
     }
 
-    private static void insertUser(SQLiteDatabase db, long id, String name) {
+    private static void insertUser(SQLiteDatabase db, String name) {
         String salt = PasswordHasher.newSalt();
         ContentValues values = new ContentValues();
-        values.put(DbContract.Users._ID, id);
         values.put(DbContract.Users.NAME, name);
         values.put(DbContract.Users.SALT, salt);
         values.put(DbContract.Users.PASSWORD_HASH, PasswordHasher.hash(DEMO_PASSWORD, salt));

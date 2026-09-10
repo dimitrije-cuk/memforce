@@ -8,7 +8,7 @@ import androidx.annotation.Nullable;
 
 import com.memforce.model.User;
 
-/** Remembers which user is signed in; decks are scoped to this user. */
+/** Remembers which user is signed in. */
 public class Session {
 
     private static final String PREFS_NAME = "memforce_session";

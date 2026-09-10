@@ -51,13 +51,6 @@ public final class MemForceDbHelper extends SQLiteOpenHelper {
                 + DbContract.Questions.NAME + " TEXT NOT NULL, "
                 + DbContract.Questions.ANSWER + " TEXT)");
 
-        db.execSQL("CREATE TABLE " + DbContract.Decks.TABLE + " ("
-                + DbContract.Decks._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + DbContract.Decks.NAME + " TEXT NOT NULL, "
-                + DbContract.Decks.USER_ID + " INTEGER NOT NULL REFERENCES "
-                + DbContract.Users.TABLE + "(" + DbContract.Users._ID + ") ON DELETE CASCADE, "
-                + "UNIQUE(" + DbContract.Decks.USER_ID + ", " + DbContract.Decks.NAME + " COLLATE NOCASE))");
-
         db.execSQL("CREATE TABLE " + DbContract.QuestionTags.TABLE + " ("
                 + DbContract.QuestionTags.QUESTION_ID + " INTEGER NOT NULL REFERENCES "
                 + DbContract.Questions.TABLE + "(" + DbContract.Questions._ID + ") ON DELETE CASCADE, "
@@ -66,29 +59,15 @@ public final class MemForceDbHelper extends SQLiteOpenHelper {
                 + "PRIMARY KEY(" + DbContract.QuestionTags.QUESTION_ID + ", "
                 + DbContract.QuestionTags.TAG_ID + "))");
 
-        db.execSQL("CREATE TABLE " + DbContract.DeckQuestions.TABLE + " ("
-                + DbContract.DeckQuestions.DECK_ID + " INTEGER NOT NULL REFERENCES "
-                + DbContract.Decks.TABLE + "(" + DbContract.Decks._ID + ") ON DELETE CASCADE, "
-                + DbContract.DeckQuestions.QUESTION_ID + " INTEGER NOT NULL REFERENCES "
-                + DbContract.Questions.TABLE + "(" + DbContract.Questions._ID + ") ON DELETE CASCADE, "
-                + "PRIMARY KEY(" + DbContract.DeckQuestions.DECK_ID + ", "
-                + DbContract.DeckQuestions.QUESTION_ID + "))");
-
-        db.execSQL("CREATE INDEX idx_decks_user ON " + DbContract.Decks.TABLE
-                + "(" + DbContract.Decks.USER_ID + ")");
         db.execSQL("CREATE INDEX idx_question_tags_tag ON " + DbContract.QuestionTags.TABLE
                 + "(" + DbContract.QuestionTags.TAG_ID + ")");
-        db.execSQL("CREATE INDEX idx_deck_questions_question ON " + DbContract.DeckQuestions.TABLE
-                + "(" + DbContract.DeckQuestions.QUESTION_ID + ")");
 
         DatabaseSeeder.seed(db, context);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + DbContract.DeckQuestions.TABLE);
         db.execSQL("DROP TABLE IF EXISTS " + DbContract.QuestionTags.TABLE);
-        db.execSQL("DROP TABLE IF EXISTS " + DbContract.Decks.TABLE);
         db.execSQL("DROP TABLE IF EXISTS " + DbContract.Questions.TABLE);
         db.execSQL("DROP TABLE IF EXISTS " + DbContract.Tags.TABLE);
         db.execSQL("DROP TABLE IF EXISTS " + DbContract.Users.TABLE);

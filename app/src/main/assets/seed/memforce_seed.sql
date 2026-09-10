@@ -40,13 +40,6 @@ INSERT INTO questions (_id, name, answer) VALUES
     (24, 'How often are the Summer Olympics held?', 'Every four years'),
     (25, 'Which language is spoken in Brazil?', 'Portuguese');
 
-INSERT INTO decks (_id, name, user_id) VALUES
-    (1, 'Exam prep science', 1),
-    (2, 'Quick trivia night', 1),
-    (3, 'Weak spots', 1),
-    (4, 'Algebra drill', 2),
-    (5, 'Programming basics', 2);
-
 INSERT INTO question_tags (question_id, tag_id) VALUES
     (1, 3), (1, 8),
     (2, 8), (2, 9),
@@ -73,10 +66,3 @@ INSERT INTO question_tags (question_id, tag_id) VALUES
     (23, 3), (23, 9),
     (24, 9),
     (25, 6), (25, 9);
-
-INSERT INTO deck_questions (deck_id, question_id) VALUES
-    (1, 3), (1, 4), (1, 8),
-    (2, 2), (2, 10), (2, 14), (2, 23), (2, 24),
-    (3, 16), (3, 17),
-    (4, 16), (4, 17), (4, 18),
-    (5, 19), (5, 20), (5, 21), (5, 22);

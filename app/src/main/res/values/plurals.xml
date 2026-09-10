@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <plurals name="deck_question_count">
-        <item quantity="one">%1$d question</item>
-        <item quantity="other">%1$d questions</item>
-    </plurals>
-
-    <plurals name="deck_selected_questions">
-        <item quantity="one">%1$d question selected</item>
-        <item quantity="other">%1$d questions selected</item>
-    </plurals>
-
     <plurals name="import_error_more">
         <item quantity="one">… and %1$d more problem.</item>
         <item quantity="other">… and %1$d more problems.</item>

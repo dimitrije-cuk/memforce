@@ -182,7 +182,7 @@ public class QuestionDao {
                 new String[]{String.valueOf(id)}) > 0;
     }
 
-    /** Tag assignments and deck membership are removed by the schema's cascade rules. */
+    /** Tag assignments are removed by the schema's cascade rules. */
     public void delete(long id) {
         helper.getWritableDatabase().delete(
                 DbContract.Questions.TABLE,

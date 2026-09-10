@@ -35,15 +35,6 @@ public final class DbContract {
         }
     }
 
-    public static final class Decks implements BaseColumns {
-        public static final String TABLE = "decks";
-        public static final String NAME = "name";
-        public static final String USER_ID = "user_id";
-
-        private Decks() {
-        }
-    }
-
     /** Question to tag assignment; a question may carry any number of tags. */
     public static final class QuestionTags {
         public static final String TABLE = "question_tags";
@@ -51,16 +42,6 @@ public final class DbContract {
         public static final String TAG_ID = "tag_id";
 
         private QuestionTags() {
-        }
-    }
-
-    /** Questions collected into a deck. */
-    public static final class DeckQuestions {
-        public static final String TABLE = "deck_questions";
-        public static final String DECK_ID = "deck_id";
-        public static final String QUESTION_ID = "question_id";
-
-        private DeckQuestions() {
         }
     }
 }

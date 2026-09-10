@@ -27,8 +27,7 @@ import follows these rules:
   the file is only used when the existing question has none.
 * Entries repeating the same question text **within one file** are collapsed into a single
   question carrying the tags of all of them.
-* Questions and tags are shared by every user, so an import is visible to everyone. Decks are
-  never touched by an import.
+* Questions and tags are shared by every user, so an import is visible to everyone.
 
 ## Files
 

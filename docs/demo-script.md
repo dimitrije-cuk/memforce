@@ -1,6 +1,11 @@
 # MemForce demo script
 
-A single pass through this script demonstrates every requirement in [requirements.md](requirements.md).
+A single pass through this script demonstrates every feature the app implements.
+
+> Decks are not implemented. The deck requirements listed in [requirements.md](requirements.md)
+> (§4 *Decks*, and the deck items under *Grading*) are intentionally out of scope, so this script
+> does not cover them.
+
 The demo data is loaded automatically the first time the database is created, so nothing has to be
 typed in before the demo starts.
 
@@ -16,17 +21,16 @@ Then launch MemForce. The login screen appears.
 
 ### Demo accounts
 
-| User | Password | Decks |
+| User | Password | Notes |
 | --- | --- | --- |
-| `ana` | `demo1234` | Exam prep science, Quick trivia night, Weak spots |
-| `marko` | `demo1234` | Algebra drill, Programming basics |
-| `petar` | `newpass123` | created live in phase 6 |
+| `ana` | `demo1234` | seeded |
+| `marko` | `demo1234` | seeded |
+| `petar` | `newpass123` | created live in phase 5 |
 
 ### Seeded data
 
 * **9 tags** — advanced, algebra, basics, exam, formulas, humanities, science, space, trivia
 * **25 questions** — a general-knowledge mix, each carrying one or more tags
-* **5 decks** — three owned by `ana`, two owned by `marko`
 
 ### About the search boxes
 
@@ -91,33 +95,15 @@ Go back to the main menu.
 
 Go back to the main menu.
 
-## Phase 5 — Decks
-
-Tap **My decks**. Three decks belonging to `ana` are listed.
+## Phase 5 — Shared data across users
 
 | # | Action | Expected result | Requirement |
 | --- | --- | --- | --- |
-| 5.1 | Read the question counts | Exam prep science 3, Quick trivia night **4**, Weak spots 2. The trivia deck dropped from 5 because the question deleted in 3.11 left it | Deleting a question keeps the decks consistent |
-| 5.2 | Type `%night%` | Quick trivia night | **Searching decks** |
-| 5.3 | Replace it with `_x%` | Exam prep science | `_` in a fixed position |
-| 5.4 | Replace it with `%s` | Weak spots | `%` at the start |
-| 5.5 | Clear the search box, tap **Add**, enter `Space round`, tap **Select questions**, tick the three `space` questions (*Which planet is closest to the Sun?*, *What galaxy contains our Solar System?*, *What force keeps planets in orbit?*), confirm, tap **Save** | `Space round` appears with 3 questions | Adding a deck |
-| 5.6 | Tap `Weak spots`, tap **Select questions**, additionally tick *What is the value of pi to two decimal places?*, confirm, tap **Save** | The deck now shows 3 questions instead of 2 | Editing a deck |
-| 5.7 | Tap **Delete** on `Space round` and confirm | The deck disappears; the dialog notes the questions themselves are kept | Deleting a deck |
-
-Go back to the main menu.
-
-## Phase 6 — Shared data versus individual decks
-
-| # | Action | Expected result | Requirement |
-| --- | --- | --- | --- |
-| 6.1 | Tap **Sign out**, sign in as `marko` / `demo1234` | Main menu shows *Signed in as marko* | Login of a second existing user |
-| 6.2 | Tap **My decks** | Only `Algebra drill` and `Programming basics`. None of ana's decks are visible | **Decks belong to one user only** |
-| 6.3 | Go back, tap **Questions** and **Tags** | Ana's additions are here: the question *Which instrument has 88 keys?* and the tag `revision 2026`. Her deletions apply too | **Questions and tags are shared by all users** |
-| 6.4 | Go back, tap **Sign out**, sign in as `petar` / `newpass123` — a user that does not exist | Sign-in succeeds and the main menu shows *Signed in as petar* | **An unknown user is registered automatically** |
-| 6.5 | Tap **My decks** | Empty — *Nothing matches this search*. The new user starts with no decks of his own | Decks are individual |
-| 6.6 | Go back, tap **Sign out**, sign in as `petar` / `wrongpass` | *Wrong password for this user* | The credentials entered in 6.4 were written to the database |
-| 6.7 | Sign in as `petar` / `newpass123` | Main menu opens again | The stored credentials work |
+| 5.1 | Tap **Sign out**, sign in as `marko` / `demo1234` | Main menu shows *Signed in as marko* | Login of a second existing user |
+| 5.2 | Tap **Questions** and **Tags** | Ana's additions are here: the question *Which instrument has 88 keys?* and the tag `revision 2026`. Her deletions apply too | **Questions and tags are shared by all users** |
+| 5.3 | Go back, tap **Sign out**, sign in as `petar` / `newpass123` — a user that does not exist | Sign-in succeeds and the main menu shows *Signed in as petar* | **An unknown user is registered automatically** |
+| 5.4 | Tap **Sign out**, sign in as `petar` / `wrongpass` | *Wrong password for this user* | The credentials entered in 5.3 were written to the database |
+| 5.5 | Sign in as `petar` / `newpass123` | Main menu opens again | The stored credentials work |
 
 The demo is complete.
 
@@ -127,18 +113,15 @@ The demo is complete.
 
 | Requirement | Sample data used | Demonstrated in |
 | --- | --- | --- |
-| Login, password check, register unknown users (4 pts) | users `ana`, `marko`; `petar` created live | 1.1, 1.2, 6.1, 6.4, 6.6, 6.7 |
+| Login, password check, register unknown users (4 pts) | users `ana`, `marko`; `petar` created live | 1.1, 1.2, 5.1, 5.3, 5.4, 5.5 |
 | Add a tag and question (2 pts) | tag `revision`, question *Which instrument has 88 keys?* | 2.5, 3.8 |
 | Edit a tag and question (4 pts) | `revision` → `revision 2026`, Brazil question gains `basics` | 2.6, 3.9 |
-| Add and edit individual decks (4 pts) | `Space round` added, `Weak spots` extended | 5.5, 5.6 |
 | Delete tags, fixing the questions that use them (2 pts) | `humanities` (4 questions) | 4.1, 4.2 |
-| Delete questions and decks (2 pts) | question *How often are the Summer Olympics held?*, deck `Space round` | 3.11, 5.7 |
+| Delete questions (2 pts) | question *How often are the Summer Olympics held?* | 3.11 |
 | Search tags and questions by name (1 pt) | `a%` `%s` `%__a` `_x%` / `Which%` `How%` `_ho%` `%capital%` | 2.1–2.4, 3.1–3.4 |
 | Search questions by tag (4 pts) | `science`, narrowed with `%water%` | 3.5, 3.6 |
-| Search individual decks (2 pts) | `%night%` `_x%` `%s` | 5.2, 5.3, 5.4 |
-| Wildcards `%` and `_` supported everywhere | patterns listed above, on all three screens | 2.1–2.4, 3.1–3.4, 5.2–5.4 |
-| Questions and tags are shared by all users | ana's question *Which instrument has 88 keys?* seen by marko | 6.3 |
-| Decks are individual | ana's 3 decks versus marko's 2 versus petar's 0 | 6.2, 6.5 |
+| Wildcards `%` and `_` supported everywhere | patterns listed above, on both screens | 2.1–2.4, 3.1–3.4 |
+| Questions and tags are shared by all users | ana's question *Which instrument has 88 keys?* seen by marko | 5.2 |
 | Standalone app with SQLite on the device | `memforce.db`, seeded from `assets/seed/memforce_seed.sql` | Before you start |
 
 ## Changing the demo data

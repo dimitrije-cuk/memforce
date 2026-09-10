@@ -1,6 +1,6 @@
 # MemForce
 
-Android app for entering and searching quiz questions, and for building personal decks from them.
+Android app for entering and searching quiz questions.
 Everything runs on the device against a local SQLite database; there is no server.
 
 ## Build and run
@@ -19,10 +19,9 @@ gradlew.bat installDebug
 | Screen | Purpose |
 | --- | --- |
 | Login | Signs in; unknown users are registered on first use |
-| Main menu | Entry point to questions, tags and decks |
+| Main menu | Entry point to questions and tags |
 | Questions | Search by text and tag; assign tags; add, edit, delete; import a question set file |
 | Tags | Search by name; add, edit, delete |
-| My decks | Search by name; pick questions; add, edit, delete |
 
 ## Searching
 
@@ -38,20 +37,16 @@ An empty field lists everything.
 
 ## Data model
 
-Questions and tags are shared by every user. Decks belong to the user that created them
-and are filtered by user id in every query.
+Questions and tags are shared by every user.
 
 ```
 users        (id, name, password_hash, salt)
 tags         (id, name)
 questions    (id, name, answer)
-decks        (id, name, user_id -> users, ON DELETE CASCADE)
 question_tags  (question_id, tag_id)     both ON DELETE CASCADE
-deck_questions (deck_id, question_id)    both ON DELETE CASCADE
 ```
 
-Deleting a tag removes it from the questions that use it. Deleting a question removes it from
-every deck.
+Deleting a tag removes it from the questions that use it.
 
 Passwords are stored as PBKDF2 hashes with a per-user random salt.
 

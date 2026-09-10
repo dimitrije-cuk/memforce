@@ -31,33 +31,17 @@ together {
 
 ' ============================ content ============================
 together {
-  entity "categories" as categories <<global>> {
-    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
-    --
-    * name : TEXT <<UNIQUE, NOCASE>>
-  }
-
   entity "questions" as questions <<global>> {
     * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
     --
     * name : TEXT
     answer : TEXT <<nullable>>
-    category_id : INTEGER <<FK>> <<nullable>>
   }
 
   entity "tags" as tags <<global>> {
     * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
     --
     * name : TEXT <<UNIQUE, NOCASE>>
-  }
-
-  entity "decks" as decks <<per user>> {
-    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
-    --
-    * name : TEXT
-    * user_id : INTEGER <<FK>>
-    --
-    UNIQUE (user_id, name COLLATE NOCASE)
   }
 }
 
@@ -69,38 +53,12 @@ together {
     --
     composite PK (question_id, tag_id)
   }
-
-  entity "category_tags" as category_tags <<junction>> {
-    * category_id : INTEGER <<PK>> <<FK>>
-    * tag_id : INTEGER <<PK>> <<FK>>
-    --
-    composite PK (category_id, tag_id)
-  }
-
-  entity "deck_questions" as deck_questions <<junction>> {
-    * deck_id : INTEGER <<PK>> <<FK>>
-    * question_id : INTEGER <<PK>> <<FK>>
-    --
-    composite PK (deck_id, question_id)
-  }
 }
 
 ' ============================ relationships ============================
-' user_id is NOT NULL -> every deck has exactly one owner.
-users ||--o{ decks : "owns\nON DELETE CASCADE"
-
-' category_id is nullable -> a question may exist with no category.
-categories |o--o{ questions : "classifies\nON DELETE SET NULL"
-
 ' Both junction columns are NOT NULL, so both parent sides are mandatory.
 questions ||--o{ question_tags : "ON DELETE CASCADE"
 tags      ||--o{ question_tags : "ON DELETE CASCADE"
-
-categories ||--o{ category_tags : "ON DELETE CASCADE"
-tags       ||--o{ category_tags : "ON DELETE CASCADE"
-
-decks     ||--o{ deck_questions : "ON DELETE CASCADE"
-questions ||--o{ deck_questions : "ON DELETE CASCADE"
 
 ' ============================ notes ============================
 legend bottom
@@ -108,18 +66,14 @@ legend bottom
   <b>*</b> = mandatory (NOT NULL).  _id is an INTEGER PRIMARY KEY (rowid alias) and can never hold NULL.
   --
   <b>Explicit indexes</b>
-  idx_questions_category      ON questions(category_id)
-  idx_decks_user              ON decks(user_id)
   idx_question_tags_tag       ON question_tags(tag_id)
-  idx_category_tags_tag       ON category_tags(tag_id)
-  idx_deck_questions_question ON deck_questions(question_id)
   --
-  <b>Scope</b>  Every table is global except decks, the only table carrying user_id.
-  deck_questions has no user_id; deck ownership is only transitive, through decks.user_id.
+  <b>Scope</b>  Every table is global; no table carries a user_id, so all content is shared by
+  every user. users has no foreign key relationship to any other table; it backs sign-in only.
   --
   <b>Runtime dependency</b>  No FK action above is enforced by the schema alone.
   MemForceDbHelper.onConfigure() calls setForeignKeyConstraintsEnabled(true);
-  without it SQLite defaults PRAGMA foreign_keys = OFF and every CASCADE / SET NULL is inert.
+  without it SQLite defaults PRAGMA foreign_keys = OFF and every CASCADE is inert.
   --
   No table declares a DEFAULT. No table is WITHOUT ROWID.
 endlegend
