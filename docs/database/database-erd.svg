@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="1102px" preserveAspectRatio="none" style="width:1079px;height:1102px;background:#FFFFFF;" version="1.1" viewBox="0 0 1079 1102" width="1079px" zoomAndPan="magnify"><defs/><g><text fill="#000000" font-family="sans-serif" font-size="18" lengthAdjust="spacing" textLength="634" x="216" y="18.6855">MemForce - on-device SQLite schema (memforce.db, DATABASE_VERSION 1)</text><!--MD5=[8413f8248b2da7966d2de021109ec289]
+class users--><rect codeLine="22" fill="#FFFFFF" height="111.5313" id="users" rx="2" ry="2" style="stroke:#444444;stroke-width:1.5;" width="219" x="323.5" y="29.6406"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="49" x="408.5" y="47.0977">«global»</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="32" x="417" y="62.1914">users</text><line style="stroke:#444444;stroke-width:1.5;" x1="324.5" x2="541.5" y1="69.8281" y2="69.8281"/><ellipse cx="334.5" cy="80.8281" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="193" x="343.5" y="85.2471">_id : INTEGER «PK» «AUTOINCREMENT»</text><line style="stroke:#444444;stroke-width:1.0;" x1="324.5" x2="541.5" y1="91.6641" y2="91.6641"/><ellipse cx="334.5" cy="102.6641" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="161" x="343.5" y="107.083">name : TEXT «UNIQUE, NOCASE»</text><ellipse cx="334.5" cy="116.5" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="114" x="343.5" y="120.9189">password_hash : TEXT</text><ellipse cx="334.5" cy="130.3359" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="51" x="343.5" y="134.7549">salt : TEXT</text><!--MD5=[8d53228b184e70212eb202c858fab81b]
+class categories--><rect codeLine="33" fill="#FFFFFF" height="83.8594" id="categories" rx="2" ry="2" style="stroke:#444444;stroke-width:1.5;" width="219" x="66.5" y="257.6406"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="49" x="151.5" y="275.0977">«global»</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="58" x="147" y="290.1914">categories</text><line style="stroke:#444444;stroke-width:1.5;" x1="67.5" x2="284.5" y1="297.8281" y2="297.8281"/><ellipse cx="77.5" cy="308.8281" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="193" x="86.5" y="313.2471">_id : INTEGER «PK» «AUTOINCREMENT»</text><line style="stroke:#444444;stroke-width:1.0;" x1="67.5" x2="284.5" y1="319.6641" y2="319.6641"/><ellipse cx="77.5" cy="330.6641" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="161" x="86.5" y="335.083">name : TEXT «UNIQUE, NOCASE»</text><!--MD5=[81560b533bd3a28b6f5b35f62413c8b9]
+class questions--><rect codeLine="39" fill="#FFFFFF" height="111.5313" id="questions" rx="2" ry="2" style="stroke:#444444;stroke-width:1.5;" width="219" x="66.5" y="453.6406"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="49" x="151.5" y="471.0977">«global»</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="55" x="148.5" y="486.1914">questions</text><line style="stroke:#444444;stroke-width:1.5;" x1="67.5" x2="284.5" y1="493.8281" y2="493.8281"/><ellipse cx="77.5" cy="504.8281" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="193" x="86.5" y="509.2471">_id : INTEGER «PK» «AUTOINCREMENT»</text><line style="stroke:#444444;stroke-width:1.0;" x1="67.5" x2="284.5" y1="515.6641" y2="515.6641"/><ellipse cx="77.5" cy="526.6641" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="60" x="86.5" y="531.083">name : TEXT</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="123" x="86.5" y="544.9189">answer : TEXT «nullable»</text><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="187" x="86.5" y="558.7549">category_id : INTEGER «FK» «nullable»</text><!--MD5=[5739ad24875601642eb98a720d13f4d4]
+class tags--><rect codeLine="47" fill="#FFFFFF" height="83.8594" id="tags" rx="2" ry="2" style="stroke:#444444;stroke-width:1.5;" width="219" x="580.5" y="257.6406"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="49" x="665.5" y="275.0977">«global»</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="24" x="678" y="290.1914">tags</text><line style="stroke:#444444;stroke-width:1.5;" x1="581.5" x2="798.5" y1="297.8281" y2="297.8281"/><ellipse cx="591.5" cy="308.8281" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="193" x="600.5" y="313.2471">_id : INTEGER «PK» «AUTOINCREMENT»</text><line style="stroke:#444444;stroke-width:1.0;" x1="581.5" x2="798.5" y1="319.6641" y2="319.6641"/><ellipse cx="591.5" cy="330.6641" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="161" x="600.5" y="335.083">name : TEXT «UNIQUE, NOCASE»</text><!--MD5=[97ec96e589bc5817565d1af95a7bec3e]
+class decks--><rect codeLine="53" fill="#FFFFFF" height="119.5313" id="decks" rx="2" ry="2" style="stroke:#444444;stroke-width:1.5;" width="224" x="321" y="239.6406"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="59" x="403.5" y="257.0977">«per user»</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="33" x="416.5" y="272.1914">decks</text><line style="stroke:#444444;stroke-width:1.5;" x1="322" x2="544" y1="279.8281" y2="279.8281"/><ellipse cx="332" cy="290.8281" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="193" x="341" y="295.2471">_id : INTEGER «PK» «AUTOINCREMENT»</text><line style="stroke:#444444;stroke-width:1.0;" x1="322" x2="544" y1="301.6641" y2="301.6641"/><ellipse cx="332" cy="312.6641" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="60" x="341" y="317.083">name : TEXT</text><ellipse cx="332" cy="326.5" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="115" x="341" y="330.9189">user_id : INTEGER «FK»</text><line style="stroke:#444444;stroke-width:1.0;" x1="322" x2="544" y1="337.3359" y2="337.3359"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="212" x="327" y="352.7549">UNIQUE (user_id, name COLLATE NOCASE)</text><!--MD5=[b637dfeae6bb189b3d9242a5db0067c7]
+class question_tags--><rect codeLine="65" fill="#FFFFFF" height="97.6953" id="question_tags" rx="2" ry="2" style="stroke:#444444;stroke-width:1.5;" width="188" x="328" y="647.6406"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="57" x="393.5" y="665.0977">«junction»</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="79" x="382.5" y="680.1914">question_tags</text><line style="stroke:#444444;stroke-width:1.5;" x1="329" x2="515" y1="687.8281" y2="687.8281"/><ellipse cx="339" cy="698.8281" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="162" x="348" y="703.2471">question_id : INTEGER «PK» «FK»</text><ellipse cx="339" cy="712.6641" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="136" x="348" y="717.083">tag_id : INTEGER «PK» «FK»</text><line style="stroke:#444444;stroke-width:1.0;" x1="329" x2="515" y1="723.5" y2="723.5"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="166" x="334" y="738.9189">composite PK (question_id, tag_id)</text><!--MD5=[9ee9ea026f160fe5800e3e240d0fbe80]
+class category_tags--><rect codeLine="72" fill="#FFFFFF" height="97.6953" id="category_tags" rx="2" ry="2" style="stroke:#444444;stroke-width:1.5;" width="190" x="551" y="647.6406"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="57" x="617.5" y="665.0977">«junction»</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="77" x="607.5" y="680.1914">category_tags</text><line style="stroke:#444444;stroke-width:1.5;" x1="552" x2="740" y1="687.8281" y2="687.8281"/><ellipse cx="562" cy="698.8281" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="164" x="571" y="703.2471">category_id : INTEGER «PK» «FK»</text><ellipse cx="562" cy="712.6641" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="136" x="571" y="717.083">tag_id : INTEGER «PK» «FK»</text><line style="stroke:#444444;stroke-width:1.0;" x1="552" x2="740" y1="723.5" y2="723.5"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="168" x="557" y="738.9189">composite PK (category_id, tag_id)</text><!--MD5=[fba1484e078dc1294057614f50bdbc6e]
+class deck_questions--><rect codeLine="79" fill="#FFFFFF" height="97.6953" id="deck_questions" rx="2" ry="2" style="stroke:#444444;stroke-width:1.5;" width="188" x="105" y="647.6406"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="57" x="170.5" y="665.0977">«junction»</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacing" textLength="88" x="155" y="680.1914">deck_questions</text><line style="stroke:#444444;stroke-width:1.5;" x1="106" x2="292" y1="687.8281" y2="687.8281"/><ellipse cx="116" cy="698.8281" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="144" x="125" y="703.2471">deck_id : INTEGER «PK» «FK»</text><ellipse cx="116" cy="712.6641" fill="#000000" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="162" x="125" y="717.083">question_id : INTEGER «PK» «FK»</text><line style="stroke:#444444;stroke-width:1.0;" x1="106" x2="292" y1="723.5" y2="723.5"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacing" textLength="174" x="111" y="738.9189">composite PK (deck_id, question_id)</text><!--MD5=[3092c05ecb3efcb24f47704ad3d43585]
+link users to decks--><path codeLine="89" d="M433,150.0206 C433,175.5606 433,205.0606 433,231.0206 " fill="none" id="users-decks" style="stroke:#333333;stroke-width:1.0;"/><line style="stroke:#333333;stroke-width:1.0;" x1="433" x2="439" y1="231.3106" y2="239.3106"/><line style="stroke:#333333;stroke-width:1.0;" x1="433" x2="427" y1="231.3106" y2="239.3106"/><line style="stroke:#333333;stroke-width:1.0;" x1="433" x2="433" y1="231.3106" y2="239.3106"/><ellipse cx="433" cy="225.3106" rx="4" ry="4" style="stroke:#333333;stroke-width:1.0;fill:none;"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="429" x2="437" y1="145.7906" y2="145.7906"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="429" x2="437" y1="148.7906" y2="148.7906"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="433" x2="433" y1="149.7906" y2="141.7906"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="30" x="489" y="188.1357">owns</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="140" x="434" y="204.4873">ON DELETE CASCADE</text><!--MD5=[7d4568915e353d872f6674a3e85b7afa]
+link categories to questions--><path codeLine="92" d="M176,349.8406 C176,378.4106 176,414.7006 176,445.3706 " fill="none" id="categories-questions" style="stroke:#333333;stroke-width:1.0;"/><line style="stroke:#333333;stroke-width:1.0;" x1="176" x2="182" y1="445.4506" y2="453.4506"/><line style="stroke:#333333;stroke-width:1.0;" x1="176" x2="170" y1="445.4506" y2="453.4506"/><line style="stroke:#333333;stroke-width:1.0;" x1="176" x2="176" y1="445.4506" y2="453.4506"/><ellipse cx="176" cy="439.4506" rx="4" ry="4" style="stroke:#333333;stroke-width:1.0;fill:none;"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="176" x2="176" y1="352.7306" y2="341.7306"/><ellipse cx="176" cy="352.7306" rx="4" ry="4" style="stroke:#333333;stroke-width:1.0;fill:none;"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="172" x2="180" y1="345.7306" y2="345.7306"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="54" x="219" y="404.1357">classifies</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="138" x="177" y="420.4873">ON DELETE SET NULL</text><!--MD5=[5a844189394a7993b8b9be20999ca7cb]
+link questions to question_tags--><path codeLine="95" d="M255.69,570.5706 C286.45,593.7006 321.36,619.9506 351.22,642.4106 " fill="none" id="questions-question_tags" style="stroke:#333333;stroke-width:1.0;"/><line style="stroke:#333333;stroke-width:1.0;" x1="351.5" x2="361.5" y1="642.6406" y2="642.6406"/><line style="stroke:#333333;stroke-width:1.0;" x1="351.5" x2="354.3" y1="642.6406" y2="652.2406"/><line style="stroke:#333333;stroke-width:1.0;" x1="351.5" x2="357.9" y1="642.6406" y2="647.4406"/><ellipse cx="346.7" cy="639.0406" rx="4" ry="4" style="stroke:#333333;stroke-width:1.0;fill:none;"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="249.926" x2="254.742" y1="571.2526" y2="564.8646"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="252.3215" x2="257.1375" y1="573.0586" y2="566.6706"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="255.528" x2="249.14" y1="570.4666" y2="565.6506"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="140" x="314" y="612.1357">ON DELETE CASCADE</text><!--MD5=[69e7d6d77dd7611fce3b02905fa04671]
+link tags to question_tags--><path codeLine="96" d="M698.95,349.5306 C707.14,394.3006 718,453.6406 718,453.6406 C718,453.6406 718,589.6406 718,589.6406 C718,589.6406 534,623.6406 534,623.6406 C534,623.6406 520.95,632.0306 503.75,643.0906 " fill="none" id="tags-question_tags" style="stroke:#333333;stroke-width:1.0;"/><line style="stroke:#333333;stroke-width:1.0;" x1="503.438" x2="499.9562" y1="643.2824" y2="652.6567"/><line style="stroke:#333333;stroke-width:1.0;" x1="503.438" x2="493.4638" y1="643.2824" y2="642.5646"/><line style="stroke:#333333;stroke-width:1.0;" x1="503.438" x2="496.71" y1="643.2824" y2="647.6106"/><ellipse cx="508.4841" cy="640.0362" rx="4" ry="4" style="stroke:#333333;stroke-width:1.0;fill:none;"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="694.2786" x2="702.15" y1="346.2906" y2="344.862"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="694.8143" x2="702.6857" y1="349.2424" y2="347.8138"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="698.9286" x2="697.5" y1="349.512" y2="341.6406"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="140" x="719" y="515.1357">ON DELETE CASCADE</text><!--MD5=[8b70940778753ecb1ed2ca9b9197f703]
+link categories to category_tags--><path codeLine="98" d="M272.66,345.1906 C290.69,353.5106 304,359.6406 304,359.6406 C304,359.6406 529,453.6406 529,453.6406 C529,453.6406 568,589.6406 568,589.6406 C568,589.6406 586.71,615.0606 605.8,641.0106 " fill="none" id="categories-category_tags" style="stroke:#333333;stroke-width:1.0;"/><line style="stroke:#333333;stroke-width:1.0;" x1="605.9141" x2="615.4857" y1="641.153" y2="644.0487"/><line style="stroke:#333333;stroke-width:1.0;" x1="605.9141" x2="605.8143" y1="641.153" y2="651.1525"/><line style="stroke:#333333;stroke-width:1.0;" x1="605.9141" x2="610.65" y1="641.153" y2="647.6006"/><ellipse cx="602.3623" cy="636.3173" rx="4" ry="4" style="stroke:#333333;stroke-width:1.0;fill:none;"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="267.2049" x2="270.5583" y1="347.0889" y2="339.8257"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="269.9287" x2="273.282" y1="348.3465" y2="341.0832"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="272.5133" x2="265.25" y1="345.134" y2="341.7806"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="140" x="569" y="515.1357">ON DELETE CASCADE</text><!--MD5=[b81b5499476ef614588551e4a8c15281]
+link tags to category_tags--><path codeLine="99" d="M761.07,345.9506 C831.84,391.0606 930,453.6406 930,453.6406 C930,453.6406 930,589.6406 930,589.6406 C930,589.6406 830.39,626.8206 749.16,657.1406 " fill="none" id="tags-category_tags" style="stroke:#333333;stroke-width:1.0;"/><line style="stroke:#333333;stroke-width:1.0;" x1="748.853" x2="743.462" y1="657.2479" y2="665.6704"/><line style="stroke:#333333;stroke-width:1.0;" x1="748.853" x2="739.258" y1="657.2479" y2="654.4309"/><line style="stroke:#333333;stroke-width:1.0;" x1="748.853" x2="741.36" y1="657.2479" y2="660.0506"/><ellipse cx="754.4727" cy="655.1459" rx="4" ry="4" style="stroke:#333333;stroke-width:1.0;fill:none;"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="755.5418" x2="759.8433" y1="347.1639" y2="340.4188"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="758.0713" x2="762.3728" y1="348.777" y2="342.0318"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="761.0652" x2="754.32" y1="345.9421" y2="341.6406"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="140" x="931" y="515.1357">ON DELETE CASCADE</text><!--MD5=[2d2b8295814ac9c3c88f85050840fca9]
+link decks to deck_questions--><path codeLine="101" d="M411.17,367.4306 C397.71,408.6306 383,453.6406 383,453.6406 C383,453.6406 334,615.6406 334,615.6406 C334,615.6406 311,623.6406 311,623.6406 C311,623.6406 297.95,632.0306 280.75,643.0906 " fill="none" id="decks-deck_questions" style="stroke:#333333;stroke-width:1.0;"/><line style="stroke:#333333;stroke-width:1.0;" x1="280.438" x2="276.9562" y1="643.2824" y2="652.6567"/><line style="stroke:#333333;stroke-width:1.0;" x1="280.438" x2="270.4638" y1="643.2824" y2="642.5646"/><line style="stroke:#333333;stroke-width:1.0;" x1="280.438" x2="273.71" y1="643.2824" y2="647.6106"/><ellipse cx="285.4841" cy="640.0362" rx="4" ry="4" style="stroke:#333333;stroke-width:1.0;fill:none;"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="408.6261" x2="416.2312" y1="362.3518" y2="364.8345"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="407.6951" x2="415.3002" y1="365.2037" y2="367.6864"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="411.1873" x2="413.67" y1="367.3956" y2="359.7906"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="140" x="384" y="515.1357">ON DELETE CASCADE</text><!--MD5=[c1426548dfdd45cfd3e72efba99ae878]
+link questions to deck_questions--><path codeLine="102" d="M60.92,569.5306 C30.51,585.1006 6,597.6406 6,597.6406 C6,597.6406 6,615.6406 6,615.6406 C6,615.6406 50.84,634.2306 97.3,653.4806 " fill="none" id="questions-deck_questions" style="stroke:#333333;stroke-width:1.0;"/><line style="stroke:#333333;stroke-width:1.0;" x1="97.3682" x2="107.0547" y1="653.521" y2="651.0368"/><line style="stroke:#333333;stroke-width:1.0;" x1="97.3682" x2="102.4653" y1="653.521" y2="662.1245"/><line style="stroke:#333333;stroke-width:1.0;" x1="97.3682" x2="104.76" y1="653.521" y2="656.5806"/><ellipse cx="91.8244" cy="651.2262" rx="4" ry="4" style="stroke:#333333;stroke-width:1.0;fill:none;"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="62.9579" x2="66.5983" y1="563.999" y2="571.1227"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="60.2865" x2="63.9269" y1="565.3641" y2="572.4878"/><line style="stroke:#333333;stroke-width:1.0;fill:none;" x1="61.2163" x2="68.34" y1="569.381" y2="565.7406"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="140" x="7" y="612.1357">ON DELETE CASCADE</text><rect fill="#DDDDDD" height="326.9688" rx="5" ry="5" style="stroke:#000000;stroke-width:1.0;" width="654" x="205.5" y="759.3359"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="59" x="211.5" y="778.8691">Notation</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="409" x="278.5" y="778.8691">Crow's foot.  || = exactly one   |o = zero or one   o{ = zero or many</text><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="5" x="211.5" y="796.4785">*</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="633" x="220.5" y="796.4785">= mandatory (NOT NULL).  _id is an INTEGER PRIMARY KEY (rowid alias) and can never hold NULL.</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="10" x="211.5" y="814.0879">--</text><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="111" x="211.5" y="831.6973">Explicit indexes</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="342" x="211.5" y="849.3066">idx_questions_category      ON questions(category_id)</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="272" x="211.5" y="866.916">idx_decks_user              ON decks(user_id)</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="332" x="211.5" y="884.5254">idx_question_tags_tag       ON question_tags(tag_id)</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="334" x="211.5" y="902.1348">idx_category_tags_tag       ON category_tags(tag_id)</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="396" x="211.5" y="919.7441">idx_deck_questions_question ON deck_questions(question_id)</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="10" x="211.5" y="937.3535">--</text><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="44" x="211.5" y="954.9629">Scope</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="416" x="263.5" y="954.9629">Every table is global except decks, the only table carrying user_id.</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="561" x="211.5" y="972.5723">deck_questions has no user_id; deck ownership is only transitive, through decks.user_id.</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="10" x="211.5" y="990.1816">--</text><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="149" x="211.5" y="1007.791">Runtime dependency</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="337" x="368.5" y="1007.791">No FK action above is enforced by the schema alone.</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="509" x="211.5" y="1025.4004">MemForceDbHelper.onConfigure() calls setForeignKeyConstraintsEnabled(true);</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="613" x="211.5" y="1043.0098">without it SQLite defaults PRAGMA foreign_keys = OFF and every CASCADE / SET NULL is inert.</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="10" x="211.5" y="1060.6191">--</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="385" x="211.5" y="1078.2285">No table declares a DEFAULT. No table is WITHOUT ROWID.</text><!--MD5=[b53c339bc7c2d5d9ed266343218fa593]
+@startuml database-erd
+' MemForce on-device SQLite schema.
+' Source of truth: app/src/main/java/com/memforce/db/MemForceDbHelper.java (onCreate)
+' Identifiers resolved through app/src/main/java/com/memforce/db/DbContract.java.
+' The entity tables implement android.provider.BaseColumns, so the key column is "_id", not "id".
+
+hide circle
+' polyline keeps each ON DELETE label attached to its own edge; ortho routing
+' strands them against the right margin on this graph.
+skinparam linetype polyline
+skinparam shadowing false
+skinparam roundcorner 4
+skinparam class {
+  BackgroundColor White
+  BorderColor #444444
+  ArrowColor #333333
+}
+
+title MemForce - on-device SQLite schema (memforce.db, DATABASE_VERSION 1)
+
+' ============================ identity / auth ============================
+together {
+  entity "users" as users <<global>> {
+    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
+    - -
+    * name : TEXT <<UNIQUE, NOCASE>>
+    * password_hash : TEXT
+    * salt : TEXT
+  }
+}
+
+' ============================ content ============================
+together {
+  entity "categories" as categories <<global>> {
+    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
+    - -
+    * name : TEXT <<UNIQUE, NOCASE>>
+  }
+
+  entity "questions" as questions <<global>> {
+    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
+    - -
+    * name : TEXT
+    answer : TEXT <<nullable>>
+    category_id : INTEGER <<FK>> <<nullable>>
+  }
+
+  entity "tags" as tags <<global>> {
+    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
+    - -
+    * name : TEXT <<UNIQUE, NOCASE>>
+  }
+
+  entity "decks" as decks <<per user>> {
+    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
+    - -
+    * name : TEXT
+    * user_id : INTEGER <<FK>>
+    - -
+    UNIQUE (user_id, name COLLATE NOCASE)
+  }
+}
+
+' ============================ junction / bridge ============================
+together {
+  entity "question_tags" as question_tags <<junction>> {
+    * question_id : INTEGER <<PK>> <<FK>>
+    * tag_id : INTEGER <<PK>> <<FK>>
+    - -
+    composite PK (question_id, tag_id)
+  }
+
+  entity "category_tags" as category_tags <<junction>> {
+    * category_id : INTEGER <<PK>> <<FK>>
+    * tag_id : INTEGER <<PK>> <<FK>>
+    - -
+    composite PK (category_id, tag_id)
+  }
+
+  entity "deck_questions" as deck_questions <<junction>> {
+    * deck_id : INTEGER <<PK>> <<FK>>
+    * question_id : INTEGER <<PK>> <<FK>>
+    - -
+    composite PK (deck_id, question_id)
+  }
+}
+
+' ============================ relationships ============================
+' user_id is NOT NULL -> every deck has exactly one owner.
+users ||- -o{ decks : "owns\nON DELETE CASCADE"
+
+' category_id is nullable -> a question may exist with no category.
+categories |o- -o{ questions : "classifies\nON DELETE SET NULL"
+
+' Both junction columns are NOT NULL, so both parent sides are mandatory.
+questions ||- -o{ question_tags : "ON DELETE CASCADE"
+tags      ||- -o{ question_tags : "ON DELETE CASCADE"
+
+categories ||- -o{ category_tags : "ON DELETE CASCADE"
+tags       ||- -o{ category_tags : "ON DELETE CASCADE"
+
+decks     ||- -o{ deck_questions : "ON DELETE CASCADE"
+questions ||- -o{ deck_questions : "ON DELETE CASCADE"
+
+' ============================ notes ============================
+legend bottom
+  <b>Notation</b>  Crow's foot.  || = exactly one   |o = zero or one   o{ = zero or many
+  <b>*</b> = mandatory (NOT NULL).  _id is an INTEGER PRIMARY KEY (rowid alias) and can never hold NULL.
+  - -
+  <b>Explicit indexes</b>
+  idx_questions_category      ON questions(category_id)
+  idx_decks_user              ON decks(user_id)
+  idx_question_tags_tag       ON question_tags(tag_id)
+  idx_category_tags_tag       ON category_tags(tag_id)
+  idx_deck_questions_question ON deck_questions(question_id)
+  - -
+  <b>Scope</b>  Every table is global except decks, the only table carrying user_id.
+  deck_questions has no user_id; deck ownership is only transitive, through decks.user_id.
+  - -
+  <b>Runtime dependency</b>  No FK action above is enforced by the schema alone.
+  MemForceDbHelper.onConfigure() calls setForeignKeyConstraintsEnabled(true);
+  without it SQLite defaults PRAGMA foreign_keys = OFF and every CASCADE / SET NULL is inert.
+  - -
+  No table declares a DEFAULT. No table is WITHOUT ROWID.
+endlegend
+
+@enduml
+
+@startuml database-erd
+
+hide circle
+skinparam linetype polyline
+skinparam shadowing false
+skinparam roundcorner 4
+skinparam class {
+  BackgroundColor White
+  BorderColor #444444
+  ArrowColor #333333
+}
+
+title MemForce - on-device SQLite schema (memforce.db, DATABASE_VERSION 1)
+
+together {
+  entity "users" as users <<global>> {
+    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
+    - -
+    * name : TEXT <<UNIQUE, NOCASE>>
+    * password_hash : TEXT
+    * salt : TEXT
+  }
+}
+
+together {
+  entity "categories" as categories <<global>> {
+    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
+    - -
+    * name : TEXT <<UNIQUE, NOCASE>>
+  }
+
+  entity "questions" as questions <<global>> {
+    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
+    - -
+    * name : TEXT
+    answer : TEXT <<nullable>>
+    category_id : INTEGER <<FK>> <<nullable>>
+  }
+
+  entity "tags" as tags <<global>> {
+    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
+    - -
+    * name : TEXT <<UNIQUE, NOCASE>>
+  }
+
+  entity "decks" as decks <<per user>> {
+    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
+    - -
+    * name : TEXT
+    * user_id : INTEGER <<FK>>
+    - -
+    UNIQUE (user_id, name COLLATE NOCASE)
+  }
+}
+
+together {
+  entity "question_tags" as question_tags <<junction>> {
+    * question_id : INTEGER <<PK>> <<FK>>
+    * tag_id : INTEGER <<PK>> <<FK>>
+    - -
+    composite PK (question_id, tag_id)
+  }
+
+  entity "category_tags" as category_tags <<junction>> {
+    * category_id : INTEGER <<PK>> <<FK>>
+    * tag_id : INTEGER <<PK>> <<FK>>
+    - -
+    composite PK (category_id, tag_id)
+  }
+
+  entity "deck_questions" as deck_questions <<junction>> {
+    * deck_id : INTEGER <<PK>> <<FK>>
+    * question_id : INTEGER <<PK>> <<FK>>
+    - -
+    composite PK (deck_id, question_id)
+  }
+}
+
+users ||- -o{ decks : "owns\nON DELETE CASCADE"
+
+categories |o- -o{ questions : "classifies\nON DELETE SET NULL"
+
+questions ||- -o{ question_tags : "ON DELETE CASCADE"
+tags      ||- -o{ question_tags : "ON DELETE CASCADE"
+
+categories ||- -o{ category_tags : "ON DELETE CASCADE"
+tags       ||- -o{ category_tags : "ON DELETE CASCADE"
+
+decks     ||- -o{ deck_questions : "ON DELETE CASCADE"
+questions ||- -o{ deck_questions : "ON DELETE CASCADE"
+
+legend bottom
+  <b>Notation</b>  Crow's foot.  || = exactly one   |o = zero or one   o{ = zero or many
+  <b>*</b> = mandatory (NOT NULL).  _id is an INTEGER PRIMARY KEY (rowid alias) and can never hold NULL.
+  - -
+  <b>Explicit indexes</b>
+  idx_questions_category      ON questions(category_id)
+  idx_decks_user              ON decks(user_id)
+  idx_question_tags_tag       ON question_tags(tag_id)
+  idx_category_tags_tag       ON category_tags(tag_id)
+  idx_deck_questions_question ON deck_questions(question_id)
+  - -
+  <b>Scope</b>  Every table is global except decks, the only table carrying user_id.
+  deck_questions has no user_id; deck ownership is only transitive, through decks.user_id.
+  - -
+  <b>Runtime dependency</b>  No FK action above is enforced by the schema alone.
+  MemForceDbHelper.onConfigure() calls setForeignKeyConstraintsEnabled(true);
+  without it SQLite defaults PRAGMA foreign_keys = OFF and every CASCADE / SET NULL is inert.
+  - -
+  No table declares a DEFAULT. No table is WITHOUT ROWID.
+endlegend
+
+@enduml
+
+PlantUML version 1.2021.7(Sun May 23 14:40:07 CEST 2021)
+(GPL source distribution)
+Java Runtime: Java(TM) SE Runtime Environment
+JVM: Java HotSpot(TM) 64-Bit Server VM
+Default Encoding: Cp1252
+Language: en
+Country: US
+--></g></svg>
