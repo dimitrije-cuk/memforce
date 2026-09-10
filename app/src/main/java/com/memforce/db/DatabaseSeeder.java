@@ -14,7 +14,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
-/** Fills a freshly created database with the demo data described in docs/demo-script.md. */
+/** Fills a freshly created database with the sample data from the seed asset. */
 final class DatabaseSeeder {
 
     private static final String SEED_ASSET = "seed/memforce_seed.sql";
