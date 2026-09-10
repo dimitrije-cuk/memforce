@@ -36,4 +36,8 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
     implementation(libs.material)
+
+    // The framework's org.json is a stub in unit tests, so the real implementation comes first.
+    testImplementation(libs.json)
+    testImplementation(libs.junit)
 }

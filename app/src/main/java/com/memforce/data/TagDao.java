@@ -55,6 +55,20 @@ public class TagDao {
         }
     }
 
+    /** @return the tag with this name, matched case insensitively by the column's collation */
+    @Nullable
+    public Tag findByName(@NonNull String name) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        try (Cursor cursor = db.query(
+                DbContract.Tags.TABLE,
+                new String[]{DbContract.Tags._ID, DbContract.Tags.NAME},
+                DbContract.Tags.NAME + " = ?",
+                new String[]{name},
+                null, null, null)) {
+            return cursor.moveToFirst() ? new Tag(cursor.getLong(0), cursor.getString(1)) : null;
+        }
+    }
+
     /** @return the new row id, or -1 when the name is already taken */
     public long insert(@NonNull String name) {
         ContentValues values = new ContentValues();

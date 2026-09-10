@@ -20,7 +20,7 @@ gradlew.bat installDebug
 | --- | --- |
 | Login | Signs in; unknown users are registered on first use |
 | Main menu | Entry point to questions, tags and decks |
-| Questions | Search by text and tag; assign tags; add, edit, delete |
+| Questions | Search by text and tag; assign tags; add, edit, delete; import a question set file |
 | Tags | Search by name; add, edit, delete |
 | My decks | Search by name; pick questions; add, edit, delete |
 
@@ -61,8 +61,12 @@ Typing in questions one at a time doesn't scale for adding a whole topic at once
 a JSON **question set** format — with tags at both the set level (applied to every question) and
 the individual-question level (applied to just one) — that a user can have an LLM chatbot fill in
 from a template and then import. See [docs/question-import-format.md](docs/question-import-format.md)
-for the format, schema, template, and example. As of this writing, only the format is specified;
-the in-app import action is planned as follow-up work.
+for the format, schema, template, and example.
+
+**Questions → Import** picks such a file and imports it. The file is validated as a whole first,
+so a file that breaks the format is reported and nothing is written. Missing tags are created,
+and a question whose text already exists (ignoring case) gains the file's tags instead of being
+stored a second time; its answer is kept.
 
 ## Repository
 

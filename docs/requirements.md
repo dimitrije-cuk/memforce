@@ -138,6 +138,7 @@ import into the app in one step.
 * Tags are supported at two levels in this format: **set-level tags**, inherited by every
   question in the file, and **question-level tags**, which apply only to one question in addition
   to the set-level tags. See [Tag inheritance](question-import-format.md#tag-inheritance).
-* Phase 1 (current) defines the format only. A later phase adds the in-app action that reads a
-  question-set file and writes it to the database; see
-  [Status](question-import-format.md#status).
+* **Questions → Import** reads such a file: it validates the whole file first, shows what would be
+  added, creates any missing tags, and merges into a question that already exists instead of
+  storing it twice. See
+  [Importing a question set](question-import-format.md#importing-a-question-set).

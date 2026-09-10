@@ -1,6 +1,6 @@
 # Question import format
 
-MemForce can (as of this specification) describe a batch of quiz questions as a single JSON
+MemForce describes a batch of quiz questions as a single JSON
 **question set** file. The intent is that a user copies the [template](templates/question-set-template.json)
 into an LLM chatbot, asks it to fill in questions on a topic, and then imports the JSON file it
 returns into MemForce. This document defines that file format so that:
@@ -9,15 +9,26 @@ returns into MemForce. This document defines that file format so that:
 * MemForce has a stable, validated shape to import, and
 * both can evolve independently as long as `formatVersion` is respected.
 
-This document covers the **format and validation rules only**. The in-app import workflow
-(where the "Import" action lives, how conflicts are resolved in the UI, etc.) is implemented in a
-later phase; see [Status](#status) below.
+This document covers the **format and validation rules**; what the app does with a valid file is
+described under [Importing a question set](#importing-a-question-set).
 
-## Status
+## Importing a question set
 
-* **Phase 1 (this change):** format definition, JSON Schema, template, and documentation.
-* **Phase 2 (future work):** an in-app "Import question set" action that reads a file matching
-  this format and writes the resulting tags and questions to the database.
+**Questions → Import** opens a file picker. Once the picked file validates, MemForce shows how
+many questions and tags the file would add and imports it only after that is confirmed. The
+import follows these rules:
+
+* A file is taken **as a whole or not at all**: if it breaks any of the
+  [validation rules](#validation-rules), the problems are listed and nothing is written.
+* **Tags are created on demand.** A tag name that no existing tag matches (case-insensitively)
+  becomes a new tag, exactly as adding one by hand would.
+* **A question whose text already exists is not stored twice.** Matching is case-insensitive; the
+  existing question gains the file's tags instead. Its stored answer is kept, and an answer from
+  the file is only used when the existing question has none.
+* Entries repeating the same question text **within one file** are collapsed into a single
+  question carrying the tags of all of them.
+* Questions and tags are shared by every user, so an import is visible to everyone. Decks are
+  never touched by an import.
 
 ## Files
 
@@ -100,9 +111,10 @@ In summary:
 2. `questions` must be present and contain at least one entry.
 3. Every question must have a non-empty `question` string (max 1000 characters).
 4. `answer`, when present, is a string or `null` (max 2000 characters).
-5. Tag names (set-level or question-level) are non-empty, non-blank strings (max 50 characters).
-   Lower-case kebab-case (e.g. `world-history`) is recommended so visually distinct tags don't
-   collide once matched case-insensitively.
+5. Tag names (set-level or question-level) are non-empty strings of a single line (max 50
+   characters) that neither start nor end with whitespace. Lower-case kebab-case (e.g.
+   `world-history`) is recommended so visually distinct tags don't collide once matched
+   case-insensitively.
 6. `tags` arrays must not contain duplicate entries *within the same array* (`uniqueItems`); the
    set-level and a question's own tags may legitimately repeat each other, since that is exactly
    how inheritance is expressed — those duplicates are removed at merge time, per
@@ -110,13 +122,15 @@ In summary:
 7. No unrecognized top-level or per-question fields are allowed (`additionalProperties: false`),
    so an LLM cannot silently invent extra structure the importer doesn't understand.
 
-Future importer behavior (to be finalized when Phase 2 is implemented) should also define, and
-this document should be updated to record:
+Surrounding whitespace is trimmed when a file is read, and a value left blank by that trimming
+counts as absent: a `question` of only spaces is rejected as empty, while a blank `answer` or
+`description` simply means the field was not given. An *empty* `name` breaks the schema's
+`minLength` and is rejected, but a `name` of only spaces is treated as absent. A file may start
+with a UTF-8 byte order mark; it is ignored. Nothing but whitespace may follow the closing brace,
+so an LLM that adds a sentence after the JSON is caught rather than silently half-imported.
 
-* whether importing a question whose text already exists (case-insensitively) merges tags into
-  the existing question or creates a duplicate, and
-* whether tag names are created on demand (matching the existing "add a new tag" behavior) when
-  they don't already exist.
+What the importer does with a valid file — merging into an existing question, creating tags on
+demand — is described under [Importing a question set](#importing-a-question-set).
 
 ## Prompt to use with an LLM chatbot
 
@@ -128,8 +142,7 @@ chatbot along with instructions similar to:
 > question its own additional `tags` where relevant (e.g. a decade or sub-topic). Keep every
 > field name and the overall structure exactly as given. Return only the JSON.
 
-Save the result as a `.json` file; it can then be imported into MemForce once the import action
-described in [Status](#status) ships.
+Save the result as a `.json` file and import it with **Questions → Import**.
 
 ## Extensibility
 

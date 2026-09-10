@@ -8,6 +8,8 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,6 +28,17 @@ import com.memforce.ui.common.FilterSpinner;
 import java.util.List;
 
 public class QuestionListActivity extends AppCompatActivity {
+
+    /** Question set files are JSON, but document providers label them inconsistently. */
+    private static final String[] IMPORT_MIME_TYPES = {
+            "application/json", "text/plain", "application/octet-stream"};
+
+    private final ActivityResultLauncher<String[]> questionSetPicker = registerForActivityResult(
+            new ActivityResultContracts.OpenDocument(), uri -> {
+                if (uri != null) {
+                    new QuestionSetImportFlow(this, this::reload).start(uri);
+                }
+            });
 
     private ActivityQuestionListBinding binding;
     private QuestionDao questionDao;
@@ -69,6 +82,7 @@ public class QuestionListActivity extends AppCompatActivity {
                 binding.tagFilter, getString(R.string.filter_any_tag), this::reload);
 
         binding.addButton.setOnClickListener(v -> startActivity(QuestionEditActivity.createIntent(this)));
+        binding.importButton.setOnClickListener(v -> questionSetPicker.launch(IMPORT_MIME_TYPES));
         binding.searchInput.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {

@@ -19,6 +19,7 @@
     <string name="action_save">Save</string>
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_import">Import</string>
 
     <string name="search_by_name">Search by name</string>
     <string name="search_wildcard_help">Use %% for any characters and _ for a single character</string>
@@ -43,6 +44,29 @@
     <string name="question_title_new">New question</string>
     <string name="question_title_edit">Edit question</string>
     <string name="question_delete_title">Delete this question?</string>
+
+    <string name="import_title">Import question set</string>
+    <string name="import_confirm_counts">New questions: %1$d\nExisting questions to update: %2$d\nNew tags: %3$d</string>
+    <string name="import_confirm_merge_hint">Existing questions keep their answer and only gain the tags of this file.</string>
+    <string name="import_confirm_question">Import now?</string>
+    <string name="import_result_title">Import finished</string>
+    <string name="import_cancelled">Nothing was imported.</string>
+    <string name="import_result_message">Added questions: %1$d\nUpdated with new tags: %2$d\nCreated tags: %3$d</string>
+    <string name="import_error_title">Import failed</string>
+    <string name="import_error_intro">Nothing was imported. This file does not match the import format:</string>
+    <string name="import_error_unreadable">Nothing was imported. The file could not be read.</string>
+    <string name="import_error_unexpected">Nothing was imported. The import could not be completed.</string>
+    <string name="import_error_too_large">Nothing was imported. The file is larger than %1$d MB.</string>
+    <string name="import_error_malformed_json">The file is not valid JSON: %1$s</string>
+    <string name="import_error_not_object">The file must hold a single JSON object.</string>
+    <string name="import_error_missing">%1$s is required.</string>
+    <string name="import_error_unknown_field">%1$s is not part of this format.</string>
+    <string name="import_error_wrong_type">%1$s has the wrong type.</string>
+    <string name="import_error_blank">%1$s must not be empty or padded with spaces.</string>
+    <string name="import_error_not_one_line">%1$s must stay on a single line.</string>
+    <string name="import_error_duplicate_tag">%1$s repeats the tag %2$s.</string>
+    <string name="import_error_unsupported_version">Format version %1$s cannot be read; this app reads version %2$s.</string>
+    <string name="import_error_no_questions">questions must hold at least one question.</string>
 
     <string name="deck_name">Deck name</string>
     <string name="deck_title_new">New deck</string>

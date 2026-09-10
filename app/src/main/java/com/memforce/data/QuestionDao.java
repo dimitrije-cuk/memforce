@@ -66,6 +66,21 @@ public class QuestionDao {
         }
     }
 
+    /**
+     * @return the id of the question with this exact text, or null when there is none. The column
+     * has no collation of its own, so the comparison asks for a case insensitive one.
+     */
+    @Nullable
+    public Long findIdByName(@NonNull String name) {
+        String sql = "SELECT " + DbContract.Questions._ID
+                + " FROM " + DbContract.Questions.TABLE
+                + " WHERE " + DbContract.Questions.NAME + " = ? COLLATE NOCASE"
+                + " LIMIT 1";
+        try (Cursor cursor = helper.getReadableDatabase().rawQuery(sql, new String[]{name})) {
+            return cursor.moveToFirst() ? cursor.getLong(0) : null;
+        }
+    }
+
     private String baseSelect() {
         return "SELECT q." + DbContract.Questions._ID
                 + ", q." + DbContract.Questions.NAME
@@ -102,6 +117,10 @@ public class QuestionDao {
         return ids;
     }
 
+    /**
+     * @return the new row id, or -1 when the question could not be stored. The transaction is
+     * always closed as successful, so a failure here cannot roll back a surrounding import.
+     */
     public long insert(@NonNull String name,
                        @Nullable String answer,
                        @NonNull List<Long> tagIds) {
@@ -109,10 +128,9 @@ public class QuestionDao {
         db.beginTransaction();
         try {
             long id = db.insert(DbContract.Questions.TABLE, null, toValues(name, answer));
-            if (id == -1) {
-                return -1;
+            if (id != -1) {
+                replaceTags(db, id, tagIds);
             }
-            replaceTags(db, id, tagIds);
             db.setTransactionSuccessful();
             return id;
         } finally {
@@ -134,6 +152,34 @@ public class QuestionDao {
         } finally {
             db.endTransaction();
         }
+    }
+
+    /** Adds tags a question does not carry yet and keeps the ones it already has. */
+    public void addTags(long questionId, @NonNull List<Long> tagIds) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        for (Long tagId : tagIds) {
+            ContentValues link = new ContentValues();
+            link.put(DbContract.QuestionTags.QUESTION_ID, questionId);
+            link.put(DbContract.QuestionTags.TAG_ID, tagId);
+            db.insertWithOnConflict(DbContract.QuestionTags.TABLE, null, link,
+                    SQLiteDatabase.CONFLICT_IGNORE);
+        }
+    }
+
+    /**
+     * Stores an answer only for a question that has none, so an existing answer is never lost.
+     *
+     * @return true when the answer was stored
+     */
+    public boolean fillMissingAnswer(long id, @NonNull String answer) {
+        ContentValues values = new ContentValues();
+        values.put(DbContract.Questions.ANSWER, answer);
+        return helper.getWritableDatabase().update(
+                DbContract.Questions.TABLE, values,
+                DbContract.Questions._ID + " = ?"
+                        + " AND (" + DbContract.Questions.ANSWER + " IS NULL"
+                        + " OR TRIM(" + DbContract.Questions.ANSWER + ") = '')",
+                new String[]{String.valueOf(id)}) > 0;
     }
 
     /** Tag assignments and deck membership are removed by the schema's cascade rules. */
