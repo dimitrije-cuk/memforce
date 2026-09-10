@@ -5,14 +5,23 @@ Everything runs on the device against a local SQLite database; there is no serve
 
 ## Build and run
 
-Requires JDK 17 or newer and an Android SDK with platform 34.
+Requires JDK 17 or newer. To install the Android SDK packages the build needs and point the
+project at them, run:
+
+```powershell
+.\setup-env.ps1
+```
+
+Then build and install:
 
 ```bat
 gradlew.bat assembleDebug
 gradlew.bat installDebug
 ```
 
-`local.properties` must point at the SDK, for example `sdk.dir=C\:\\Users\\me\\AppData\\Local\\Android\\Sdk`.
+The script only writes to the SDK directory and to `local.properties`; it changes no environment
+variables and needs no administrator rights. To set the environment up by hand instead, or to
+undo it, see [docs/development-environment.md](docs/development-environment.md).
 
 ## Screens
 
