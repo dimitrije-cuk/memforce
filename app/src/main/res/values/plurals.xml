@@ -1,5 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <plurals name="tag_question_count">
+        <item quantity="one">%1$d question</item>
+        <item quantity="other">%1$d questions</item>
+    </plurals>
+
+    <plurals name="tag_total_count">
+        <item quantity="one">%1$d tag</item>
+        <item quantity="other">%1$d tags</item>
+    </plurals>
+
+    <plurals name="search_selection_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+
+    <plurals name="lobby_added">
+        <item quantity="one">%1$d question added to the lobby</item>
+        <item quantity="other">%1$d questions added to the lobby</item>
+    </plurals>
+
+    <plurals name="lobby_summary">
+        <item quantity="one">%1$d question in the lobby</item>
+        <item quantity="other">%1$d questions in the lobby</item>
+    </plurals>
+
     <plurals name="import_error_more">
         <item quantity="one">… and %1$d more problem.</item>
         <item quantity="other">… and %1$d more problems.</item>

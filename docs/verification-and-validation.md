@@ -170,16 +170,16 @@ acquisition and supply support tasks, and independent audits. See
 
 ## 6 Verification coverage
 
-MF-SRS-001 states 91 requirements, each with exactly one verification entry. Distribution by
+MF-SRS-001 states 118 requirements, each with exactly one verification entry. Distribution by
 method:
 
 | Method | Requirements | Where executed |
 |---|---|---|
-| Test (`T`) | 56 | JVM unit tests and the device suites of [clause 8](#8-test-suites-and-procedures) |
-| Inspection (`I`) | 20 | Source, manifest, schema and document review |
+| Test (`T`) | 82 | JVM unit tests and the device suites of [clause 8](#8-test-suites-and-procedures) |
+| Inspection (`I`) | 21 | Source, manifest, schema and document review |
 | Demonstration (`D`) | 12 | Manual operation on a device or emulator |
 | Analysis (`A`) | 3 | Reasoning over design and measured data |
-| **Total** | **91** | |
+| **Total** | **118** | |
 
 Coverage is checked mechanically at each baseline: every `REQ-` identifier defined in
 MF-SRS-001, clause 3 must appear exactly once in clause 4, and every identifier must appear in at
@@ -196,7 +196,7 @@ Following the test sub-process model of ISO/IEC/IEEE 29119-1:2013:
 
 | Level | Scope | Current state |
 |---|---|---|
-| **Unit** | Parsing, validation and merging (`com.memforce.importer`). Runs on the JVM, no device. | Automated: 2 test classes, 40 tests. |
+| **Unit** | Parsing, validation and merging (`com.memforce.importer`); the search criteria and the statements built from them (`com.memforce.search`, `com.memforce.data`); answer marking and the rules of a game (`com.memforce.game`). Runs on the JVM, no device. | Automated: 7 test classes, 103 tests. |
 | **Integration (database)** | DAOs against a real SQLite database: constraints, cascades, transactions, collation, pattern search. | **Not automated** — anomaly [A-06](#92-open-anomalies). Executed manually via TS-DB. |
 | **System** | The application on a device or emulator, against MF-SRS-001 clause 3 as a whole. | Manual, by the suites of [clause 8](#8-test-suites-and-procedures). |
 | **Acceptance / validation** | A person uses the product as a learner against MF-SRS-001, 1.4. | Manual, per release. |
@@ -205,15 +205,17 @@ Following the test sub-process model of ISO/IEC/IEEE 29119-1:2013:
 
 Risk-based selection per ISO/IEC/IEEE 29119-1:2013, clause 5. The highest-risk areas are those
 that write many records at once (import), those that guard data (schema, transactions) and those
-that cannot be undone (deletion, migration); they receive the most cases.
+that cannot be undone (deletion, migration); they receive the most cases. Deletion is now also
+reachable by a gesture, which adds the risk of an unintended one, so every swipe case checks both
+outcomes of its confirmation.
 
 | Technique | Applied to |
 |---|---|
-| Equivalence partitioning | Input fields: empty, valid, over-length; pattern criteria: empty, literal, wildcard. |
-| Boundary value analysis | Field limits of MF-IFS-001 (120, 500, 50, 1 000, 2 000 characters); the 1 MiB file bound; the 10-violation display cap. |
-| Decision table | Sign-in: {name known, unknown} × {password matches, does not} × {fields empty}. Import merge: {question exists, does not} × {stored answer present, absent}. |
-| State transition | The import state machine of MF-SDD-001, 3.8, including every failure exit. |
-| Error guessing / negative testing | Malformed JSON, trailing content after the closing brace, byte order marks, non-breaking spaces in tags, unknown fields, quotation and pattern characters in every text field. |
+| Equivalence partitioning | Input fields: empty, valid, over-length; pattern criteria: empty, literal, wildcard; submitted answers: exact, differing only in case or spacing, differing in a word, empty. |
+| Boundary value analysis | Field limits of MF-IFS-001 (120, 500, 50, 1 000, 2 000 characters); the 1 MiB file bound; the 10-violation display cap; a game of one question; a lobby of none; the last question of a game. |
+| Decision table | Sign-in: {name known, unknown} × {password matches, does not} × {fields empty}. Import merge: {question exists, does not} × {stored answer present, absent}. Game end: {every question answered correctly, not} × {streak equals the total, does not}. |
+| State transition | The import state machine of MF-SDD-001, 3.8, including every failure exit. The queue of a game: the question asked moves to the back on each of a correct, an incorrect and an empty submission. |
+| Error guessing / negative testing | Malformed JSON, trailing content after the closing brace, byte order marks, non-breaking spaces in tags, unknown fields, quotation and pattern characters in every text field; a question deleted while it is in the lobby; a tag carrying no question swiped towards the lobby. |
 | Data-volume testing | All performance procedures, executed only at the reference volume. |
 
 ### 7.3 Automated test inventory
@@ -224,9 +226,14 @@ Executed by `gradlew testDebugUnitTest`.
 |---|---|---|
 | `com.memforce.importer.QuestionSetParserTest` | 34 | Format acceptance and the rejection rules it exercises: version support, missing required fields, unknown fields at both levels, non-object roots, blank and space-padded values, the question and tag length limits, byte order mark, trailing content, single-line tag names, duplicate tags within an array, an empty `questions` array, and the collection of all violations into one failure. Parses the published template and example. Requirements: REQ-IMP-20, REQ-IMP-30, REQ-STD-30, REQ-POR-40. |
 | `com.memforce.importer.MergedQuestionTest` | 6 | Set-level tags precede question-level tags; duplicate tags fold; questions without tags; file order preserved; a repeated question folds into one; the first answer wins. Requirements: REQ-IMP-70. |
-| **Total** | **40** | |
+| `com.memforce.search.SearchQueryTest` | 12 | The criteria a search carries: empty means no criterion; text of spaces is no criterion; tags keep the order they were chosen in and are held once; dropping and toggling a tag; text changes leave the tags alone; the value is immutable, so the criteria a screen has already used cannot be altered behind it. Requirements: REQ-SRCH-40, REQ-SRCH-100. |
+| `com.memforce.data.QuestionFilterTest` | 11 | The condition that decides which questions match: the text pattern is asked of the question text and of the tag names, so title and tag matches land in one result; each chosen tag adds a further condition, never an alternative one; the patterns are trimmed and an empty pattern matches everything; each tag condition is named apart from the others. Requirements: REQ-SRCH-30, REQ-SRCH-40, REQ-SRCH-60, REQ-SRCH-90, REQ-SRCH-100. |
+| `com.memforce.data.TagQueriesTest` | 11 | The tag statements: the tag list counts by a sub-select, so a tag no question carries is still read; the three orders and their tie-break by name; the suggestions are drawn only from the questions the search already found, are counted within them, exclude the tags already chosen, and are limited. Requirements: REQ-TAG-70, REQ-TAG-90, REQ-SRCH-110, REQ-SRCH-120. |
+| `com.memforce.game.AnswerMatcherTest` | 11 | What marking forgives — letter case, surrounding spacing, the length of spacing runs — and what it does not: a missing word, a different answer, an empty submission, and a question with no stored answer. Requirements: REQ-GAME-80. |
+| `com.memforce.game.GameSessionTest` | 18 | The rules of a run: a game needs a question; the shuffle loses nothing and repeats for a fixed source; every other question is asked before one is asked again, whatever the outcome; the streak breaks on a wrong answer and on a skip; a question answered correctly twice counts once; victory when every question has been answered correctly; perfect victory when the streak covers the whole set; no submission is taken once the run is decided. Requirements: REQ-GAME-60, REQ-GAME-70, REQ-GAME-80, REQ-GAME-90, REQ-GAME-100, REQ-GAME-110, REQ-GAME-120. |
+| **Total** | **103** | |
 
-Last executed on 2026-09-10 against the current draft: 40 tests, 0 failures, 0 errors, 0 skipped.
+Last executed on 2026-09-11 against the current draft: 103 tests, 0 failures, 0 errors, 0 skipped.
 
 Rules of MF-IFS-001 that the automated suite does **not** yet exercise, and which TS-IMP therefore
 covers by hand: the `name` and `description` length limits, a wrongly typed `answer`, `tags` or
@@ -235,13 +242,18 @@ two belong to the import flow rather than to the parser and cannot be reached wi
 provider.
 
 **Coverage gaps, and what compensates for them.** No automated test executes a DAO, the schema,
-`PasswordHasher`, `Session`, `SearchPatterns` or any screen (anomaly
-[A-06](#92-open-anomalies)). Until instrumented tests exist, those requirements are verified by
-the manual suites of [clause 8](#8-test-suites-and-procedures) at every release candidate, and any
-change to `db`, `data` or `security` requires the corresponding suite to be re-executed before
-merge ([4.3](#43-master-schedule)).
+`PasswordHasher`, `Session`, `Lobby` or any screen (anomaly [A-06](#92-open-anomalies)). The
+statements the DAOs run are built by `QuestionFilter` and `TagQueries` and are covered by the JVM
+suite, but nothing automated runs them against SQLite, so what the statements *return* — and with
+it the narrowing of [REQ-SRCH-120](requirements.md#324-search-and-filtering) and the counts of
+[REQ-TAG-70](requirements.md#323-tags) — is still established by hand. Until instrumented tests
+exist, those requirements are verified by the manual suites of
+[clause 8](#8-test-suites-and-procedures) at every release candidate, and any change to `db`,
+`data` or `security` requires the corresponding suite to be re-executed before merge
+([4.3](#43-master-schedule)).
 
-Planned closure, in priority order: TS-DB (schema, constraints, cascades, transactions), then
+Planned closure, in priority order: TS-DB (schema, constraints, cascades, transactions) together
+with the search and suggestion statements, which need the same database fixture; then
 `PasswordHasher` and `SearchPatterns` — both of which need no emulator and could move to the JVM
 suite with a thin abstraction — then the screens.
 
@@ -267,11 +279,12 @@ when every criterion it covers is met.
 |---|---|---|---|
 | **TS-EXT** — interfaces and navigation | REQ-EXT-10 … REQ-EXT-70 | System | Manual, both platform levels |
 | **TS-AUTH** — sign-in, registration, session | REQ-AUTH-10 … REQ-AUTH-80 | System | Manual; database state inspected with the SQLite tool |
-| **TS-QST** — question management | REQ-QST-10 … REQ-QST-70 | System | Manual |
-| **TS-TAG** — tag management | REQ-TAG-10 … REQ-TAG-60 | System | Manual |
-| **TS-SRCH** — search and filtering | REQ-SRCH-10 … REQ-SRCH-80 | System | Manual, against the prepared pattern data set of [8.1](#81-prepared-data-sets) |
+| **TS-QST** — question management | REQ-QST-10 … REQ-QST-90 | System | Manual |
+| **TS-TAG** — tag management | REQ-TAG-10 … REQ-TAG-110 | System | Manual |
+| **TS-SRCH** — search and filtering | REQ-SRCH-10 … REQ-SRCH-150 | Unit + system | JUnit for the criteria and the statements built from them; manual on both screens, against the prepared pattern data set of [8.1](#81-prepared-data-sets) |
 | **TS-IMP** — question-set import | REQ-IMP-10 … REQ-IMP-100, REQ-STD-30 | Unit + system | JUnit for parsing and merging; manual for picking, confirming, applying and rollback |
-| **TS-USE** — usability | REQ-USE-10 … REQ-USE-70 | System | Manual, in light and in dark appearance |
+| **TS-GAME** — lobby and game | REQ-GAME-10 … REQ-GAME-120 | Unit + system | JUnit for marking and the rules of a run; manual for the three ways into the lobby, its retention, and the two endings |
+| **TS-USE** — usability | REQ-USE-10 … REQ-USE-80 | System | Manual, in light and in dark appearance |
 | **TS-PERF** — performance | REQ-PERF-10 … REQ-PERF-60 | System | Manual measurement at the reference volume, procedure [8.2](#82-performance-measurement) |
 | **TS-DB** — schema and integrity | REQ-DB-10 … REQ-DB-100 | Integration | Manual through the SQLite tool, procedure [8.3](#83-database-integrity) |
 | **TS-CON** — constraints | REQ-CON-10 … REQ-CON-50 | System | Inspection of the manifest, the dependency set and the package; flight-mode run |
@@ -285,6 +298,8 @@ when every criterion it covers is met.
 | Data set | Content | Used by |
 |---|---|---|
 | `DS-PATTERN` | Questions and tags chosen so that each of `po%`, `%ta`, `%sto%`, `_br%`, `%__a` has a known, non-empty expected result and a known non-matching neighbour. | TS-SRCH (REQ-SRCH-60) |
+| `DS-OVERLAP` | Tags of known and unequal use, including one tag carried by no question, two tags carried by the same questions, and two tags sharing no question; and a question carried by twelve tags. | TS-SRCH (REQ-SRCH-110, REQ-SRCH-120), TS-TAG (REQ-TAG-70, REQ-TAG-90), TS-QST (REQ-QST-80) |
+| `DS-UNANSWERED` | A set of five questions of which two carry no answer. | TS-GAME (REQ-GAME-50) |
 | `DS-CASE` | A tag `Algebra` and a question differing from a stored one only by letter case. | TS-AUTH, TS-TAG, TS-IMP (REQ-AUTH-60, REQ-TAG-20, REQ-IMP-60) |
 | `DS-VOLUME` | Question-set files that together produce the reference volume. | TS-PERF |
 | `DS-BAD` | One file per rejection rule of MF-IFS-001, plus one file carrying several violations at once, one of 2 MiB, and one holding invalid JSON. | TS-IMP (REQ-IMP-20, REQ-IMP-90) |
@@ -293,7 +308,9 @@ when every criterion it covers is met.
 
 1. Install a clean build; import `DS-VOLUME` until the reference volume is reached.
 2. For each of text search, tag filter and combined filter: perform ten searches with different
-   criteria, measuring from the last keystroke to the displayed list. Record the worst case.
+   criteria, measuring from the last keystroke to the displayed list. Record the worst case. The
+   measurement includes the tags offered beneath the field, because they are read on the same
+   change as the results ([REQ-SRCH-110](requirements.md#324-search-and-filtering)).
 3. Create, edit and delete ten questions and ten tags, measuring from the confirming action to
    the updated list. Record the worst case.
 4. Cold-start the application five times, measuring to the first accepted input. Record the mean.
@@ -375,7 +392,7 @@ classification and disposition live.
 | **A-03** | List queries execute on the user-interface thread. | REQ-PERF-10 at the reference volume | Minor (risk) | **Accepted for BL-1**, conditional on measurement: if procedure [8.2](#82-performance-measurement) records worse than 0.8 s, move list queries to a background executor. |
 | **A-04** | Question text has no uniqueness constraint, while import merges case-insensitively; manual entry and import disagree about what "the same question" is. | Consistency of REQ-QST-10 with REQ-IMP-60 | Minor | **Open — decision required.** Either add a case-insensitive uniqueness constraint with a merge on manual entry, or state in MF-SRS-001 that hand-entered duplicates are permitted. |
 | **A-05** | Demo accounts `ana` and `marko` are created with a constant password in every build, including release. | No requirement asks for them; contrary to the intent of REQ-SEC-10 | Minor | **Open — to fix.** Seed content without accounts, or gate account seeding to debug builds. |
-| **A-06** | No automated test executes a DAO, the schema, `PasswordHasher`, `Session`, `SearchPatterns` or any screen. | Verification coverage | Major (process) | **Open — planned.** Add database integration tests first ([7.3](#73-automated-test-inventory)); until then the manual suites are mandatory per change, as [4.3](#43-master-schedule) requires. |
+| **A-06** | No automated test executes a DAO, the schema, `PasswordHasher`, `Session`, `Lobby` or any screen. The statements the DAOs run are covered on the JVM, but nothing automated runs them against SQLite. | Verification coverage | Major (process) | **Open — planned.** Add database integration tests first ([7.3](#73-automated-test-inventory)); until then the manual suites are mandatory per change, as [4.3](#43-master-schedule) requires. |
 | **A-07** | `QuestionDao.replaceTags` ignores a failed `insert` (`-1`), and `insert`/`update` mark their transaction successful unconditionally, so a link write that fails without raising does not stop the enclosing import from committing. | REQ-IMP-80, REQ-REL-20 | Major | **Open — to fix.** Use `insertOrThrow` or check the return value before marking the transaction successful. Regression cover: a DAO test that forces a link insert to fail, added with the TS-DB automation of A-06. |
 | **A-08** | Failed writes are not reported to the user: the question editor discards the result of `insert` and closes either way; update and delete failures are not surfaced. | REQ-REL-30 | Major | **Open — to fix.** Return a typed outcome from the DAOs and report it at the call site without closing the form. |
 | **A-09** | State the platform does not restore is lost on recreation: the question editor's tag selection resets on rotation; an import result delivered to a destroyed screen omits its counts. | REQ-STD-10, REQ-IMP-100 | Minor | **Open — to fix.** Save the selection in `onSaveInstanceState`; deliver the import result through lifecycle-aware state. |
@@ -408,7 +425,7 @@ are not defined.
 
 | Information need | Measure | Collected | Decision criterion |
 |---|---|---|---|
-| Are the requirements verified? | Requirement verification coverage: requirements with a passing record ÷ 91 | Per release candidate | Must be 100 % before a release baseline. |
+| Are the requirements verified? | Requirement verification coverage: requirements with a passing record ÷ 118 | Per release candidate | Must be 100 % before a release baseline. |
 | Is verification automated enough for the change rate? | Automation ratio: requirements verified by an automated test ÷ requirements verified by method `T` | Per release | A fall below the previous release is investigated; the trend, not the value, is what matters while A-06 is open. |
 | Is the product stable? | Open anomalies by severity | Continuous | No *critical*; no *major* without a recorded disposition. |
 | Does the product still meet its performance limits? | Worst-case search, single-operation and cold-start times at the reference volume | Per release candidate | Within MF-SRS-001, 3.4; a value within 20 % of a limit is recorded as a risk. |

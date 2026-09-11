@@ -13,18 +13,33 @@
     <string name="menu_sign_out">Sign out</string>
     <string name="menu_tags">Tags</string>
     <string name="menu_questions">Questions</string>
+    <string name="menu_lobby">Game lobby (%1$d)</string>
 
     <string name="action_add">Add</string>
     <string name="action_save">Save</string>
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_import">Import</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_add_to_lobby">Add to lobby</string>
+    <string name="action_clear_lobby">Clear lobby</string>
+    <string name="action_start_game">Start game</string>
+    <string name="action_submit">Submit</string>
+    <string name="action_skip">Skip</string>
+    <string name="action_next">Next</string>
+    <string name="action_leave">Leave</string>
 
     <string name="search_by_name">Search by name</string>
+    <string name="search_hint">Search questions and tags</string>
     <string name="search_wildcard_help">Use %% for any characters and _ for a single character</string>
-    <string name="search_filter_by_tag">Filter by tag</string>
-    <string name="filter_any_tag">Any tag</string>
+    <string name="search_suggested_tags">Suggested tags, most used first</string>
+    <string name="search_select_all">Select all</string>
+    <string name="search_select_question">Select this question</string>
+    <string name="search_tag_suggestion">%1$s (%2$d)</string>
     <string name="empty_no_results">Nothing matches this search</string>
+
+    <string name="question_swipe_help">Swipe a question left to delete it, right to add it to the lobby</string>
+    <string name="tag_swipe_help">Swipe a tag left to delete it, right to add its questions to the lobby</string>
 
     <string name="tags_select">Select tags</string>
     <string name="tags_selected">Tags: %1$s</string>
@@ -37,12 +52,44 @@
     <string name="tag_name_taken">A tag with this name already exists</string>
     <string name="tag_delete_title">Delete %1$s?</string>
     <string name="tag_delete_message">The tag is removed from every question that uses it.</string>
+    <string name="tag_sort">Sort</string>
+    <string name="tag_sort_most_used">Most used first</string>
+    <string name="tag_sort_alphabetical">A to Z</string>
+    <string name="tag_sort_least_used">Least used first</string>
 
     <string name="question_text">Question</string>
     <string name="question_answer">Answer (optional)</string>
     <string name="question_title_new">New question</string>
     <string name="question_title_edit">Edit question</string>
     <string name="question_delete_title">Delete this question?</string>
+
+    <string name="lobby_title">Game lobby</string>
+    <string name="lobby_empty">The lobby is empty. Add questions from the search on the main menu, by swiping a question right, or by swiping a tag right.</string>
+    <string name="lobby_nothing_added">Already in the lobby</string>
+    <string name="lobby_tag_empty">%1$s carries no question, so nothing was added</string>
+    <string name="lobby_answer">Answer: %1$s</string>
+    <string name="lobby_no_answer">No answer, left out of the game</string>
+    <string name="lobby_clear_title">Clear the lobby?</string>
+    <string name="lobby_clear_message">Every question is taken out of the lobby. The questions themselves are kept.</string>
+    <string name="lobby_unanswerable_note">%1$d of them carry no answer and are left out of the game.</string>
+
+    <string name="game_title">Game</string>
+    <string name="game_progress">%1$d / %2$d / %3$d</string>
+    <string name="game_progress_legend">Streak / answered correctly / questions</string>
+    <string name="game_answer">Your answer</string>
+    <string name="game_correct">Correct</string>
+    <string name="game_incorrect">Not quite. The answer is: %1$s</string>
+    <string name="game_skipped">Skipped. The answer is: %1$s</string>
+    <string name="game_none_answerable_title">No question can be marked</string>
+    <string name="game_none_answerable_message">A game needs questions that carry an answer. Every question in the lobby is stored without one.</string>
+    <string name="game_excluded_title">Start without some questions?</string>
+    <string name="game_excluded_message">%1$d of the questions in the lobby carry no answer and cannot be marked. The game would ask the remaining %2$d.</string>
+    <string name="game_victory_title">Victory</string>
+    <string name="game_victory_message">Every one of the %1$d questions was answered correctly, in %2$d attempts.</string>
+    <string name="game_perfect_title">Perfect victory</string>
+    <string name="game_perfect_message">Every one of the %1$d questions answered correctly, one after another, in a single unbroken streak.</string>
+    <string name="game_leave_title">Leave the game?</string>
+    <string name="game_leave_message">The progress of this game is given up. The lobby is kept.</string>
 
     <string name="import_title">Import question set</string>
     <string name="import_confirm_counts">New questions: %1$d\nExisting questions to update: %2$d\nNew tags: %3$d</string>

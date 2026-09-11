@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?attr/colorSurface"
     android:gravity="center_vertical"
     android:minHeight="56dp"
     android:orientation="horizontal"
@@ -13,30 +14,34 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingVertical="8dp">
 
         <TextView
             android:id="@+id/title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
             android:textAppearance="?attr/textAppearanceBodyLarge"
-            tools:text="Geography" />
+            tools:text="What caused the French Revolution?" />
 
         <TextView
-            android:id="@+id/subtitle"
+            android:id="@+id/answer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textAppearance="?attr/textAppearanceBodySmall"
-            android:visibility="gone"
-            tools:text="3 questions" />
+            tools:text="Answer: Financial crisis" />
 
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/deleteButton"
+        android:id="@+id/removeButton"
         style="?attr/materialButtonOutlinedStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/action_delete" />
+        android:text="@string/action_remove" />
 
 </LinearLayout>

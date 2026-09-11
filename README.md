@@ -48,9 +48,11 @@ Platform baseline: `minSdk` 24, `compileSdk` and `targetSdk` 34, Java 17, Gradle
 | Screen | Purpose |
 | --- | --- |
 | Sign in | Signs in; an unknown user name is registered on first use |
-| Main menu | Shows who is signed in; leads to questions and tags; signs out |
-| Questions | Search by text and by tag; add, edit, delete; assign tags; import a question set |
-| Tags | Search by name; add, edit, delete |
+| Main menu | Shows who is signed in; carries the search; leads to questions, tags and the game lobby; signs out |
+| Questions | The same search with swipe actions; add, edit, delete; assign tags; import a question set |
+| Tags | Each tag with how many questions carry it, and the total; order by most used, name, or least used; swipe left to delete, right to send its questions to the lobby; add, edit |
+| Game lobby | The questions gathered for the next game; remove one or clear it; start the game |
+| Game | Asks the questions and marks the answers; shows streak, correct and total |
 
 The application follows the device's light or dark appearance; there is no in-app switch.
 
@@ -67,6 +69,12 @@ written:
 
 An empty field lists everything, matching ignores letter case, and the list narrows as you type.
 
+One search serves the main menu and the questions screen. The text is matched against question
+titles and tag names at once, so typing finds a question by either. Below it, tags carried by the
+questions found are suggested, most used first; choosing one adds it as a filter and narrows the
+result, and choosing more narrows further. Results can be ticked one by one or with select-all, and
+the ticked questions sent to the game lobby.
+
 ## Data model
 
 Four tables in `memforce.db`, in application-private storage. Questions and tags are global: no
@@ -82,6 +90,11 @@ question_tags  (question_id, tag_id)   PK(question_id, tag_id), both ON DELETE C
 Deleting a tag removes it from every question that carries it; deleting a question removes its
 tag assignments and leaves the tags. Foreign keys are switched on for every connection, which
 SQLite does not do by default.
+
+The game lobby is not a table. It is a set of question ids kept in the preferences store
+(`memforce_lobby`), beside the signed-in identity (`memforce_session`), not in `memforce.db`. It
+holds ids rather than questions, so a question edited after being added shows its new text and a
+deleted question drops out of it.
 
 Passwords are never stored: `password_hash` holds a PBKDF2 value (HMAC-SHA1, 100 000 iterations,
 256-bit key) derived over the password and a 16-byte random per-account salt, and verification
@@ -103,6 +116,22 @@ the format is reported — the first ten problems and a count of any others — 
 written. The counts to be applied are shown before anything is stored. Missing tags are created;
 a question whose text already exists (ignoring case) gains the file's tags instead of being stored
 a second time, and its answer is kept.
+
+## Gameplay
+
+Questions chosen for a game are gathered in a **lobby**: add a ticked selection from the search, or
+swipe a question — or a whole tag — to the right. The lobby holds question ids in the preferences
+store, so it survives leaving the app on the way to the game, an edited question shows its new text,
+and a deleted one drops out.
+
+Starting a game shuffles the questions once and asks them from a queue that never shortens: after
+every answer the question goes to the back, so a wrong one comes round again. Progress shows as
+`streak / correct / total` — answers right in a row, different questions answered correctly at least
+once, and questions in the run. An answer matches after trimming, collapsing runs of spaces and
+ignoring case; a blank answer is a skip and counts as wrong. **Victory** is every question answered
+correctly; a **perfect victory** is that in one unbroken streak. A question stored without an answer
+cannot be marked, so the game leaves it out and says so before starting. A run lives only in memory:
+leaving the game, or returning after the app was restarted, goes back to the lobby.
 
 ## First launch
 

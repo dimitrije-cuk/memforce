@@ -10,13 +10,22 @@ import androidx.annotation.Nullable;
 
 import com.memforce.db.DbContract;
 import com.memforce.db.MemForceDbHelper;
-import com.memforce.db.SearchPatterns;
 import com.memforce.model.Question;
+import com.memforce.search.SearchQuery;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 public class QuestionDao {
+
+    /** SQLite accepts at most 999 statement arguments, so long identifier lists are read in parts. */
+    private static final int MAX_IDS_PER_QUERY = 400;
 
     private final MemForceDbHelper helper;
 
@@ -25,45 +34,68 @@ public class QuestionDao {
     }
 
     /**
-     * @param namePattern LIKE pattern applied to the question text
-     * @param tagId       when set, only questions carrying this tag are returned
+     * Reads the questions the criteria select, ordered by question text.
+     *
+     * @param query the text pattern and the chosen tags; empty criteria select every question
      */
     @NonNull
-    public List<Question> search(@Nullable String namePattern, @Nullable Long tagId) {
-        StringBuilder sql = new StringBuilder(baseSelect())
-                .append(" WHERE q.").append(DbContract.Questions.NAME).append(" LIKE ?");
-
-        List<String> args = new ArrayList<>();
-        args.add(SearchPatterns.like(namePattern));
-        if (tagId != null) {
-            sql.append(" AND q.").append(DbContract.Questions._ID)
-                    .append(" IN (SELECT ").append(DbContract.QuestionTags.QUESTION_ID)
-                    .append(" FROM ").append(DbContract.QuestionTags.TABLE)
-                    .append(" WHERE ").append(DbContract.QuestionTags.TAG_ID).append(" = ?)");
-            args.add(String.valueOf(tagId));
-        }
-        sql.append(" GROUP BY q.").append(DbContract.Questions._ID)
-                .append(" ORDER BY q.").append(DbContract.Questions.NAME).append(" COLLATE NOCASE ASC");
-
-        List<Question> questions = new ArrayList<>();
-        try (Cursor cursor = helper.getReadableDatabase()
-                .rawQuery(sql.toString(), args.toArray(new String[0]))) {
-            while (cursor.moveToNext()) {
-                questions.add(read(cursor));
-            }
-        }
-        return questions;
+    public List<Question> search(@NonNull SearchQuery query) {
+        QuestionFilter filter = QuestionFilter.of(query);
+        return load(filter.sql(), filter.args());
     }
 
     @Nullable
     public Question findById(long id) {
-        String sql = baseSelect()
-                + " WHERE q." + DbContract.Questions._ID + " = ?"
-                + " GROUP BY q." + DbContract.Questions._ID;
-        try (Cursor cursor = helper.getReadableDatabase()
-                .rawQuery(sql, new String[]{String.valueOf(id)})) {
-            return cursor.moveToFirst() ? read(cursor) : null;
+        List<Question> found = load(
+                "q." + DbContract.Questions._ID + " = ?", new String[]{String.valueOf(id)});
+        return found.isEmpty() ? null : found.get(0);
+    }
+
+    /**
+     * Reads the named questions, ordered by question text. Identifiers that match no stored
+     * question are skipped, so a lobby that still names a deleted question stays usable.
+     */
+    @NonNull
+    public List<Question> findByIds(@NonNull Collection<Long> ids) {
+        List<Long> remaining = new ArrayList<>(new LinkedHashSet<>(ids));
+        List<Question> questions = new ArrayList<>();
+        for (int from = 0; from < remaining.size(); from += MAX_IDS_PER_QUERY) {
+            List<Long> chunk = remaining.subList(
+                    from, Math.min(from + MAX_IDS_PER_QUERY, remaining.size()));
+            StringBuilder predicate = new StringBuilder("q.")
+                    .append(DbContract.Questions._ID).append(" IN (");
+            String[] args = new String[chunk.size()];
+            for (int i = 0; i < chunk.size(); i++) {
+                predicate.append(i == 0 ? "?" : ",?");
+                args[i] = String.valueOf(chunk.get(i));
+            }
+            questions.addAll(load(predicate.append(')').toString(), args));
         }
+        if (remaining.size() > MAX_IDS_PER_QUERY) {
+            // Each part came back ordered, but the parts were read one after another, so the
+            // order only holds across the whole list once they are merged.
+            Collections.sort(questions,
+                    (left, right) -> String.CASE_INSENSITIVE_ORDER.compare(
+                            left.getName(), right.getName()));
+        }
+        return questions;
+    }
+
+    /** The identifiers of every question carrying this tag. */
+    @NonNull
+    public List<Long> idsWithTag(long tagId) {
+        List<Long> ids = new ArrayList<>();
+        try (Cursor cursor = helper.getReadableDatabase().query(
+                DbContract.QuestionTags.TABLE,
+                new String[]{DbContract.QuestionTags.QUESTION_ID},
+                DbContract.QuestionTags.TAG_ID + " = ?",
+                new String[]{String.valueOf(tagId)},
+                null, null, null)) {
+            while (cursor.moveToNext()) {
+                ids.add(cursor.getLong(0));
+            }
+        }
+        return ids;
     }
 
     /**
@@ -81,24 +113,64 @@ public class QuestionDao {
         }
     }
 
-    private String baseSelect() {
-        return "SELECT q." + DbContract.Questions._ID
+    /**
+     * Reads the questions a condition selects together with their tag names.
+     *
+     * <p>The tag names are read by a second statement rather than by a {@code GROUP_CONCAT} over a
+     * join: SQLite before 3.44 cannot order the values an aggregate collects, and a tag name may
+     * itself contain the separator such a concatenation would use. Two statements keep the tag
+     * order defined and keep names with punctuation intact.
+     *
+     * @param predicate a condition over the question table aliased {@code q}
+     */
+    @NonNull
+    private List<Question> load(@NonNull String predicate, @NonNull String[] args) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        String sql = "SELECT q." + DbContract.Questions._ID
                 + ", q." + DbContract.Questions.NAME
                 + ", q." + DbContract.Questions.ANSWER
-                + ", IFNULL(GROUP_CONCAT(t." + DbContract.Tags.NAME + ", ', '), '')"
                 + " FROM " + DbContract.Questions.TABLE + " q"
-                + " LEFT JOIN " + DbContract.QuestionTags.TABLE + " qt"
-                + " ON qt." + DbContract.QuestionTags.QUESTION_ID + " = q." + DbContract.Questions._ID
-                + " LEFT JOIN " + DbContract.Tags.TABLE + " t"
-                + " ON t." + DbContract.Tags._ID + " = qt." + DbContract.QuestionTags.TAG_ID;
-    }
+                + " WHERE " + predicate
+                + " ORDER BY q." + DbContract.Questions.NAME + " COLLATE NOCASE ASC";
 
-    private Question read(Cursor cursor) {
-        return new Question(
-                cursor.getLong(0),
-                cursor.getString(1),
-                cursor.isNull(2) ? null : cursor.getString(2),
-                cursor.getString(3));
+        Map<Long, String[]> rows = new LinkedHashMap<>();
+        try (Cursor cursor = db.rawQuery(sql, args)) {
+            while (cursor.moveToNext()) {
+                rows.put(cursor.getLong(0), new String[]{
+                        cursor.getString(1), cursor.isNull(2) ? null : cursor.getString(2)});
+            }
+        }
+        if (rows.isEmpty()) {
+            return new ArrayList<>();
+        }
+        Map<Long, List<String>> tagNames = new HashMap<>();
+        String tagSql = "SELECT qt." + DbContract.QuestionTags.QUESTION_ID
+                + ", t." + DbContract.Tags.NAME
+                + " FROM " + DbContract.QuestionTags.TABLE + " qt"
+                + " JOIN " + DbContract.Tags.TABLE + " t"
+                + " ON t." + DbContract.Tags._ID + " = qt." + DbContract.QuestionTags.TAG_ID
+                + " WHERE qt." + DbContract.QuestionTags.QUESTION_ID + " IN ("
+                + "SELECT q." + DbContract.Questions._ID
+                + " FROM " + DbContract.Questions.TABLE + " q WHERE " + predicate + ")"
+                + " ORDER BY t." + DbContract.Tags.NAME + " COLLATE NOCASE ASC";
+        try (Cursor cursor = db.rawQuery(tagSql, args)) {
+            while (cursor.moveToNext()) {
+                List<String> names = tagNames.get(cursor.getLong(0));
+                if (names == null) {
+                    names = new ArrayList<>();
+                    tagNames.put(cursor.getLong(0), names);
+                }
+                names.add(cursor.getString(1));
+            }
+        }
+
+        List<Question> questions = new ArrayList<>(rows.size());
+        for (Map.Entry<Long, String[]> row : rows.entrySet()) {
+            List<String> names = tagNames.get(row.getKey());
+            questions.add(new Question(row.getKey(), row.getValue()[0], row.getValue()[1],
+                    names == null ? Collections.<String>emptyList() : names));
+        }
+        return questions;
     }
 
     @NonNull

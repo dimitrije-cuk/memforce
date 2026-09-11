@@ -13,6 +13,9 @@ import com.memforce.db.DbContract;
 import com.memforce.db.MemForceDbHelper;
 import com.memforce.db.SearchPatterns;
 import com.memforce.model.Tag;
+import com.memforce.model.TagSort;
+import com.memforce.model.TagUsage;
+import com.memforce.search.SearchQuery;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,6 +70,46 @@ public class TagDao {
                 null, null, null)) {
             return cursor.moveToFirst() ? new Tag(cursor.getLong(0), cursor.getString(1)) : null;
         }
+    }
+
+    /**
+     * Reads the tags with the number of questions each carries, in the requested order.
+     *
+     * @param namePattern LIKE pattern applied to the tag name; blank reads every tag
+     */
+    @NonNull
+    public List<TagUsage> searchWithCounts(@Nullable String namePattern, @NonNull TagSort sort) {
+        return readUsages(TagQueries.usage(namePattern, sort));
+    }
+
+    /** The number of stored tags. */
+    public int countAll() {
+        try (Cursor cursor = helper.getReadableDatabase().rawQuery(
+                "SELECT COUNT(*) FROM " + DbContract.Tags.TABLE, null)) {
+            return cursor.moveToFirst() ? cursor.getInt(0) : 0;
+        }
+    }
+
+    /**
+     * Reads the tags worth offering as the next search criterion, most used first.
+     *
+     * @param limit the greatest number of tags to read
+     */
+    @NonNull
+    public List<TagUsage> suggest(@NonNull SearchQuery query, int limit) {
+        return readUsages(TagQueries.suggestions(query, limit));
+    }
+
+    @NonNull
+    private List<TagUsage> readUsages(@NonNull TagQueries.Statement statement) {
+        List<TagUsage> usages = new ArrayList<>();
+        try (Cursor cursor = helper.getReadableDatabase()
+                .rawQuery(statement.sql(), statement.args())) {
+            while (cursor.moveToNext()) {
+                usages.add(new TagUsage(cursor.getLong(0), cursor.getString(1), cursor.getInt(2)));
+            }
+        }
+        return usages;
     }
 
     /** @return the new row id, or -1 when the name is already taken */

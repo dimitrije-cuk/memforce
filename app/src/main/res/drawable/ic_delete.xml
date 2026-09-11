@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A waste bin drawn from three rectangles: handle, lid and body. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorControlNormal">
+
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9,3h6v2h-6z" />
+
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M5,6h14v2h-14z" />
+
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M7,9h10v12h-10z" />
+
+</vector>

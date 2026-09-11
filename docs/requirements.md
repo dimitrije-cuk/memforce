@@ -65,8 +65,8 @@ justified in [Annex E](#annex-e--tailoring-record).
 ### 1.1 Purpose
 
 This document specifies the requirements for **MemForce**, a standalone Android application for
-capturing, classifying and retrieving quiz questions. It states what MemForce must do and the
-constraints it must respect, in a form that can be designed to, implemented against, and
+capturing, classifying, retrieving and practising quiz questions. It states what MemForce must do
+and the constraints it must respect, in a form that can be designed to, implemented against, and
 verified.
 
 It is the authoritative statement of required behaviour for the product. It is written for the
@@ -79,17 +79,18 @@ evidence that these requirements hold is recorded in [MF-VVP-001](verification-a
 The software product specified here is **MemForce**, version 1.0.
 
 MemForce shall let a person authenticate against a local account, maintain a shared body of quiz
-questions classified by tag, import prepared question sets from a JSON file, and retrieve
-questions by text pattern, by tag, or by both. All data is held in a SQLite database in
-application-private storage on the device.
+questions classified by tag, import prepared question sets from a JSON file, retrieve questions by
+text pattern, by tag, or by both, gather chosen questions into a gameplay lobby, and practise them
+in a game that ends when every question in it has been answered correctly. All questions, tags and
+accounts are held in a SQLite database in application-private storage on the device.
 
-MemForce shall **not** deliver study sessions, scoring, scheduling, content sharing, export, or
-any network-based capability. Those capabilities are listed in
+MemForce shall **not** deliver scheduling, progress history across games, content sharing, export,
+or any network-based capability. Those capabilities are listed in
 [1.8 Apportioning of requirements](#18-apportioning-of-requirements).
 
 The benefit sought is retention of learning material: a learner captures questions once,
-classifies them so they can be found again, and can load a whole topic at once instead of typing
-it in.
+classifies them so they can be found again, can load a whole topic at once instead of typing it
+in, and practises a chosen selection until the whole of it is known.
 
 ### 1.3 Product perspective
 
@@ -100,7 +101,7 @@ counterpart, and it exchanges no data with any external system at run time.
 ┌───────────────────────────── Android device ──────────────────────────────┐
 │                                                                           │
 │   User ──▶ MemForce ──┬──▶ SQLite database  (application-private storage)  │
-│                       ├──▶ Preferences      (signed-in account identity)   │
+│                       ├──▶ Preferences      (signed-in identity, lobby)    │
 │                       └──◀ Question-set file (read-only, user-selected)    │
 │                                                                           │
 └───────────────────────────────────────────────────────────────────────────┘
@@ -108,13 +109,13 @@ counterpart, and it exchanges no data with any external system at run time.
 ```
 
 Its interfaces are the touchscreen user interface, the platform SQLite persistence interface, the
-platform preferences store that holds the signed-in identity, and the platform document-selection
-interface through which the user offers a question-set file for import. All are specified in
-[3.1 External interfaces](#31-external-interfaces).
+platform preferences store that holds the signed-in identity and the gameplay lobby, and the
+platform document-selection interface through which the user offers a question-set file for
+import. All are specified in [3.1 External interfaces](#31-external-interfaces).
 
 ### 1.4 Product functions
 
-MemForce provides five groups of function.
+MemForce provides six groups of function.
 
 - **Authentication and session.** A person signs in with a user name and a password. An unknown
   user name creates an account, so first use and subsequent use follow the same path. The signed-in
@@ -122,12 +123,15 @@ MemForce provides five groups of function.
 - **Question management.** A question — its text, an optional answer, and any number of tags — is
   created, changed, listed and deleted. Questions are shared: every account sees every question.
 - **Tag management.** A tag is the multi-valued classification of a question (*algebra*,
-  *space*, *exam*). Tags are created, renamed, searched and deleted, and are shared by all
-  accounts.
-- **Search and filtering.** Questions are retrieved by text pattern, by tag, or by both together;
-  tags are retrieved by name pattern. Patterns support the `%` and `_` wildcards.
+  *space*, *exam*). Tags are created, renamed, searched and deleted, are shown with the number of
+  questions carrying them, and are shared by all accounts.
+- **Search and filtering.** One search retrieves questions by text pattern, by tag, or by both
+  together, offering the tags worth choosing next in the order of how many of the questions found
+  carry them; tags are retrieved by name pattern. Patterns support the `%` and `_` wildcards.
 - **Question-set import.** A JSON file conforming to [MF-IFS-001](question-import-format.md) is
   validated as a whole and then merged into the stored questions and tags in one transaction.
+- **Gameplay.** Questions chosen anywhere in the application are gathered in a lobby and then
+  practised: the game asks them in turn until every one of them has been answered correctly.
 
 ### 1.5 User characteristics
 
@@ -184,15 +188,16 @@ this specification.
 
 | Deferred capability | Reason |
 |---|---|
-| Study sessions, question presentation, answer checking, scoring | MemForce 1.0 manages material; it does not drill it. |
-| Spaced-repetition scheduling | Depends on study sessions. |
+| A record of past games, statistics, progress over time | A game reports its own result ([REQ-GAME-110](#326-gameplay)); nothing is kept once it ends, so no history is stored and none can be shown. |
+| Spaced-repetition scheduling | The game of [3.2.6](#326-gameplay) repeats within one run only. Scheduling repetitions across days would require the per-question history the row above defers. |
+| Multiple-choice or other question forms, partial credit | A submission is compared with the stored answer as a whole ([REQ-GAME-80](#326-gameplay)); other forms would each need their own marking rule. |
 | Export of questions or tags to a file | The import format is defined for one direction in 1.0; export would make the format a two-way contract and is deferred until the format stabilises ([MF-IFS-001](question-import-format.md), *Extensibility*). |
 | Personal collections of questions owned by one account | 1.0 shares all content between accounts ([REQ-QST-60](#322-questions)); ownership would require an owning key on content and a per-account filter throughout. |
 | Synchronisation, cloud backup, multi-device use | Excluded by the standalone constraint ([REQ-CON-10](#36-design-constraints)). |
 | Media (images, audio) in questions | Limitation of [1.6](#16-limitations); the format reserves room for it. |
 | Localisation, internationalised collation and non-ASCII case folding | Wildcard matching, ordering and every case-insensitive comparison are specified for ASCII letters only ([1.6](#16-limitations), [REQ-SRCH-70](#324-search-and-filtering)). |
 | Password change, password recovery, account deletion | No user-facing account management exists in 1.0; the data effect that deleting an account would have is nonetheless stated in [3.5.3](#353-deletion-rules). |
-| Multiple tags in one filter, saved searches | 1.0 filters by at most one tag at a time ([REQ-SRCH-20](#324-search-and-filtering)). |
+| Saved searches, more than one gameplay lobby | A search is held while it is being used ([REQ-SRCH-100](#324-search-and-filtering)) and there is one lobby ([REQ-GAME-10](#326-gameplay)); naming and storing either would add a management screen for each. |
 
 ### 1.9 Conventions
 
@@ -222,7 +227,8 @@ Superlatives, subjective language ("user-friendly", "fast"), and open-ended term
 | `TAG` | Tags | `STD` | Standards compliance |
 | `SRCH` | Search and filtering | `SEC` | Security |
 | `IMP` | Question-set import | `REL` | Reliability and availability |
-| `USE` | Usability | `POR` | Portability and maintainability |
+| `GAME` | Gameplay lobby and game | `POR` | Portability and maintainability |
+| `USE` | Usability | | |
 
 Numbers advance in steps of ten so that a later insertion never renumbers an existing
 requirement. In line with clause 5.2.8.2, **an identifier is never changed and never reused**: a
@@ -288,12 +294,12 @@ Column conventions are defined in [1.9 Conventions](#19-conventions).
 
 | ID | Requirement | Type | Pri | Source |
 |---|---|---|---|---|
-| REQ-EXT-10 | The application shall provide a sign-in screen, a main menu, a question list screen, a question editor, a tag list screen, and a tag editor. | I | H | SN-01, SN-02, SN-05 |
-| REQ-EXT-20 | Once a user is signed in, the application shall provide navigation from the main menu to the question list and to the tag list, and a return path from each screen to the screen that opened it, without repeating sign-in. | I | H | SN-01, D-05 |
+| REQ-EXT-10 | The application shall provide a sign-in screen, a main menu, a question list screen, a question editor, a tag list screen, a tag editor, a gameplay lobby screen, and a game screen. | I | H | SN-01, SN-02, SN-05, SN-09 |
+| REQ-EXT-20 | Once a user is signed in, the application shall provide navigation from the main menu to the question list, to the tag list and to the gameplay lobby, and a return path from each screen to the screen that opened it, without repeating sign-in. | I | H | SN-01, D-05 |
 | REQ-EXT-30 | The question list screen and the tag list screen shall each display the items they manage as a scrollable list and shall expose the create, edit, delete and search actions defined for that entity in [3.2](#32-functions). | I | H | SN-01, SN-03 |
 | REQ-EXT-40 | Every search input field shall accept the characters `%` and `_` as typed input and shall pass them unaltered to the search function as pattern characters. | I | H | SN-03 |
 | REQ-EXT-50 | The application shall provide no communications interface: it shall neither transmit nor receive data over any network interface of the device, and it shall declare no permission in its manifest. | I | H | SN-06 |
-| REQ-EXT-60 | The application's only interface for question, tag and account records shall be a single SQLite database file located in application-private storage on the device; the only application data held outside that file shall be the retained signed-in identity of [REQ-AUTH-70](#321-authentication-and-session). | I | H | SN-06, SN-07 |
+| REQ-EXT-60 | The application's only interface for question, tag and account records shall be a single SQLite database file located in application-private storage on the device; the only application data held outside that file shall be the retained signed-in identity of [REQ-AUTH-70](#321-authentication-and-session) and the gameplay lobby of [REQ-GAME-30](#326-gameplay), both held in application-private preference storage. | I | H | SN-06, SN-07 |
 | REQ-EXT-70 | The application shall obtain a question-set file through the platform document-selection interface, shall open it for reading only, and shall access no other file of the device file system. | I | H | SN-04, D-06 |
 
 *Rationale.* REQ-EXT-20 makes reachability verifiable: without it, "the app has screens" would
@@ -338,12 +344,16 @@ credential is stored is a security attribute and is specified in [3.8.1](#381-se
 | REQ-QST-50 | The application shall display the stored questions as a list ordered by question text in ascending order, compared without regard to letter case, each entry showing its question text and the names of its tags. | F | H | SN-01, SN-03 |
 | REQ-QST-60 | Every question shall be visible to, and modifiable by, every account, irrespective of which account created it. | F | H | SN-05 |
 | REQ-QST-70 | The application shall allow a user to assign any of the existing tags to a question and to withdraw any assignment, and a tag shall apply to a question at most once. | F | H | SN-02 |
+| REQ-QST-80 | Each entry of the question list shall display the question text above the names of its tags, and shall keep the same height whatever the number of tags, the tag names being scrollable along the entry when they do not fit. | F | M | SN-01, SN-03, D-22 |
+| REQ-QST-90 | The application shall delete the question of a list entry swiped to the left, subject to the confirmation of REQ-QST-40, and shall add the question of a list entry swiped to the right to the gameplay lobby. | F | M | SN-09, D-21 |
 
 *Rationale.* An answer is optional because a question captured during a lecture is often written
 before its answer is known, and forcing a placeholder answer would corrupt the data; the import
 format makes the same choice for the same reason. REQ-QST-50 fixes the order and the content of
 the list so that "the list shows the questions" is verifiable, and so that a user who has just
-edited a question can find it again in a predictable place.
+edited a question can find it again in a predictable place. REQ-QST-80 states the height rule
+because a question carrying a dozen tags would otherwise push the questions around it off the
+screen, and the question text — the thing being looked for — is what must stay visible.
 
 #### 3.2.3 Tags
 
@@ -355,11 +365,20 @@ edited a question can find it again in a predictable place.
 | REQ-TAG-40 | The application shall allow a user to delete a tag, and shall delete it only after the user confirms a message that names the tag and states that it will be removed from every question that carries it. | F | H | SN-02, D-04 |
 | REQ-TAG-50 | The application shall display the stored tags as a list ordered by name in ascending order, compared without regard to letter case. | F | H | SN-02, SN-03 |
 | REQ-TAG-60 | Every tag shall be visible to, and modifiable by, every account, irrespective of which account created it. | F | H | SN-05 |
+| REQ-TAG-70 | The application shall display, for each entry of the tag list, the number of questions carrying that tag. | F | M | SN-02, SN-03 |
+| REQ-TAG-80 | The application shall display the total number of stored tags on the tag list screen. | F | M | SN-02 |
+| REQ-TAG-90 | The application shall order the tag list by one of three orders chosen by the user — most questions first, name ascending, fewest questions first — and shall reorder the displayed list on the choice alone, without a further action; within an order, tags carrying the same number of questions shall be ordered by name ascending. | F | M | SN-03, D-20 |
+| REQ-TAG-100 | The application shall delete the tag of a list entry swiped to the left, subject to the confirmation of REQ-TAG-40. | F | M | SN-02, D-21 |
+| REQ-TAG-110 | The application shall add every question carrying the tag of a list entry swiped to the right to the gameplay lobby. | F | M | SN-09, D-21 |
 
 *Rationale.* Tag names are the vocabulary of the whole product: two tags differing only in case
 would split one concept across two filters and make every tag search ambiguous, so REQ-TAG-20
 forbids them. REQ-TAG-40 requires the confirmation to state the consequence, because deleting a
-tag changes questions the user is not looking at.
+tag changes questions the user is not looking at. REQ-TAG-70 and REQ-TAG-90 exist because a tag's
+worth is the number of questions behind it: a vocabulary can only be kept in order if the tags
+nothing uses and the tags everything uses can both be found, which is why the order is required
+in both directions rather than only in the useful-looking one. The tie-break by name in REQ-TAG-90
+is stated so that the list has one defined order rather than an arbitrary one among equal counts.
 
 #### 3.2.4 Search and filtering
 
@@ -373,14 +392,28 @@ tag changes questions the user is not looking at.
 | REQ-SRCH-60 | The application shall interpret `%` in a search pattern as zero or more characters and `_` as exactly one character, at any position in the pattern. | F | H | SN-03 |
 | REQ-SRCH-70 | The application shall match search patterns without regard to the letter case of ASCII letters. | F | M | derived, D-08 |
 | REQ-SRCH-80 | The application shall update the displayed result after each change to a search criterion, without a separate confirming action by the user. | F | M | derived, D-09 |
+| REQ-SRCH-90 | The application shall retrieve, as one result, the questions whose question text matches the text pattern together with the questions carrying a tag whose name matches that same pattern. | F | H | SN-03, D-23 |
+| REQ-SRCH-100 | The application shall allow the user to hold any number of tags as search criteria at once, and shall retrieve only the questions carrying every one of them. | F | H | SN-03, D-07 |
+| REQ-SRCH-110 | The application shall offer, below the text field, the tags carried by at least one question of the current result, ordered by the number of those questions descending, excluding the tags already held as criteria. | F | H | SN-03, D-24 |
+| REQ-SRCH-120 | The application shall omit from the offered tags every tag that no question of the current result carries, so that no offered tag can narrow the result to nothing. | F | H | SN-03, D-24 |
+| REQ-SRCH-130 | The application shall allow the user to select any of the questions of the current result individually, and to select all of them in one action. | F | H | SN-09 |
+| REQ-SRCH-140 | The application shall add the selected questions to the gameplay lobby in one action, and shall state how many questions were added. | F | H | SN-09 |
+| REQ-SRCH-150 | The application shall present the search of REQ-SRCH-90 to REQ-SRCH-140 on the main menu and on the question list screen, and the two presentations shall behave identically. | F | M | SN-03, D-23 |
 
 *Rationale.* Wildcards are exposed to the user deliberately (decision D-08): the alternative —
 escaping `%` and `_` so they match literally — would remove the only means of substring search
 the product offers, and a tag or question text containing a literal `%` is not a case worth
 optimising for. REQ-SRCH-40 makes the empty state definite: an empty search is a request to see
-everything, not a request that matches nothing. REQ-SRCH-30 fixes the combination as
-conjunction, because a disjunction would widen the result as the user adds criteria, which is the
-opposite of what a filter is for.
+everything, not a request that matches nothing. REQ-SRCH-30 and REQ-SRCH-100 fix the combination
+as conjunction, because a disjunction would widen the result as the user adds criteria, which is
+the opposite of what a filter is for. The text is the one exception, and REQ-SRCH-90 states it:
+a user who types `france` is asking about a subject, and cannot be expected to know whether the
+word was written into the question or recorded as its tag. REQ-SRCH-110 orders the offered tags
+by how many of the questions *found* carry them rather than by how many exist in the library,
+because that number is what tells the user how much choosing the tag would narrow what is on the
+screen; REQ-SRCH-120 follows from it, since a tag no question in the result carries would lead
+to an empty list and is not worth offering. REQ-SRCH-150 keeps one search rather than two: two
+implementations of the same idea drift apart, and a user would have to learn each.
 
 #### 3.2.5 Question-set import
 
@@ -405,6 +438,49 @@ working from a template, which repeats questions across files and within a file;
 a second import of an improved set would double the library. Keeping the stored answer makes
 import safe to repeat: an import can add classification, never overwrite work.
 
+#### 3.2.6 Gameplay
+
+| ID | Requirement | Type | Pri | Source |
+|---|---|---|---|---|
+| REQ-GAME-10 | The application shall provide a gameplay lobby that holds the questions chosen for the next game, each question at most once however often it is added. | F | H | SN-09 |
+| REQ-GAME-20 | The application shall add questions to the gameplay lobby from the search result ([REQ-SRCH-140](#324-search-and-filtering)), from a tag ([REQ-TAG-110](#323-tags)), and from a question list entry ([REQ-QST-90](#322-questions)). | F | H | SN-09 |
+| REQ-GAME-30 | The application shall retain the content of the gameplay lobby across restarts of the application until the user empties it, and shall drop from it any question that has been deleted. | F | M | SN-09, D-25 |
+| REQ-GAME-40 | The application shall display the questions in the gameplay lobby and shall allow the user to remove one of them and to empty the lobby, the emptying only after a confirmation. | F | M | SN-09, D-04 |
+| REQ-GAME-50 | The application shall play a game with the questions in the gameplay lobby that carry an answer; it shall exclude the questions that carry none, shall state how many are excluded before the game begins, and shall refuse to begin when no question in the lobby carries an answer. | F | H | SN-09, D-26 |
+| REQ-GAME-60 | The application shall determine the order of the questions of a game by a shuffle performed once, when the game begins. | F | H | SN-09 |
+| REQ-GAME-70 | The application shall move the question just asked to the end of the queue after every submission, whatever the submission was worth, and shall ask the question at the front of the queue next. | F | H | SN-09, D-27 |
+| REQ-GAME-80 | The application shall treat a submission as correct when it equals the stored answer of the question ignoring letter case, leading and trailing spacing, and the length of the runs of spacing within it; it shall treat a submission that carries nothing but spacing as a skip, and shall treat a skip as an incorrect submission. | F | H | SN-09, D-28 |
+| REQ-GAME-90 | The application shall display, at every point of a game, the number of correct submissions made in an unbroken run, the number of different questions answered correctly at least once, and the number of questions the game began with. | F | H | SN-09 |
+| REQ-GAME-100 | The application shall reset the unbroken run of correct submissions to zero on any submission that is not correct, and shall not decrease the number of different questions answered correctly. | F | H | SN-09 |
+| REQ-GAME-110 | The application shall end the game in a victory when the number of different questions answered correctly equals the number of questions the game began with. | F | H | SN-09 |
+| REQ-GAME-120 | The application shall report the victory as a perfect victory when, at that point, the unbroken run of correct submissions also equals the number of questions the game began with. | F | M | SN-09 |
+
+*Rationale.* The lobby exists because the three places a question can be chosen — the search, a
+tag, a list entry — would otherwise each need their own way of starting a game, and a user could
+not gather a set from more than one of them. It holds questions chosen rather than a game in
+progress, which is why REQ-GAME-30 makes it outlive a restart while a game itself does not.
+
+REQ-GAME-70 is what makes the game a practice loop rather than a test: a question answered wrongly
+is not dropped and not repeated immediately, but comes back after every other question has been
+asked, and a question answered correctly comes back too. Together with REQ-GAME-110 this means the
+game cannot be finished without answering every question correctly at least once — the reason
+REQ-GAME-90 counts *different* questions and not submissions, since counting submissions would let
+a player finish while still never having answered some question correctly.
+
+REQ-GAME-120 is stated over the unbroken run alone, and deliberately so. Because every question
+moves to the back of the queue as it is asked, a run as long as the game itself can only be made of
+that many different questions; a run equal to the total therefore means the whole set was answered
+correctly, one question after another, with nothing wrong or skipped inside that run — which is
+also why a perfect victory is always a victory. It does not claim that nothing was ever missed. A
+player who misses a question early and then answers the whole set correctly has made exactly the
+run the rule asks for, and is told so; holding the earlier mistake against a recovery that
+demonstrates the same command of the set would make the reward for recovering worse than the reward
+for never having been tested on it.
+
+REQ-GAME-50 follows from [REQ-QST-10](#322-questions): an answer is optional, so some questions
+cannot be marked at all. Excluding them silently would make the total the player is working
+towards disagree with the lobby they assembled, which is why the number is stated first.
+
 ### 3.3 Usability requirements
 
 | ID | Requirement | Type | Pri | Source |
@@ -416,11 +492,14 @@ import safe to repeat: an import can add classification, never overwrite work.
 | REQ-USE-50 | After a create, an edit, a delete or an import, the application shall display the affected list with the change applied. | Q | H | derived |
 | REQ-USE-60 | The application shall follow the device's light or dark appearance setting, and shall be legible under both without further user action. | Q | M | SN-08 |
 | REQ-USE-70 | Each screen that offers a pattern search shall display the meaning of the `%` and `_` wildcards. | Q | M | SN-03, D-08 |
+| REQ-USE-80 | Each screen on which a list entry may be swiped shall display what a swipe in each direction does. | Q | M | derived, D-21 |
 
 *Rationale.* These are the smallest set of usability properties that make the product safe and
 predictable, and each is verifiable — unlike "the interface shall be user-friendly", which
 clause 5.2.7 forbids. REQ-USE-70 is the counterpart of REQ-SRCH-60: exposing wildcards to users
-is only defensible if the application tells them the two characters mean something.
+is only defensible if the application tells them the two characters mean something. REQ-USE-80 is
+the counterpart of REQ-QST-90 and REQ-TAG-100: a gesture leaves no mark on the screen, so a
+destructive action reached only by a gesture must be announced somewhere the user reads.
 
 ### 3.4 Performance requirements
 
@@ -448,7 +527,7 @@ than left to design because credential derivation is deliberately expensive
 
 | ID | Requirement | Type | Pri | Source |
 |---|---|---|---|---|
-| REQ-DB-10 | All persistent question, tag and account records shall be held in a single SQLite database stored in application-private storage on the device, the retained signed-in identity of [REQ-AUTH-70](#321-authentication-and-session) excepted. | D | H | SN-06, SN-07 |
+| REQ-DB-10 | All persistent question, tag and account records shall be held in a single SQLite database stored in application-private storage on the device, the retained signed-in identity of [REQ-AUTH-70](#321-authentication-and-session) and the gameplay lobby of [REQ-GAME-30](#326-gameplay) excepted. | D | H | SN-06, SN-07 |
 | REQ-DB-20 | The database shall represent the entities Users, Questions, Tags and QuestionTags with at least the attributes and constraints listed in [3.5.1](#351-entities-and-attributes). | D | H | SN-01, SN-02, SN-05 |
 | REQ-DB-30 | Each of Users, Questions and Tags shall have an integer primary key that is unique within its entity and that is not reused after a deletion. | D | H | derived |
 | REQ-DB-40 | QuestionTags shall relate Questions to Tags as a many-to-many relation whose primary key is the pair of referenced keys, so that a tag applies to a question at most once. | D | H | SN-02 |
@@ -602,12 +681,12 @@ build is exercised end to end against the product functions of [1.4](#14-product
 
 | ID | Method | Acceptance criteria |
 |---|---|---|
-| REQ-EXT-10 | D | All six screens are opened in one session, each showing what it manages. |
-| REQ-EXT-20 | D | From the main menu, the question list and the tag list are each opened and left again; the sign-in screen does not reappear. |
+| REQ-EXT-10 | D | All eight screens are opened in one session, each showing what it manages. |
+| REQ-EXT-20 | D | From the main menu, the question list, the tag list and the gameplay lobby are each opened and left again; the sign-in screen does not reappear. |
 | REQ-EXT-30 | D | On each list screen the list scrolls when items exceed the viewport, and the create, edit, delete and search actions are all present. |
 | REQ-EXT-40 | T | Typing `h_st%` into each search field results in that exact string being used as the pattern; no character is stripped, escaped or reordered. |
 | REQ-EXT-50 | I | The manifest declares no `uses-permission` element; the application's own code contains no networking call; with the device in flight mode every function of 3.2 completes normally. |
-| REQ-EXT-60 | I | Exactly one SQLite database file exists, under the application's private data directory; no question, tag or account data is found in any other store. |
+| REQ-EXT-60 | I | Exactly one SQLite database file exists, under the application's private data directory; no question, tag or account data is found in any other store, and the only other application data found is the signed-in identity and the gameplay lobby, both in application-private preference storage. |
 | REQ-EXT-70 | I | Import is started only through the platform document-selection interface; the returned stream is opened for reading; no other file path is opened by the application. |
 
 ### 4.3 Functions
@@ -636,6 +715,8 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-QST-50 | T | With questions `apple`, `Banana`, `cherry` stored, the list shows them in that order, and each entry displays the names of the tags assigned to it. |
 | REQ-QST-60 | T | A question created while signed in as `alice` is visible and editable after signing in as `bob`. |
 | REQ-QST-70 | T | Two tags are assigned to a question and one is withdrawn; the assignment table holds exactly one row for that question; re-selecting an assigned tag does not create a second row. |
+| REQ-QST-80 | T | A question carrying one tag and a question carrying twelve are shown in the same list; both entries have the same height, both show the question text above the tags, and the tag area of the second scrolls along the entry to reveal the tags that do not fit. |
+| REQ-QST-90 | T | Swiping an entry to the left raises the confirmation of REQ-QST-40 — declining restores the entry and leaves the question stored, accepting removes it; swiping an entry to the right leaves the question stored, restores the entry, and leaves the lobby holding that question. |
 
 #### 4.3.3 Tags
 
@@ -647,6 +728,11 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-TAG-40 | T | The delete action raises a confirmation naming the tag and stating the consequence; declining leaves the tag stored; accepting removes it. |
 | REQ-TAG-50 | T | With tags `basics`, `Exam`, `space` stored, the list shows them in that order. |
 | REQ-TAG-60 | T | A tag created while signed in as `alice` is visible and editable after signing in as `bob`. |
+| REQ-TAG-70 | T | With `algebra` carrying 3 questions and `unused` carrying none, the two entries show 3 and 0; assigning a fourth question to `algebra` changes its entry to 4. |
+| REQ-TAG-80 | T | With 9 tags stored, the tag list screen states 9; creating a tag changes the stated number to 10. |
+| REQ-TAG-90 | T | With tags carrying 5, 2, 2 and 0 questions, the three orders produce respectively: descending by count, ascending by name, ascending by count; in the first and third the two tags carrying 2 appear in name order. Changing the choice reorders the displayed list with no further action. |
+| REQ-TAG-100 | T | Swiping a tag entry to the left raises the confirmation of REQ-TAG-40; declining restores the entry and leaves the tag stored; accepting removes it and its assignments. |
+| REQ-TAG-110 | T | Swiping a tag carrying 4 questions to the right leaves the tag stored, restores the entry, and leaves the lobby holding exactly those 4 questions; repeating the swipe adds none and says so. |
 
 #### 4.3.4 Search and filtering
 
@@ -660,6 +746,13 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-SRCH-60 | T | The patterns `po%`, `%ta`, `%sto%`, `_br%` and `%__a` each return exactly the members of the prepared data set that satisfy the stated wildcard rule. |
 | REQ-SRCH-70 | T | The patterns `PO%` and `po%` return the same questions. |
 | REQ-SRCH-80 | D | Typing successive characters into a search field narrows the displayed list after each character, with no confirming action. |
+| REQ-SRCH-90 | T | With question `Who was Napoleon?` carrying the tag `france` and question `What caused the French Revolution?` not carrying it, the pattern `%fran%` returns both: the second by its text, the first through its tag. |
+| REQ-SRCH-100 | T | Holding `history` returns the questions carrying it; adding `politics` returns only the questions carrying both; adding a tag no question shares with them returns nothing. |
+| REQ-SRCH-110 | T | With nothing held, the offered tags appear in descending order of the number of questions carrying them, ties in name order. After holding `history`, the counts offered are the counts within the questions carrying `history`, and `history` itself is no longer offered. |
+| REQ-SRCH-120 | T | With `history` held and `science` carried by no question carrying `history`, `science` is not among the offered tags; every tag that is offered returns at least one question when chosen. |
+| REQ-SRCH-130 | T | Individual results are selected and deselected one by one; the select-all action selects exactly the results currently displayed and no others, and narrowing the search afterwards leaves selected only those still displayed. |
+| REQ-SRCH-140 | T | Selecting three results and adding them leaves the lobby holding exactly those three and states that three were added; repeating the action adds none and says so. |
+| REQ-SRCH-150 | T | The same sequence of criteria entered on the main menu and on the question list produces the same results, the same offered tags in the same order, and the same effect on the lobby. |
 
 #### 4.3.5 Question-set import
 
@@ -676,6 +769,23 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-IMP-90 | T | A file of 2 MiB, a file whose stream cannot be opened, and a file holding invalid JSON are each rejected with the corresponding message and no write. |
 | REQ-IMP-100 | T | After a completed import the reported counts equal the counts confirmed beforehand, and the reported numbers of created questions and created tags equal the actual change in the tables. |
 
+#### 4.3.6 Gameplay
+
+| ID | Method | Acceptance criteria |
+|---|---|---|
+| REQ-GAME-10 | T | A question added from the search, then again by a swipe, then again through one of its tags, appears once in the lobby. |
+| REQ-GAME-20 | T | Starting from an empty lobby, one question is added by each of the three paths; the lobby then holds exactly the union of what those three paths named. |
+| REQ-GAME-30 | T | A lobby of four questions still holds those four after the application is stopped and launched again; deleting one of them leaves the lobby holding three, and the deleted question is named nowhere in it. |
+| REQ-GAME-40 | T | Removing one question from the lobby leaves the others; emptying raises a confirmation, declining leaves the lobby as it was, accepting empties it; in neither case is any question deleted. |
+| REQ-GAME-50 | T | With a lobby of 5 questions of which 2 carry no answer, starting states that 2 are excluded and 3 will be asked, and the game's total is 3; with a lobby in which no question carries an answer, the game does not begin and the reason is stated. |
+| REQ-GAME-60 | T | Two games started from the same lobby with different shuffle sources ask the questions in different orders; a game started from a fixed source asks them in the same order every time; no question is lost or duplicated by the shuffle. |
+| REQ-GAME-70 | T | In a game of three questions, the first three submissions ask three different questions and the fourth asks the first one again — for a correct submission, an incorrect one and a skip alike. |
+| REQ-GAME-80 | T | For a stored answer `Otto von Bismarck`: `otto von bismarck`, `  Otto von Bismarck `, and `Otto   von\tBismarck` are correct; `Otto Bismarck` and `Metternich` are not; an empty submission and one of spaces alone are reported as skips and counted as incorrect. |
+| REQ-GAME-90 | T | After a correct, a wrong and a correct submission in a game of 30 questions, the display reads `1 / 2 / 30`. |
+| REQ-GAME-100 | T | A wrong submission and a skip each set the run to zero; answering an already-correct question correctly again raises the run but leaves the number of different questions unchanged; no submission ever lowers that number. |
+| REQ-GAME-110 | T | A game of three questions ends exactly when the third different question has been answered correctly, and not before, however many correct submissions were made for the others. |
+| REQ-GAME-120 | T | A game of four questions answered correctly at the first attempt throughout ends as a perfect victory reading `4 / 4 / 4`; a game in which a question was missed early but the whole set was then answered correctly in one unbroken run also ends as a perfect victory; a game in which the run was broken inside the final round ends as a victory with a run shorter than the total. |
+
 ### 4.4 Usability requirements
 
 | ID | Method | Acceptance criteria |
@@ -687,6 +797,7 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-USE-50 | D | After each of a create, an edit, a delete and an import, the affected list is displayed with the change applied. |
 | REQ-USE-60 | D | With the device set to light and then to dark appearance, every screen renders with the corresponding theme and every label remains legible. |
 | REQ-USE-70 | I | The question list and tag list screens each display the wildcard help text. |
+| REQ-USE-80 | I | The question list and tag list screens each display what a swipe to the left and a swipe to the right do on that screen. |
 
 ### 4.5 Performance requirements
 
@@ -792,11 +903,12 @@ This document is a configuration item under [MF-CMP-001](configuration-managemen
 |---|---|---|
 | External interfaces (`EXT`) | 3.1 | 7 |
 | Authentication and session (`AUTH`) | 3.2.1 | 8 |
-| Questions (`QST`) | 3.2.2 | 7 |
-| Tags (`TAG`) | 3.2.3 | 6 |
-| Search and filtering (`SRCH`) | 3.2.4 | 8 |
+| Questions (`QST`) | 3.2.2 | 9 |
+| Tags (`TAG`) | 3.2.3 | 11 |
+| Search and filtering (`SRCH`) | 3.2.4 | 15 |
 | Question-set import (`IMP`) | 3.2.5 | 10 |
-| Usability (`USE`) | 3.3 | 7 |
+| Gameplay (`GAME`) | 3.2.6 | 12 |
+| Usability (`USE`) | 3.3 | 8 |
 | Performance (`PERF`) | 3.4 | 6 |
 | Logical database (`DB`) | 3.5 | 10 |
 | Design constraints (`CON`) | 3.6 | 5 |
@@ -804,9 +916,9 @@ This document is a configuration item under [MF-CMP-001](configuration-managemen
 | Security (`SEC`) | 3.8.1 | 6 |
 | Reliability and availability (`REL`) | 3.8.2 | 4 |
 | Portability and maintainability (`POR`) | 3.8.3 | 4 |
-| **Total** | | **91** |
+| **Total** | | **118** |
 
-Priority distribution: 71 High, 19 Medium, 1 Low. The High requirements are those without which
+Priority distribution: 86 High, 31 Medium, 1 Low. The High requirements are those without which
 the product does not meet the purpose of [1.1](#11-purpose); together they form the minimum
 acceptable product.
 
@@ -830,12 +942,13 @@ here so that every requirement has a stated origin.
 |---|---|---|
 | SN-01 | A learner captures a question and its answer once, and can change or remove it later. | REQ-QST-10, REQ-QST-20, REQ-QST-30, REQ-QST-40, REQ-QST-50, REQ-EXT-10, REQ-EXT-20, REQ-EXT-30, REQ-USE-10 |
 | SN-02 | A learner classifies a question along as many dimensions as the material needs. | REQ-QST-10, REQ-QST-70, REQ-TAG-10, REQ-TAG-20, REQ-TAG-30, REQ-TAG-40, REQ-TAG-50, REQ-DB-40, REQ-DB-60 |
-| SN-03 | A learner finds a question again by what it says or by what it is about, in a library that keeps growing. | REQ-SRCH-10, REQ-SRCH-20, REQ-SRCH-30, REQ-SRCH-50, REQ-SRCH-60, REQ-EXT-40, REQ-USE-70, REQ-QST-50, REQ-TAG-50 |
+| SN-03 | A learner finds a question again by what it says or by what it is about, in a library that keeps growing. | REQ-SRCH-10, REQ-SRCH-20, REQ-SRCH-30, REQ-SRCH-50, REQ-SRCH-60, REQ-SRCH-90, REQ-SRCH-100, REQ-SRCH-110, REQ-SRCH-120, REQ-SRCH-150, REQ-EXT-40, REQ-USE-70, REQ-QST-50, REQ-QST-80, REQ-TAG-50, REQ-TAG-70, REQ-TAG-90 |
 | SN-04 | A learner loads a whole topic prepared outside the application instead of typing it in. | REQ-IMP-10 … REQ-IMP-100, REQ-EXT-70, REQ-STD-30 |
 | SN-05 | Several people share one device, each signing in under their own name, with no server involved. | REQ-AUTH-10, REQ-AUTH-20, REQ-AUTH-30, REQ-AUTH-40, REQ-AUTH-70, REQ-AUTH-80, REQ-QST-60, REQ-TAG-60, REQ-DB-20 |
 | SN-06 | The application works with no connectivity and sends nothing anywhere. | REQ-CON-10, REQ-CON-20, REQ-CON-30, REQ-CON-40, REQ-CON-50, REQ-EXT-50, REQ-EXT-60, REQ-DB-10, REQ-SEC-40, REQ-SEC-60 |
 | SN-07 | A password stored on the device cannot be recovered from the device's storage. | REQ-SEC-10, REQ-SEC-20, REQ-SEC-30, REQ-SEC-50, REQ-SEC-60, REQ-EXT-60, REQ-DB-10 |
 | SN-08 | The application is comfortable to read in the same lighting conditions as the rest of the device. | REQ-USE-60 |
+| SN-09 | A learner practises a chosen set of questions until the whole set is known, rather than reading it through once. | REQ-GAME-10 … REQ-GAME-120, REQ-SRCH-130, REQ-SRCH-140, REQ-QST-90, REQ-TAG-110, REQ-EXT-10 |
 
 ### A.2 Forward trace — requirements to verification
 
@@ -845,7 +958,7 @@ in clause 4, in the subclause that mirrors its own:
 | Requirements | Verified in |
 |---|---|
 | 3.1 External interfaces | [4.2](#42-external-interfaces) |
-| 3.2.1 – 3.2.5 Functions | [4.3.1](#431-authentication-and-session) – [4.3.5](#435-question-set-import) |
+| 3.2.1 – 3.2.6 Functions | [4.3.1](#431-authentication-and-session) – [4.3.6](#436-gameplay) |
 | 3.3 Usability | [4.4](#44-usability-requirements) |
 | 3.4 Performance | [4.5](#45-performance-requirements) |
 | 3.5 Logical database | [4.6](#46-logical-database-requirements) |
@@ -862,6 +975,7 @@ otherwise not be **complete** in the sense of clause 5.2.6.
 |---|---|
 | REQ-AUTH-50, REQ-AUTH-60, REQ-QST-20, REQ-TAG-20, REQ-DB-80 | No need statement defines behaviour for empty input or for names differing only by case; without these, a mistyped capital creates a second account or a duplicate tag. |
 | REQ-SRCH-40, REQ-SRCH-70, REQ-SRCH-80 | The empty-criteria case, letter case, and when results refresh are otherwise undefined. |
+| REQ-USE-80 | A swipe leaves no mark on the screen; without this, the only way to discover a destructive gesture is to perform it. |
 | REQ-IMP-90 | A file interface must state what it refuses, or every malformed file becomes an unhandled failure. |
 | REQ-USE-10 … REQ-USE-50 | Usability needs a verifiable form; these five are the properties that make the product safe and predictable. |
 | REQ-PERF-10 … REQ-PERF-60 | Without numbers, "usable at size" cannot be verified. |
@@ -899,6 +1013,15 @@ change to this document under [5.2](#52-baseline-and-change-control).
 | **D-17** | May the platform back up application data off the device? | **No.** Backup of the database and the identity record is excluded. | *Allowing platform backup* — copies questions and credential material to a cloud transport, which contradicts SN-06 even though the application itself never opens a socket. | REQ-SEC-60 |
 | **D-18** | What is the platform baseline? | **API level 24** minimum, up to the declared target; touchscreen and local storage only. | *A higher minimum* — excludes usable devices for no needed API. *No stated baseline* — "runs on Android" is unverifiable. | REQ-POR-10, REQ-POR-20 |
 | **D-19** | What makes the product maintainable in a verifiable way? | A **reproducible build** from a clean checkout, and **platform-free parsing and merging logic**. | *Metrics such as module size or complexity limits* — design prescriptions that clause 9.6.18 warns against placing in an SRS, and weak predictors at this scale. | REQ-POR-30, REQ-POR-40 |
+| **D-20** | In what order is the tag list shown? | **Three orders the user chooses between**: most questions first, by name, fewest questions first; ties broken by name. | *By name only* — the tags a library leans on and the tags nothing uses are the two ends worth seeing, and neither is findable by name in a list of hundreds. *Most-used only* — a tag carrying nothing is then the hardest to find and the most likely to want deleting. | REQ-TAG-90 |
+| **D-21** | How are the per-entry actions on a list offered? | **Swipes**: left is the destructive action, right adds to the lobby. The confirmations of REQ-QST-40 and REQ-TAG-40 still apply, and each screen says what the swipes do. | *A button on every entry* — the entry is then dominated by its controls rather than by its content, and the tag counts of REQ-TAG-70 would compete with a delete button for the same space. The cost of a gesture is that it is invisible, which REQ-USE-80 pays for. | REQ-QST-90, REQ-TAG-100, REQ-TAG-110, REQ-USE-80 |
+| **D-22** | How are a question's tags shown in a list that must stay readable? | The tag names sit **under the question text in a strip that scrolls sideways**, so the entry keeps its height. | *Wrapping the tags over several lines* — a question carrying a dozen tags would then push the questions around it off the screen. *Showing the first few and a count* — hides exactly the tag the user is scanning for. | REQ-QST-80 |
+| **D-23** | Is there one search or one per screen? | **One**, presented on the main menu and on the question list, and the typed text is matched against question texts and tag names together. | *A search field and a separate tag filter per screen* — two implementations of one idea drift apart, and a user who types a subject would have to know whether it was written into the question or recorded as its tag before choosing which control to use. | REQ-SRCH-90, REQ-SRCH-150 |
+| **D-24** | Which tags are offered as the next criterion, and in what order? | Those carried by **at least one question of the current result**, ordered by how many of those questions carry them. | *Every stored tag, ordered by total use* — offers tags that would empty the list, and a count that says nothing about the search in progress. *Alphabetical* — makes the user read the whole vocabulary to find the one tag that would halve the result. | REQ-SRCH-110, REQ-SRCH-120 |
+| **D-25** | Where does the gameplay lobby live? | In **application-private preference storage**, as question identifiers, beside the signed-in identity. | *A table in the database* — the lobby is a choice being assembled, not part of the library, and adding a table would require a schema version increase and the conversion of REQ-DB-100 for data that is thrown away after one game. *Memory only* — a lobby gathered from three screens would be lost whenever the platform reclaimed the process. Identifiers rather than copies mean a question edited after being chosen is asked as edited. | REQ-GAME-30, REQ-EXT-60, REQ-DB-10 |
+| **D-26** | What happens to a question with no answer when a game starts? | It is **left out**, and the number left out is stated before the game begins. | *Asking it and accepting anything* — the question then teaches nothing and the total is dishonest. *Refusing to start* — a lobby assembled from a tag would fail because of one incomplete question. | REQ-GAME-50 |
+| **D-27** | What happens to a question after it has been asked? | It goes to the **back of the queue**, whatever the submission was worth, and the queue never shortens. | *Removing a question once answered correctly* — turns the game into a single pass, which tests rather than teaches. *Repeating a missed question immediately* — the answer is then still on the screen, and the repetition proves nothing. | REQ-GAME-70 |
+| **D-28** | What counts as a correct answer? | Equality with the stored answer, **ignoring letter case, surrounding spacing and the length of spacing runs**; a blank submission is a skip and counts as incorrect. | *Exact equality* — a trailing space would mark a correct answer wrong. *Fuzzy matching* — a threshold no user can predict, and one that would accept an answer the learner does not actually know. | REQ-GAME-80 |
 
 ---
 
@@ -910,17 +1033,24 @@ change to this document under [5.2](#52-baseline-and-change-control).
 | **Answer** | The optional text recorded against a question. |
 | **API level** | The Android platform version identifier. |
 | **Assignment** | The relation between one question and one tag; a QuestionTags record. |
+| **Correct answers** | In a game, the number of *different* questions answered correctly at least once; the middle of the three numbers of REQ-GAME-90. |
+| **Game** | One run over the questions of the lobby, ending in a victory (REQ-GAME-110). |
 | **Import** | Loading a question set file into the stored questions and tags. |
+| **Lobby** | The gameplay lobby: the questions gathered for the next game, from wherever they were chosen (REQ-GAME-10). |
 | **M:N** | A many-to-many relationship between two entities. |
 | **PBKDF2** | Password-Based Key Derivation Function 2 — the iterated derivation used for stored credentials. |
+| **Perfect victory** | A victory in which the streak also equals the number of questions the game began with, which happens only when nothing was answered wrongly or skipped (REQ-GAME-120). |
 | **Question** | The unit of study material: a question text, an optional answer text, and any number of tags. |
 | **Question set** | A JSON file holding a batch of questions and tags, defined by [MF-IFS-001](question-import-format.md). |
 | **Reference device** | The device class against which the limits of [3.4](#34-performance-requirements) are measured — assumption A-4. |
 | **Reference volume** | The dataset size against which those limits are measured — defined in [3.4](#34-performance-requirements). |
 | **Session** | The state in which an account is signed in; retained until sign-out (REQ-AUTH-70). |
+| **Skip** | A submission carrying nothing but spacing; counted as an incorrect submission (REQ-GAME-80). |
+| **Streak** | The number of correct submissions made in an unbroken run; reset to zero by any other submission (REQ-GAME-100). |
 | **Tag** | A named, multi-valued classification of a question, for example *algebra*. Shared by all accounts. |
 | **TBD / TBS / TBR** | To Be Defined / Specified / Resolved — placeholders that clause 5.2.6 forbids in a complete requirement set. |
 | **V&V** | Verification and validation. |
+| **Victory** | The end of a game, reached when every question it began with has been answered correctly at least once (REQ-GAME-110). |
 | **Wildcard** | A pattern character: `%` matches zero or more characters, `_` matches exactly one. |
 
 Terms not defined here carry the meaning given in ISO/IEC/IEEE 24765:2017.
@@ -939,7 +1069,7 @@ Terms not defined here carry the meaning given in ISO/IEC/IEEE 24765:2017.
 | **Complete** | Each requirement is understandable on its own; where it depends on another it names it by identifier rather than implying it. | Cross-references were made explicit links. |
 | **Singular** | One capability, constraint or quality per requirement; grouped actions such as "add, edit, delete" were split into separate requirements. | Statements containing a conjunction of *actions* were split; enumerations of *fields* within one action were kept (REQ-QST-30). |
 | **Feasible** | Every requirement is achievable with the platform APIs on the baseline of assumption A-1, and every numeric limit sits well above measured behaviour at the seeded volume. | Each non-functional limit was checked against the reference device of assumption A-4. |
-| **Verifiable** | Each has exactly one entry in [clause 4](#4-verification) with a method and pass criteria. Unmeasurable terms are absent. | Clause 4 was built by walking clause 3 in order; the counts agree at 91. |
+| **Verifiable** | Each has exactly one entry in [clause 4](#4-verification) with a method and pass criteria. Unmeasurable terms are absent. | Clause 4 was built by walking clause 3 in order; the counts agree at 118. |
 | **Correct** | Each requirement is an accurate statement of the need it cites; every decision that shaped it is recorded in [Annex B](#annex-b--decision-record). | Each need was re-read against the requirements claiming it. |
 | **Conforming** | All requirements follow the construct of clause 5.2.4 and the keywords of clause 5.2.7, in the fixed table form of [1.9](#19-conventions). | Every statement uses *shall* with an explicit subject. |
 
@@ -967,6 +1097,6 @@ several organisations is omitted.
 |---|---|---|---|---|
 | T-1 | Information items of clause 7 (BRS, StRS, SyRS, SRS) | Only the **SRS** is produced. Stakeholder needs are recorded in [A.1](#a1-stakeholder-needs). | There is one stakeholder group and no acquirer to negotiate with; the product is software only, so a system-level specification would restate the software one. | A later change of stakeholder would find the needs stated compactly rather than argued in full; A.1 is then the item to expand first. |
 | T-2 | Requirement attributes of clause 5.2.8.2 | Identification, type, priority, source and verification method are carried; *version number*, *owner*, *risk* and *difficulty* are not. | One owner, and per-requirement versions duplicate the document version held under [MF-CMP-001](configuration-management.md). Risk and difficulty inform planning, which is not this document's purpose. | Requirement-level history is only recoverable from the repository history of this file. |
-| T-3 | Requirements management measurement (clause 6.5) | Volatility is not measured; changes are visible in the document history. | At 91 requirements under one owner, the measure would cost more than it informs. | Requirement churn is not quantified; if the set grows past a few hundred, this should be revisited. |
+| T-3 | Requirements management measurement (clause 6.5) | Volatility is not measured; changes are visible in the document history. | At 118 requirements under one owner, the measure would cost more than it informs. | Requirement churn is not quantified; if the set grows past a few hundred, this should be revisited. |
 | T-4 | Concept of operations and operational concept annexes | Not produced as separate items; the operational context is given in [1.3](#13-product-perspective), [1.4](#14-product-functions) and [5.1](#51-the-problem-being-solved). | A single-user application on one device has no operational environment beyond the device itself. | None material at this scale. |
 | T-5 | Formal review and approval records | Approval is recorded by the baseline label in [MF-CMP-001](configuration-management.md) rather than by a signature page. | No separate acquirer or quality organisation exists to sign. | Approval authority and date are traceable through the repository history only. |
