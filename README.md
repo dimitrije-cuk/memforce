@@ -69,7 +69,7 @@ written:
 
 An empty field lists everything, matching ignores letter case, and the list narrows as you type.
 
-One search serves the main menu and the questions screen. The text is matched against question
+One search serves the home screen and the questions screen. The text is matched against question
 titles and tag names at once, so typing finds a question by either. Below it, tags carried by the
 questions found are suggested, most used first; choosing one adds it as a filter and narrows the
 result, and choosing more narrows further. Results can be ticked one by one or with select-all, and

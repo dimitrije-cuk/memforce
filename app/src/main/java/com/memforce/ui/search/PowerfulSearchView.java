@@ -34,8 +34,8 @@ import java.util.List;
  *
  * <p>It carries the whole of a search rather than a field alone: the text, the tags chosen so far,
  * the tags worth choosing next, the questions that match, and what may be done with the ones
- * picked out. Both the main menu and the question list show this view, so a user learns the search
- * once and the two screens cannot drift apart.
+ * picked out. Both the home screen and the question list show this view, so a user learns the
+ * search once and the two screens cannot drift apart.
  *
  * <p>Text matches question texts and tag names alike, so typing narrows by either; each tag chosen
  * on top of it narrows further. The suggestions are the tags carried by the questions currently
@@ -58,9 +58,6 @@ public class PowerfulSearchView extends LinearLayout {
     private Lobby lobby;
 
     private SearchQuery query = SearchQuery.empty();
-
-    @Nullable
-    private Runnable onLobbyChanged;
 
     public PowerfulSearchView(@NonNull Context context) {
         this(context, null);
@@ -97,6 +94,7 @@ public class PowerfulSearchView extends LinearLayout {
             }
         });
         binding.selectAll.setOnClickListener(v -> adapter.selectAll(binding.selectAll.isChecked()));
+        binding.selectAllLabel.setOnClickListener(v -> binding.selectAll.performClick());
         binding.addToLobbyButton.setOnClickListener(v -> addSelectionToLobby());
         showSelection();
     }
@@ -104,11 +102,6 @@ public class PowerfulSearchView extends LinearLayout {
     /** Set to open a question when its row is tapped; leave unset to make rows inert. */
     public void setOnOpenQuestion(@Nullable QuestionResultAdapter.QuestionAction action) {
         adapter.setOnClick(action);
-    }
-
-    /** Invoked whenever this view has put questions into the lobby. */
-    public void setOnLobbyChanged(@Nullable Runnable listener) {
-        this.onLobbyChanged = listener;
     }
 
     /**
@@ -206,6 +199,7 @@ public class PowerfulSearchView extends LinearLayout {
         binding.addToLobbyButton.setEnabled(count > 0);
         binding.selectAll.setChecked(adapter.isAllSelected());
         binding.selectAll.setEnabled(!adapter.isEmpty());
+        binding.selectAllLabel.setEnabled(!adapter.isEmpty());
     }
 
     private void addSelectionToLobby() {
@@ -224,9 +218,6 @@ public class PowerfulSearchView extends LinearLayout {
                         ? getContext().getString(R.string.lobby_nothing_added)
                         : getResources().getQuantityString(R.plurals.lobby_added, added, added),
                 Snackbar.LENGTH_SHORT).show();
-        if (onLobbyChanged != null) {
-            onLobbyChanged.run();
-        }
     }
 
     private void confirmDelete(int position) {

@@ -16,7 +16,7 @@ import java.util.Set;
 /**
  * The questions gathered for the next game.
  *
- * <p>The lobby is the one destination every selection path leads to: the search on the main menu,
+ * <p>The lobby is the one destination every selection path leads to: the search on the home screen,
  * a swipe on a tag, and a swipe on a question all put questions here, and the game reads them back
  * from here. It holds identifiers rather than questions so that editing a question between the
  * selection and the game shows the edited text, and it is kept in the same preference storage the

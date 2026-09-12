@@ -294,8 +294,8 @@ Column conventions are defined in [1.9 Conventions](#19-conventions).
 
 | ID | Requirement | Type | Pri | Source |
 |---|---|---|---|---|
-| REQ-EXT-10 | The application shall provide a sign-in screen, a main menu, a question list screen, a question editor, a tag list screen, a tag editor, a gameplay lobby screen, and a game screen. | I | H | SN-01, SN-02, SN-05, SN-09 |
-| REQ-EXT-20 | Once a user is signed in, the application shall provide navigation from the main menu to the question list, to the tag list and to the gameplay lobby, and a return path from each screen to the screen that opened it, without repeating sign-in. | I | H | SN-01, D-05 |
+| REQ-EXT-10 | The application shall provide a sign-in screen, a home screen, a question list screen, a question editor, a tag list screen, a tag editor, a gameplay lobby screen, and a game screen. | I | H | SN-01, SN-02, SN-05, SN-09 |
+| REQ-EXT-20 | Once a user is signed in, the application shall provide navigation from the home screen to the question list, to the tag list and to the gameplay lobby, and a return path from each screen to the screen that opened it, without repeating sign-in. | I | H | SN-01, D-05 |
 | REQ-EXT-30 | The question list screen and the tag list screen shall each display the items they manage as a scrollable list and shall expose the create, edit, delete and search actions defined for that entity in [3.2](#32-functions). | I | H | SN-01, SN-03 |
 | REQ-EXT-40 | Every search input field shall accept the characters `%` and `_` as typed input and shall pass them unaltered to the search function as pattern characters. | I | H | SN-03 |
 | REQ-EXT-50 | The application shall provide no communications interface: it shall neither transmit nor receive data over any network interface of the device, and it shall declare no permission in its manifest. | I | H | SN-06 |
@@ -322,7 +322,7 @@ storage permission possible.
 | REQ-AUTH-40 | When the submitted user name matches a stored account and the submitted password does not match that account's stored credential, the application shall deny access and shall display a message on the password field stating that the password is wrong for that user. | F | H | SN-05 |
 | REQ-AUTH-50 | When the user name or the password field is empty, the application shall reject the sign-in attempt, shall mark the empty field as required, and shall create no account. | F | H | derived, D-02 |
 | REQ-AUTH-60 | The application shall treat user names as equal when they differ only by letter case, so that a second account with the same name in different case cannot be created. | F | H | derived, D-02 |
-| REQ-AUTH-70 | The application shall retain the identity of the signed-in account across restarts of the application until the user signs out, and shall present the signed-in user name on the main menu. | F | M | SN-05, D-03 |
+| REQ-AUTH-70 | The application shall retain the identity of the signed-in account across restarts of the application until the user signs out, and shall present the signed-in user name in the menu of the home screen. | F | M | SN-05, D-03 |
 | REQ-AUTH-80 | The application shall provide a sign-out action that discards the retained identity and returns to the sign-in screen. | F | H | SN-05, D-03 |
 
 *Rationale.* Sign-in in MemForce is registration as well as authentication (decision D-01): a
@@ -398,7 +398,7 @@ is stated so that the list has one defined order rather than an arbitrary one am
 | REQ-SRCH-120 | The application shall omit from the offered tags every tag that no question of the current result carries, so that no offered tag can narrow the result to nothing. | F | H | SN-03, D-24 |
 | REQ-SRCH-130 | The application shall allow the user to select any of the questions of the current result individually, and to select all of them in one action. | F | H | SN-09 |
 | REQ-SRCH-140 | The application shall add the selected questions to the gameplay lobby in one action, and shall state how many questions were added. | F | H | SN-09 |
-| REQ-SRCH-150 | The application shall present the search of REQ-SRCH-90 to REQ-SRCH-140 on the main menu and on the question list screen, and the two presentations shall behave identically. | F | M | SN-03, D-23 |
+| REQ-SRCH-150 | The application shall present the search of REQ-SRCH-90 to REQ-SRCH-140 on the home screen and on the question list screen, and the two presentations shall behave identically. | F | M | SN-03, D-23 |
 
 *Rationale.* Wildcards are exposed to the user deliberately (decision D-08): the alternative —
 escaping `%` and `_` so they match literally — would remove the only means of substring search
@@ -485,7 +485,7 @@ towards disagree with the lobby they assembled, which is why the number is state
 
 | ID | Requirement | Type | Pri | Source |
 |---|---|---|---|---|
-| REQ-USE-10 | The application shall make every function of [3.2](#32-functions) reachable from the main menu in at most two user actions. | Q | M | SN-01, D-05 |
+| REQ-USE-10 | The application shall make every function of [3.2](#32-functions) reachable from the home screen in at most three user actions. | Q | M | SN-01, D-05 |
 | REQ-USE-20 | The application shall require a confirmation before deleting a question or a tag, and the confirmation shall identify the item to be deleted. | Q | H | derived, D-04 |
 | REQ-USE-30 | When the application rejects an entry, it shall display a message on the field that caused the rejection and shall retain the values the user has already entered. | Q | H | derived |
 | REQ-USE-40 | When a list is empty because nothing matches the current search, the application shall display a message that says so, in place of an empty area. | Q | M | derived |
@@ -682,7 +682,7 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | ID | Method | Acceptance criteria |
 |---|---|---|
 | REQ-EXT-10 | D | All eight screens are opened in one session, each showing what it manages. |
-| REQ-EXT-20 | D | From the main menu, the question list, the tag list and the gameplay lobby are each opened and left again; the sign-in screen does not reappear. |
+| REQ-EXT-20 | D | From the home screen's menu, the question list, the tag list and the gameplay lobby are each opened and left again; the sign-in screen does not reappear. |
 | REQ-EXT-30 | D | On each list screen the list scrolls when items exceed the viewport, and the create, edit, delete and search actions are all present. |
 | REQ-EXT-40 | T | Typing `h_st%` into each search field results in that exact string being used as the pattern; no character is stripped, escaped or reordered. |
 | REQ-EXT-50 | I | The manifest declares no `uses-permission` element; the application's own code contains no networking call; with the device in flight mode every function of 3.2 completes normally. |
@@ -701,7 +701,7 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-AUTH-40 | T | Given account `alice` created with `pw1`, when `alice`/`wrong` is submitted, then access is denied, the wrong-password message appears on the password field, and the account record is unchanged. |
 | REQ-AUTH-50 | T | For each of (empty user name, empty password, both empty): access is denied, the empty field is marked as required, and the Users table is unchanged. |
 | REQ-AUTH-60 | T | Given account `alice`, when `ALICE`/`pw2` is submitted, then no second account is created; the attempt is treated as a sign-in for `alice` and fails on the password. |
-| REQ-AUTH-70 | T | After signing in as `alice` and stopping the application, the next launch opens the main menu showing `alice` without asking for a password. |
+| REQ-AUTH-70 | T | After signing in as `alice` and stopping the application, the next launch opens the home screen, whose menu names `alice`, without asking for a password. |
 | REQ-AUTH-80 | D | The sign-out action returns to the sign-in screen; the next launch asks for a user name and password. |
 
 #### 4.3.2 Questions
@@ -752,7 +752,7 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-SRCH-120 | T | With `history` held and `science` carried by no question carrying `history`, `science` is not among the offered tags; every tag that is offered returns at least one question when chosen. |
 | REQ-SRCH-130 | T | Individual results are selected and deselected one by one; the select-all action selects exactly the results currently displayed and no others, and narrowing the search afterwards leaves selected only those still displayed. |
 | REQ-SRCH-140 | T | Selecting three results and adding them leaves the lobby holding exactly those three and states that three were added; repeating the action adds none and says so. |
-| REQ-SRCH-150 | T | The same sequence of criteria entered on the main menu and on the question list produces the same results, the same offered tags in the same order, and the same effect on the lobby. |
+| REQ-SRCH-150 | T | The same sequence of criteria entered on the home screen and on the question list produces the same results, the same offered tags in the same order, and the same effect on the lobby. |
 
 #### 4.3.5 Question-set import
 
@@ -790,7 +790,7 @@ build is exercised end to end against the product functions of [1.4](#14-product
 
 | ID | Method | Acceptance criteria |
 |---|---|---|
-| REQ-USE-10 | A | Each function of 3.2 is traced to a path from the main menu; no path exceeds two user actions. |
+| REQ-USE-10 | A | Each function of 3.2 is traced to a path from the home screen; no path exceeds three user actions. |
 | REQ-USE-20 | T | For a question and for a tag: the delete action raises a confirmation that identifies the item; declining leaves it stored; accepting removes it. |
 | REQ-USE-30 | D | A rejected entry shows a message on the offending field, and the values already entered are still present in the form. |
 | REQ-USE-40 | D | A search matching nothing shows the no-results message in place of the list. |
@@ -998,7 +998,7 @@ change to this document under [5.2](#52-baseline-and-change-control).
 | **D-02** | What are the validity and uniqueness rules for names and text? | User name unique; tag name unique; question text and tag name not empty; all comparisons ignore letter case. | *Allowing duplicates* — two tags named `Algebra` and `algebra` split one concept and make every tag filter ambiguous. *Case-sensitive uniqueness* — the same failure with extra steps. | REQ-AUTH-50, REQ-AUTH-60, REQ-QST-20, REQ-TAG-20, REQ-DB-80 |
 | **D-03** | Should the signed-in identity survive an application restart? | **Yes**, until the user signs out, held in application-private preferences. | *Sign in on every launch* — a learner who opens the application a dozen times a day types a password each time, for no security gain on a device that already has a lock screen. *Holding a credential in the record* — never necessary, so the record holds an identifier and a name only (REQ-SEC-50). | REQ-AUTH-70, REQ-AUTH-80, REQ-SEC-50 |
 | **D-04** | Is a deletion confirmed? | **Yes**, for questions and tags, and the tag confirmation states the effect on questions. | *Immediate deletion with undo* — needs an undo stack across screens; a confirmation is cheaper and sufficient at this scale. | REQ-QST-40, REQ-TAG-40, REQ-USE-20 |
-| **D-05** | How are the capabilities arranged on screen? | A **main menu** leading to a question area and a tag area, each with its list and editor. | *One screen with tabs* — the two areas share no state, and separate activities keep the back stack meaningful. | REQ-EXT-10, REQ-EXT-20, REQ-USE-10 |
+| **D-05** | How are the capabilities arranged on screen? | A **home screen given over to searching the questions**, carrying a menu that leads to the question area, the tag area and the gameplay lobby, each with its list and editor. | *One screen with tabs* — the two areas share no state, and separate activities keep the back stack meaningful. *A button on the home screen for each destination* — they take the height the result list needs and grow with every destination added, where a menu costs one press and no height. | REQ-EXT-10, REQ-EXT-20, REQ-USE-10 |
 | **D-06** | How does a file reach the application without a storage permission? | Through the **platform document-selection interface**, which grants read access to the one file the user picks. | *Reading a fixed directory* — needs a storage permission and a file manager, and would put MemForce in charge of a folder it does not own. | REQ-EXT-70, REQ-CON-50 |
 | **D-07** | How do a text pattern and a tag filter combine? | **Conjunction**: a question must satisfy every active criterion; an inactive criterion restricts nothing. | *Disjunction* — adding a criterion would widen the result, which is the opposite of filtering. | REQ-SRCH-30, REQ-SRCH-40 |
 | **D-08** | Are `%` and `_` wildcards or literal characters? | **Wildcards**, exposed to the user, with on-screen help. | *Escaping them to match literally* — removes the product's only substring search. The residual cost is that a literal `%` cannot be searched for; no stored content is expected to contain one. | REQ-SRCH-60, REQ-EXT-40, REQ-USE-70 |
@@ -1016,7 +1016,7 @@ change to this document under [5.2](#52-baseline-and-change-control).
 | **D-20** | In what order is the tag list shown? | **Three orders the user chooses between**: most questions first, by name, fewest questions first; ties broken by name. | *By name only* — the tags a library leans on and the tags nothing uses are the two ends worth seeing, and neither is findable by name in a list of hundreds. *Most-used only* — a tag carrying nothing is then the hardest to find and the most likely to want deleting. | REQ-TAG-90 |
 | **D-21** | How are the per-entry actions on a list offered? | **Swipes**: left is the destructive action, right adds to the lobby. The confirmations of REQ-QST-40 and REQ-TAG-40 still apply, and each screen says what the swipes do. | *A button on every entry* — the entry is then dominated by its controls rather than by its content, and the tag counts of REQ-TAG-70 would compete with a delete button for the same space. The cost of a gesture is that it is invisible, which REQ-USE-80 pays for. | REQ-QST-90, REQ-TAG-100, REQ-TAG-110, REQ-USE-80 |
 | **D-22** | How are a question's tags shown in a list that must stay readable? | The tag names sit **under the question text in a strip that scrolls sideways**, so the entry keeps its height. | *Wrapping the tags over several lines* — a question carrying a dozen tags would then push the questions around it off the screen. *Showing the first few and a count* — hides exactly the tag the user is scanning for. | REQ-QST-80 |
-| **D-23** | Is there one search or one per screen? | **One**, presented on the main menu and on the question list, and the typed text is matched against question texts and tag names together. | *A search field and a separate tag filter per screen* — two implementations of one idea drift apart, and a user who types a subject would have to know whether it was written into the question or recorded as its tag before choosing which control to use. | REQ-SRCH-90, REQ-SRCH-150 |
+| **D-23** | Is there one search or one per screen? | **One**, presented on the home screen and on the question list, and the typed text is matched against question texts and tag names together. | *A search field and a separate tag filter per screen* — two implementations of one idea drift apart, and a user who types a subject would have to know whether it was written into the question or recorded as its tag before choosing which control to use. | REQ-SRCH-90, REQ-SRCH-150 |
 | **D-24** | Which tags are offered as the next criterion, and in what order? | Those carried by **at least one question of the current result**, ordered by how many of those questions carry them. | *Every stored tag, ordered by total use* — offers tags that would empty the list, and a count that says nothing about the search in progress. *Alphabetical* — makes the user read the whole vocabulary to find the one tag that would halve the result. | REQ-SRCH-110, REQ-SRCH-120 |
 | **D-25** | Where does the gameplay lobby live? | In **application-private preference storage**, as question identifiers, beside the signed-in identity. | *A table in the database* — the lobby is a choice being assembled, not part of the library, and adding a table would require a schema version increase and the conversion of REQ-DB-100 for data that is thrown away after one game. *Memory only* — a lobby gathered from three screens would be lost whenever the platform reclaimed the process. Identifiers rather than copies mean a question edited after being chosen is asked as edited. | REQ-GAME-30, REQ-EXT-60, REQ-DB-10 |
 | **D-26** | What happens to a question with no answer when a game starts? | It is **left out**, and the number left out is stated before the game begins. | *Asking it and accepting anything* — the question then teaches nothing and the total is dishonest. *Refusing to start* — a lobby assembled from a tag would fail because of one incomplete question. | REQ-GAME-50 |

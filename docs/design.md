@@ -145,13 +145,13 @@ All code is under `app/src/main/java/com/memforce/`.
 | `game` | `GameSession`, `GameQuestion` | One run: a circular queue of questions and the streak/correct/total it keeps. Holds no Android type. | REQ-GAME-60…120 |
 | `game` | `AnswerMatcher` | Decides whether a submission counts, after trimming, collapsing runs of spaces and lowercasing. | REQ-GAME-80 |
 | `game` | `CurrentGame` | Holds the run the game screen is showing, in memory only. | [DD-11](#42-decisions-that-shape-the-structure) |
-| `ui` | `MainActivity` | Greeting, the embedded search, the lobby, questions and tags buttons, sign-out. | REQ-EXT-20, REQ-USE-10, REQ-SRCH-90 |
+| `ui` | `MainActivity` | The home screen: the heading, the embedded search, and the menu carrying the signed-in user, the lobby, the question list, the tag list and sign-out. | REQ-EXT-20, REQ-USE-10, REQ-SRCH-90 |
 | `ui.login` | `LoginActivity` | Sign-in form; derivation on a background executor; skips itself when a session exists. | REQ-AUTH-10…80, REQ-PERF-40 |
 | `ui.question` | `QuestionListActivity` | Hosts the search with swipe actions enabled; entry to the editor and to import. | REQ-QST-40, REQ-QST-50, REQ-SRCH-80, REQ-SRCH-90…150 |
 | `ui.question` | `QuestionEditActivity` | Create and edit a question, including its tag selection. | REQ-QST-10, REQ-QST-20, REQ-QST-30, REQ-QST-70 |
 | `ui.question` | `QuestionSetImportFlow` | The import interaction: pick, read, validate, plan, confirm, apply, report. | REQ-IMP-10…100 |
 | `ui.tag` | `TagListActivity`, `TagAdapter`, `TagEditActivity` | Tag list showing each tag's question count and the total, in a chosen order; swipe left deletes (after confirmation), swipe right sends the tag's questions to the lobby; tag create and rename. | REQ-TAG-10…50, REQ-TAG-70…110 |
-| `ui.search` | `PowerfulSearchView` | The compound view carrying the text field, chosen-tag chips, suggestion chips, result list, select-all box, selection count and "add to lobby" button. Embedded by the main menu and the question list. | REQ-SRCH-90…150 |
+| `ui.search` | `PowerfulSearchView` | The compound view carrying the text field, chosen-tag chips, suggestion chips, result list, select-all box, selection count and "add to lobby" button. Embedded by the home screen and the question list. | REQ-SRCH-90…150 |
 | `ui.search` | `QuestionResultAdapter` | The result rows; selection is held as question ids, so it survives a re-read, and ids no longer shown are dropped. | REQ-SRCH-130, REQ-SRCH-140, REQ-QST-80 |
 | `ui.common` | `SwipeActions` | An `ItemTouchHelper` callback drawing a coloured background and icon; absolute left/right so the gesture is the same whichever way the layout runs; a swipe never removes the row by itself. | REQ-QST-90, REQ-TAG-100, REQ-TAG-110, REQ-USE-80 |
 | `ui.common` | `TagPicker` | Multi-choice tag dialog used by the question editor. | REQ-QST-70 |
@@ -163,7 +163,9 @@ dark variants of `Theme.MemForce` (REQ-USE-60); `res/values/strings.xml` holds e
 message, including the wildcard help of REQ-USE-70 and the import messages of REQ-IMP-20 to
 REQ-IMP-100. `res/layout/view_powerful_search.xml` is the search's `<merge>` layout;
 `item_question_result.xml`, with `item_tag_label.xml`, lays a question's tag names in a
-sideways-scrolling strip so their number never changes the row height; `res/drawable/ic_delete.xml`
+sideways-scrolling strip so their number never changes the row height, and gives the row's box and
+the select-all box the same geometry so the two stand in one column; `res/menu/main.xml` is the
+home screen's menu, drawn behind `res/drawable/ic_more_vert.xml`; `res/drawable/ic_delete.xml`
 and `ic_add_to_lobby.xml` are the icons the swipe gestures draw.
 
 ### 3.3 Logical view
@@ -393,7 +395,7 @@ and questions a lobby identifier refers to remain governed by the schema; the lo
 |---|---|---|
 | Document selection | `ActivityResultContracts.OpenDocument`, MIME filter `application/json`, `text/plain`, `application/octet-stream`; the stream is opened through `ContentResolver.openInputStream` and closed after one read. | REQ-EXT-70, REQ-IMP-10 |
 | Question-set document | [MF-IFS-001](question-import-format.md) and its JSON Schema. `formatVersion` `"1.0"` only. | REQ-IMP-30, REQ-STD-30 |
-| Navigation | `LoginActivity` is the launcher; `MainActivity` is `exported=false`; each of the six list, editor and game activities declares `parentActivityName`, so the system Back button returns to the screen that opened it. Both themes are `NoActionBar` and no toolbar is installed, so navigation is by the system Back button rather than an on-screen arrow. | REQ-EXT-20 |
+| Navigation | `LoginActivity` is the launcher; `MainActivity` is `exported=false`; each of the six list, editor and game activities declares `parentActivityName`, so the system Back button returns to the screen that opened it. Both themes are `NoActionBar` and no toolbar is installed: the home screen opens the other screens from the menu behind its own button (`res/menu/main.xml`), and the way back from each is the system Back button rather than an on-screen arrow. | REQ-EXT-20 |
 
 ### 3.7 Interaction view
 
@@ -419,7 +421,7 @@ on the reference device (REQ-PERF-40, decision D-13).
 
 #### 3.7.2 Search
 
-The search is one compound view, `PowerfulSearchView`, embedded by both the main menu and the
+The search is one compound view, `PowerfulSearchView`, embedded by both the home screen and the
 question list. It holds the criteria in a single `SearchQuery` field and replaces that field
 whenever the user types, adds a suggested tag, or removes a chosen one; every change calls
 `refresh()`.
@@ -675,10 +677,11 @@ specification left open.
 | DD-06 | **Rule-bearing logic kept free of Android types.** | The importer, the `SearchQuery` value, the `QuestionFilter`/`TagQueries` statement builders and the whole game core (`GameSession`, `AnswerMatcher`, `CurrentGame`) use only the Java standard library, or `org.json`, so their rules run on a plain JVM. That is what gives the product its 103 JVM unit tests (REQ-POR-40); putting the same logic in a DAO or an activity would need an emulator to test. |
 | DD-07 | **Errors reported as return values (`-1`, `false`, `null`), not exceptions**, in the DAOs. | A duplicate tag name is an expected outcome of a user action, not an exceptional condition; the screens that call these methods handle both outcomes on the same path. `QuestionSetFormatException` is the deliberate exception: it carries a whole violation list, which no return value could. |
 | DD-08 | **Seeded demo content on first creation.** | An empty first launch gives a user nothing to search, and makes the product look broken; 25 seeded questions demonstrate every screen. The demo *accounts* that come with it are the part that should not ship — [A-05](#6-known-deviations-and-design-debt). |
-| DD-09 | **One search component reused, not a search box per screen.** | The main menu and the question list embed the same `PowerfulSearchView`, so a user learns the search once and the two screens cannot drift. The cost is a compound view with configuration hooks (`setOnOpenQuestion`, `setSwipeActionsEnabled`, `setResultsBottomPadding`, …); the alternative was two search boxes and two tag pickers kept in step by hand, which the removed `FilterSpinner` had begun to duplicate. |
+| DD-09 | **One search component reused, not a search box per screen.** | The home screen and the question list embed the same `PowerfulSearchView`, so a user learns the search once and the two screens cannot drift. The cost is a compound view with configuration hooks (`setOnOpenQuestion`, `setSwipeActionsEnabled`, `setResultsBottomPadding`, …); the alternative was two search boxes and two tag pickers kept in step by hand, which the removed `FilterSpinner` had begun to duplicate. |
 | DD-10 | **The lobby stored in preferences, not the database.** | The lobby is a handful of question identifiers naming rows the schema already owns; a table would add a fifth schema object, the owning-key question of [3.5.3](#353-ownership) and a migration to store them. Preferences also give it the persistence it needs — surviving the trip to the game and process death — beside the session it resembles. Holding identifiers rather than questions is what lets an edit show through and a deletion drop out ([3.5.6](#356-non-schema-persistence)). |
 | DD-11 | **A game run held in memory only.** | A run belongs to the moment, not the library. Persisting it would let a player resume a half-finished game after leaving, but would then have to be reconciled with questions edited or deleted meanwhile; discarding it on exit matches what a player expects and keeps the game free of stored state. `CurrentGame` is the single holder, and the game screen returns to the lobby when it finds none. |
 | DD-12 | **Swipe gestures in absolute left/right, not start/end.** | Binding delete and add-to-lobby to absolute directions makes the gesture identical whichever way the layout runs; start/end would flip them under a right-to-left layout. Neither direction removes the row itself — the handler decides and the row is put back — so a cancelled confirmation leaves the list unchanged. |
+| DD-13 | **The home screen given over to the search, with its navigation behind one menu.** | The screen a signed-in user lands on is the screen they browse in, so the questions are given the whole of it, and the lobby, the two lists and sign-out sit in a single menu that costs one press and no height. The alternative — the four buttons this screen used to stack beneath the results — took a fifth of the screen, would have grown with every destination added, and pushed the result list into what was left. The menu is built on each press, so the lobby count it names is read rather than kept in step by a listener; the search's `setOnLobbyChanged` hook went with the buttons that needed it. |
 
 ### 4.3 What the structure keeps open
 

@@ -54,17 +54,31 @@
 
     </HorizontalScrollView>
 
+    <!--
+        The box carries no text of its own, and the label beside it is a view apart, so that this
+        box and the box of a result row are laid out by the same rule and stand in one column; the
+        label then starts where a question's text starts.
+    -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingStart="8dp">
 
         <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/selectAll"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/search_select_all" />
+            android:contentDescription="@string/search_select_all" />
+
+        <TextView
+            android:id="@+id/selectAllLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:labelFor="@id/selectAll"
+            android:text="@string/search_select_all"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
 
         <TextView
             android:id="@+id/selectionCount"

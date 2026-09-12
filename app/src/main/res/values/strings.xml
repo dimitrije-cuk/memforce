@@ -9,7 +9,11 @@
     <string name="login_sign_in">Sign in</string>
     <string name="login_wrong_password">Wrong password for this user</string>
 
+    <string name="home_title">Browse Questions</string>
+    <string name="home_menu">More actions</string>
+
     <string name="menu_greeting">Signed in as %1$s</string>
+    <string name="menu_account">Account</string>
     <string name="menu_sign_out">Sign out</string>
     <string name="menu_tags">Tags</string>
     <string name="menu_questions">Questions</string>
@@ -64,7 +68,7 @@
     <string name="question_delete_title">Delete this question?</string>
 
     <string name="lobby_title">Game lobby</string>
-    <string name="lobby_empty">The lobby is empty. Add questions from the search on the main menu, by swiping a question right, or by swiping a tag right.</string>
+    <string name="lobby_empty">The lobby is empty. Add questions from the search on the home screen, by swiping a question right, or by swiping a tag right.</string>
     <string name="lobby_nothing_added">Already in the lobby</string>
     <string name="lobby_tag_empty">%1$s carries no question, so nothing was added</string>
     <string name="lobby_answer">Answer: %1$s</string>

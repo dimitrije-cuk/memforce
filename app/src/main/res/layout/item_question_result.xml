@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:background="?attr/colorSurface"
     android:gravity="center_vertical"
-    android:minHeight="56dp"
+    android:minHeight="48dp"
     android:orientation="horizontal"
     android:paddingStart="8dp"
     android:paddingEnd="16dp">
@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:paddingVertical="8dp">
+        android:paddingVertical="4dp">
 
         <TextView
             android:id="@+id/title"
@@ -29,14 +29,14 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
             tools:text="What caused the French Revolution?" />
 
         <HorizontalScrollView
             android:id="@+id/tagScroll"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="2dp"
             android:scrollbars="none">
 
             <LinearLayout
