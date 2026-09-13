@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        A Material check box paints an 18dp box centred in a 32dp button drawable, and
+        CompoundButton pins that drawable to the view's leading edge whatever the padding is, so
+        the first 7dp of the view is transparent. Laid out plainly, the box would therefore stand
+        7dp inside every neighbour. This margin takes that transparent strip back out of the
+        layout, which puts the box itself — not the empty edge around it — on the screen's content
+        column beside the search field and the tag chips. The drawable is symmetric, so the same
+        figure serves a right-to-left layout.
+    -->
+    <dimen name="checkbox_optical_alignment">-7dp</dimen>
+
+</resources>

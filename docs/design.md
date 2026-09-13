@@ -165,9 +165,13 @@ message, including the import messages of REQ-IMP-20 to
 REQ-IMP-100. `res/layout/view_powerful_search.xml` is the search's `<merge>` layout;
 `item_question_result.xml`, with `item_tag_label.xml`, lays a question's tag names in a
 sideways-scrolling strip so their number never changes the row height, and gives the row's box and
-the select-all box the same geometry so the two stand in one column; `res/menu/main.xml` is the
-home screen's menu, drawn behind `res/drawable/ic_more_vert.xml`; `res/drawable/ic_delete.xml`
-and `ic_add_to_lobby.xml` are the icons the swipe gestures draw.
+the select-all box the same geometry so the two stand in one column. That column is the screen's
+content edge, where the search field and the tag chips begin: a Material check box paints its box
+centred in a drawable wider than itself, which the platform pins to the view's leading edge, so
+both boxes take the negative start margin `res/values/dimens.xml` holds as
+`checkbox_optical_alignment`, which takes that transparent strip back out of the layout.
+`res/menu/main.xml` is the home screen's menu, drawn behind `res/drawable/ic_more_vert.xml`;
+`res/drawable/ic_delete.xml` and `ic_add_to_lobby.xml` are the icons the swipe gestures draw.
 
 ### 3.3 Logical view
 
