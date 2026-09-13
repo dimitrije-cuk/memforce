@@ -30,18 +30,11 @@
         app:chipSpacingVertical="0dp"
         app:singleLine="false" />
 
-    <TextView
-        android:id="@+id/suggestionsLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="@string/search_suggested_tags"
-        android:textAppearance="?attr/textAppearanceLabelSmall" />
-
     <HorizontalScrollView
         android:id="@+id/suggestionsScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
         android:scrollbars="none">
 
         <com.google.android.material.chip.ChipGroup

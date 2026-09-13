@@ -35,7 +35,6 @@
 
     <string name="search_by_name">Search by name</string>
     <string name="search_hint">Search questions and tags</string>
-    <string name="search_suggested_tags">Suggested tags, most used first</string>
     <string name="search_select_all">Select all</string>
     <string name="search_select_question">Select this question</string>
     <string name="search_tag_suggestion">%1$s (%2$d)</string>

@@ -189,7 +189,6 @@ public class PowerfulSearchView extends LinearLayout {
             binding.suggestions.addView(chip);
         }
         int visibility = suggestions.isEmpty() ? GONE : VISIBLE;
-        binding.suggestionsLabel.setVisibility(visibility);
         binding.suggestionsScroll.setVisibility(visibility);
         binding.suggestionsScroll.scrollTo(0, 0);
     }
