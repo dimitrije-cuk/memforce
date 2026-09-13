@@ -127,7 +127,9 @@ MemForce provides six groups of function.
   questions carrying them, and are shared by all accounts.
 - **Search and filtering.** One search retrieves questions by text pattern, by tag, or by both
   together, offering the tags worth choosing next in the order of how many of the questions found
-  carry them; tags are retrieved by name pattern. Patterns support the `%` and `_` wildcards.
+  carry them; tags are retrieved by name pattern. The text entered is looked for wherever it
+  stands in a question text or a tag name, and the `%` and `_` wildcards are available to a user
+  who types them.
 - **Question-set import.** A JSON file conforming to [MF-IFS-001](question-import-format.md) is
   validated as a whole and then merged into the stored questions and tags in one transaction.
 - **Gameplay.** Questions chosen anywhere in the application are gathered in a lobby and then
@@ -140,9 +142,11 @@ administrator, moderator, or privileged role exists, and no function is restrict
 users.
 
 Users are assumed to be familiar with everyday Android applications. No knowledge of databases or
-of JSON is assumed, except that a user who types a wildcard character is assumed to intend its
-wildcard meaning, and that a user who imports a file is assumed to have obtained it from the
-documented template.
+of JSON is assumed: a search is typed as the words to look for, and the pattern that finds them
+anywhere in a question or a tag name is built around them
+([REQ-SRCH-160](#324-search-and-filtering)). A user who types a wildcard character nonetheless is
+assumed to intend its wildcard meaning, and a user who imports a file is assumed to have obtained
+it from the documented template.
 
 Several people may share one device by holding separate accounts. In version 1.0 accounts
 separate sign-in only: questions and tags are common to all accounts
@@ -297,7 +301,7 @@ Column conventions are defined in [1.9 Conventions](#19-conventions).
 | REQ-EXT-10 | The application shall provide a sign-in screen, a home screen, a question list screen, a question editor, a tag list screen, a tag editor, a gameplay lobby screen, and a game screen. | I | H | SN-01, SN-02, SN-05, SN-09 |
 | REQ-EXT-20 | Once a user is signed in, the application shall provide navigation from the home screen to the question list, to the tag list and to the gameplay lobby, and a return path from each screen to the screen that opened it, without repeating sign-in. | I | H | SN-01, D-05 |
 | REQ-EXT-30 | The question list screen and the tag list screen shall each display the items they manage as a scrollable list and shall expose the create, edit, delete and search actions defined for that entity in [3.2](#32-functions). | I | H | SN-01, SN-03 |
-| REQ-EXT-40 | Every search input field shall accept the characters `%` and `_` as typed input and shall pass them unaltered to the search function as pattern characters. | I | H | SN-03 |
+| REQ-EXT-40 | Every search input field shall accept the characters `%` and `_` as typed input, shall pass them to the search function as pattern characters, shall alter the entered text only by the enclosing `%` of [REQ-SRCH-160](#324-search-and-filtering), and shall continue to display the text as the user entered it. | I | H | SN-03 |
 | REQ-EXT-50 | The application shall provide no communications interface: it shall neither transmit nor receive data over any network interface of the device, and it shall declare no permission in its manifest. | I | H | SN-06 |
 | REQ-EXT-60 | The application's only interface for question, tag and account records shall be a single SQLite database file located in application-private storage on the device; the only application data held outside that file shall be the retained signed-in identity of [REQ-AUTH-70](#321-authentication-and-session) and the gameplay lobby of [REQ-GAME-30](#326-gameplay), both held in application-private preference storage. | I | H | SN-06, SN-07 |
 | REQ-EXT-70 | The application shall obtain a question-set file through the platform document-selection interface, shall open it for reading only, and shall access no other file of the device file system. | I | H | SN-04, D-06 |
@@ -305,7 +309,9 @@ Column conventions are defined in [1.9 Conventions](#19-conventions).
 *Rationale.* REQ-EXT-20 makes reachability verifiable: without it, "the app has screens" would
 not state that every capability is available after a single sign-in. REQ-EXT-40 exists because
 the wildcard behaviour of [3.2.4](#324-search-and-filtering) is only observable if the input
-field passes the characters through untouched. REQ-EXT-50 turns the standalone property into a
+field passes the characters through, and because the enclosing `%` of REQ-SRCH-160 belongs to the
+pattern alone: a field that showed the constructed pattern back would leave the user editing text
+they never typed. REQ-EXT-50 turns the standalone property into a
 property that can be checked on the delivered package rather than by reading code. REQ-EXT-70
 bounds file access to what the user explicitly offers, which is what makes the absence of a
 storage permission possible.
@@ -399,12 +405,20 @@ is stated so that the list has one defined order rather than an arbitrary one am
 | REQ-SRCH-130 | The application shall allow the user to select any of the questions of the current result individually, and to select all of them in one action. | F | H | SN-09 |
 | REQ-SRCH-140 | The application shall add the selected questions to the gameplay lobby in one action, and shall state how many questions were added. | F | H | SN-09 |
 | REQ-SRCH-150 | The application shall present the search of REQ-SRCH-90 to REQ-SRCH-140 on the home screen and on the question list screen, and the two presentations shall behave identically. | F | M | SN-03, D-23 |
+| REQ-SRCH-160 | The application shall enclose the text entered in a search field in `%` before matching it, so that the text is found wherever it stands within the value, enclosing it once however many `%` the entered text already begins or ends with. | F | H | SN-03, D-30 |
 
-*Rationale.* Wildcards are exposed to the user deliberately (decision D-08): the alternative —
-escaping `%` and `_` so they match literally — would remove the only means of substring search
-the product offers, and a tag or question text containing a literal `%` is not a case worth
-optimising for. REQ-SRCH-40 makes the empty state definite: an empty search is a request to see
-everything, not a request that matches nothing. REQ-SRCH-30 and REQ-SRCH-100 fix the combination
+*Rationale.* The text a user types is looked for wherever it stands in the value, because that is
+what searching ordinarily means (REQ-SRCH-160, decision D-30): a learner who types `history`
+is asking for the questions that mention history, not for those that consist of the word. The
+wildcards themselves are kept unescaped (decision D-08): `_` matches exactly one character where
+the user puts it and is never inserted by the application, and a `%` typed within the text keeps
+its meaning, so a pattern that fixes characters relative to one another is still expressible; a
+`%` typed at either end is absorbed by the enclosing pair rather than doubled. The residual cost
+is that a search can no longer be anchored to the beginning or the end of a value, which is a
+rarer need than finding a word inside one. Escaping the two characters instead would leave no way
+to express a pattern at all, and a tag or question text containing a literal `%` is not a case
+worth optimising for. REQ-SRCH-40 makes the empty state definite: an empty search is a request to
+see everything, not a request that matches nothing. REQ-SRCH-30 and REQ-SRCH-100 fix the combination
 as conjunction, because a disjunction would widen the result as the user adds criteria, which is
 the opposite of what a filter is for. The text is the one exception, and REQ-SRCH-90 states it:
 a user who types `france` is asking about a subject, and cannot be expected to know whether the
@@ -503,13 +517,14 @@ towards disagree with the lobby they assembled, which is why the number is state
 | REQ-USE-40 | When a list is empty because nothing matches the current search, the application shall display a message that says so, in place of an empty area. | Q | M | derived |
 | REQ-USE-50 | After a create, an edit, a delete or an import, the application shall display the affected list with the change applied. | Q | H | derived |
 | REQ-USE-60 | The application shall follow the device's light or dark appearance setting, and shall be legible under both without further user action. | Q | M | SN-08 |
-| REQ-USE-70 | Each screen that offers a pattern search shall display the meaning of the `%` and `_` wildcards. | Q | M | SN-03, D-08 |
+| REQ-USE-70 | *Obsolete (version 1.0).* Each screen that offers a pattern search shall display the meaning of the `%` and `_` wildcards. Withdrawn when [REQ-SRCH-160](#324-search-and-filtering) made an ordinary search need no wildcard; the identifier is kept under [5.2](#52-baseline-and-change-control). | Q | M | SN-03, D-08, D-30 |
 | REQ-USE-80 | Each screen on which a list entry may be swiped shall display what a swipe in each direction does. | Q | M | derived, D-21 |
 
 *Rationale.* These are the smallest set of usability properties that make the product safe and
 predictable, and each is verifiable — unlike "the interface shall be user-friendly", which
-clause 5.2.7 forbids. REQ-USE-70 is the counterpart of REQ-SRCH-60: exposing wildcards to users
-is only defensible if the application tells them the two characters mean something. REQ-USE-80 is
+clause 5.2.7 forbids. REQ-USE-70 was the counterpart of REQ-SRCH-60 while an ordinary search had
+to be written as a pattern; REQ-SRCH-160 removed that need, and the help text with it, so the
+requirement is withdrawn rather than restated (decision D-30). REQ-USE-80 is
 the counterpart of REQ-QST-90 and REQ-TAG-100: a gesture leaves no mark on the screen, so a
 destructive action reached only by a gesture must be announced somewhere the user reads.
 
@@ -674,8 +689,10 @@ This clause gives the approach planned to qualify MemForce against
 [clause 3](#3-specified-requirements). It is laid out **in parallel** with clause 3 — subclause
 4.*n* verifies subclause 3.*n* — as recommended by clause 9.6.19 of ISO/IEC/IEEE 29148:2018.
 Every requirement identifier of clause 3 appears exactly once below, with the method used and the
-criteria that decide pass or fail. The procedures that execute these criteria, the current
-results, and any open deviation are held in [MF-VVP-001](verification-and-validation.md).
+criteria that decide pass or fail; an identifier withdrawn under
+[5.2](#52-baseline-and-change-control) appears with a dash in place of a method. The procedures
+that execute these criteria, the current results, and any open deviation are held in
+[MF-VVP-001](verification-and-validation.md).
 
 ### 4.1 Verification methods
 
@@ -697,7 +714,7 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-EXT-10 | D | All eight screens are opened in one session, each showing what it manages. |
 | REQ-EXT-20 | D | From the home screen's menu, the question list, the tag list and the gameplay lobby are each opened and left again; the sign-in screen does not reappear. |
 | REQ-EXT-30 | D | On each list screen the list scrolls when items exceed the viewport, and the create, edit, delete and search actions are all present. |
-| REQ-EXT-40 | T | Typing `h_st%` into each search field results in that exact string being used as the pattern; no character is stripped, escaped or reordered. |
+| REQ-EXT-40 | T | Typing `h_st%` into each search field results in the pattern `%h_st%` being used: no character is stripped, escaped or reordered, the typed `%` is not doubled, and the field still displays `h_st%`. |
 | REQ-EXT-50 | I | The manifest declares no `uses-permission` element; the application's own code contains no networking call; with the device in flight mode every function of 3.2 completes normally. |
 | REQ-EXT-60 | I | Exactly one SQLite database file exists, under the application's private data directory; no question, tag or account data is found in any other store, and the only other application data found is the signed-in identity and the gameplay lobby, both in application-private preference storage. |
 | REQ-EXT-70 | I | Import is started only through the platform document-selection interface; the returned stream is opened for reading; no other file path is opened by the application. |
@@ -756,8 +773,8 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-SRCH-30 | T | A pattern matching six questions combined with a tag carried by four of them returns exactly the questions in both sets. |
 | REQ-SRCH-40 | T | An empty text field with no chosen tag returns every stored question; an empty text field with a chosen tag returns every question carrying that tag. |
 | REQ-SRCH-50 | T | A pattern applied to the tag list returns exactly the matching tags; an empty pattern returns every tag. |
-| REQ-SRCH-60 | T | Against a database holding the prepared wildcard data set alone ([MF-VVP-001, 8.1](verification-and-validation.md#81-prepared-data-sets)), the patterns `po%`, `%ta`, `%sto%`, `_br%` and `%__a` each return exactly the members of that set which satisfy the stated wildcard rule. |
-| REQ-SRCH-70 | T | The patterns `PO%` and `po%` return the same questions. |
+| REQ-SRCH-60 | T | Against a database holding the prepared wildcard data set alone ([MF-VVP-001, 8.1](verification-and-validation.md#81-prepared-data-sets)), the entries `po`, `ta`, `s%o`, `_br` and `__a` — matched as `%po%`, `%ta%`, `%s%o%`, `%_br%` and `%__a%` — each return exactly the members of that set which satisfy the stated wildcard rule. |
+| REQ-SRCH-70 | T | The entries `PO` and `po` return the same questions. |
 | REQ-SRCH-80 | D | Typing successive characters into a search field narrows the displayed list after each character, with no confirming action. |
 | REQ-SRCH-90 | T | With question `Who was Napoleon?` carrying the tag `france` and question `What caused the French Revolution?` not carrying it, the pattern `%fran%` returns both: the second by its text, the first through its tag. |
 | REQ-SRCH-100 | T | Holding `history` returns the questions carrying it; adding `politics` returns only the questions carrying both; adding a tag no question shares with them returns nothing. |
@@ -766,6 +783,7 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-SRCH-130 | T | Individual results are selected and deselected one by one; the select-all action selects exactly the results currently displayed and no others, and narrowing the search afterwards leaves selected only those still displayed. |
 | REQ-SRCH-140 | T | Selecting three results and adding them leaves the lobby holding exactly those three and states that three were added; repeating the action adds none and says so. |
 | REQ-SRCH-150 | T | The same sequence of criteria entered on the home screen and on the question list produces the same results, the same offered tags in the same order, and the same effect on the lobby. |
+| REQ-SRCH-160 | T | `history` is used as the pattern `%history%` and returns the questions carrying the word anywhere in their text or in a tag name, not only those beginning with it; `%history`, `history%` and `%history%` each yield that same pattern and that same result; `c_t` is used as `%c_t%` and returns the values holding `cat`, `cot` and `cut`. |
 
 #### 4.3.5 Question-set import
 
@@ -812,7 +830,7 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-USE-40 | D | A search matching nothing shows the no-results message in place of the list. |
 | REQ-USE-50 | D | After each of a create, an edit, a delete and an import, the affected list is displayed with the change applied. |
 | REQ-USE-60 | D | With the device set to light and then to dark appearance, every screen renders with the corresponding theme and every label remains legible. |
-| REQ-USE-70 | I | The question list and tag list screens each display the wildcard help text. |
+| REQ-USE-70 | — | *Obsolete (version 1.0).* Nothing is verified: the help text was withdrawn with the requirement, and the search it explained is verified by REQ-SRCH-160. |
 | REQ-USE-80 | I | The question list and tag list screens each display what a swipe to the left and a swipe to the right do on that screen. |
 
 ### 4.5 Performance requirements
@@ -921,7 +939,7 @@ This document is a configuration item under [MF-CMP-001](configuration-managemen
 | Authentication and session (`AUTH`) | 3.2.1 | 8 |
 | Questions (`QST`) | 3.2.2 | 9 |
 | Tags (`TAG`) | 3.2.3 | 11 |
-| Search and filtering (`SRCH`) | 3.2.4 | 15 |
+| Search and filtering (`SRCH`) | 3.2.4 | 16 |
 | Question-set import (`IMP`) | 3.2.5 | 13 |
 | Gameplay (`GAME`) | 3.2.6 | 12 |
 | Usability (`USE`) | 3.3 | 8 |
@@ -932,9 +950,13 @@ This document is a configuration item under [MF-CMP-001](configuration-managemen
 | Security (`SEC`) | 3.8.1 | 6 |
 | Reliability and availability (`REL`) | 3.8.2 | 4 |
 | Portability and maintainability (`POR`) | 3.8.3 | 4 |
-| **Total** | | **121** |
+| **Total** | | **122** |
 
-Priority distribution: 87 High, 33 Medium, 1 Low. The High requirements are those without which
+The total counts every identifier the document defines, including REQ-USE-70, withdrawn in
+version 1.0 and kept as *Obsolete* under [5.2](#52-baseline-and-change-control); **121**
+requirements are in force.
+
+Priority distribution: 88 High, 33 Medium, 1 Low. The High requirements are those without which
 the product does not meet the purpose of [1.1](#11-purpose); together they form the minimum
 acceptable product.
 
@@ -958,7 +980,7 @@ here so that every requirement has a stated origin.
 |---|---|---|
 | SN-01 | A learner captures a question and its answer once, and can change or remove it later. | REQ-QST-10, REQ-QST-20, REQ-QST-30, REQ-QST-40, REQ-QST-50, REQ-EXT-10, REQ-EXT-20, REQ-EXT-30, REQ-USE-10 |
 | SN-02 | A learner classifies a question along as many dimensions as the material needs. | REQ-QST-10, REQ-QST-70, REQ-TAG-10, REQ-TAG-20, REQ-TAG-30, REQ-TAG-40, REQ-TAG-50, REQ-DB-40, REQ-DB-60 |
-| SN-03 | A learner finds a question again by what it says or by what it is about, in a library that keeps growing. | REQ-SRCH-10, REQ-SRCH-20, REQ-SRCH-30, REQ-SRCH-50, REQ-SRCH-60, REQ-SRCH-90, REQ-SRCH-100, REQ-SRCH-110, REQ-SRCH-120, REQ-SRCH-150, REQ-EXT-40, REQ-USE-70, REQ-QST-50, REQ-QST-80, REQ-TAG-50, REQ-TAG-70, REQ-TAG-90 |
+| SN-03 | A learner finds a question again by what it says or by what it is about, in a library that keeps growing. | REQ-SRCH-10, REQ-SRCH-20, REQ-SRCH-30, REQ-SRCH-50, REQ-SRCH-60, REQ-SRCH-90, REQ-SRCH-100, REQ-SRCH-110, REQ-SRCH-120, REQ-SRCH-150, REQ-SRCH-160, REQ-EXT-40, REQ-QST-50, REQ-QST-80, REQ-TAG-50, REQ-TAG-70, REQ-TAG-90 |
 | SN-04 | A learner loads a whole topic prepared outside the application instead of typing it in. | REQ-IMP-10 … REQ-IMP-100, REQ-EXT-70, REQ-STD-30 |
 | SN-05 | Several people share one device, each signing in under their own name, with no server involved. | REQ-AUTH-10, REQ-AUTH-20, REQ-AUTH-30, REQ-AUTH-40, REQ-AUTH-70, REQ-AUTH-80, REQ-QST-60, REQ-TAG-60, REQ-DB-20 |
 | SN-06 | The application works with no connectivity and sends nothing anywhere. | REQ-CON-10, REQ-CON-20, REQ-CON-30, REQ-CON-40, REQ-CON-50, REQ-EXT-50, REQ-EXT-60, REQ-DB-10, REQ-SEC-40, REQ-SEC-60 |
@@ -1018,7 +1040,7 @@ change to this document under [5.2](#52-baseline-and-change-control).
 | **D-05** | How are the capabilities arranged on screen? | A **home screen given over to searching the questions**, carrying a menu that leads to the question area, the tag area and the gameplay lobby, each with its list and editor. | *One screen with tabs* — the two areas share no state, and separate activities keep the back stack meaningful. *A button on the home screen for each destination* — they take the height the result list needs and grow with every destination added, where a menu costs one press and no height. | REQ-EXT-10, REQ-EXT-20, REQ-USE-10 |
 | **D-06** | How does a file reach the application without a storage permission? | Through the **platform document-selection interface**, which grants read access to the one file the user picks. | *Reading a fixed directory* — needs a storage permission and a file manager, and would put MemForce in charge of a folder it does not own. | REQ-EXT-70, REQ-CON-50 |
 | **D-07** | How do a text pattern and a tag filter combine? | **Conjunction**: a question must satisfy every active criterion; an inactive criterion restricts nothing. | *Disjunction* — adding a criterion would widen the result, which is the opposite of filtering. | REQ-SRCH-30, REQ-SRCH-40 |
-| **D-08** | Are `%` and `_` wildcards or literal characters? | **Wildcards**, exposed to the user, with on-screen help. | *Escaping them to match literally* — removes the product's only substring search. The residual cost is that a literal `%` cannot be searched for; no stored content is expected to contain one. | REQ-SRCH-60, REQ-EXT-40, REQ-USE-70 |
+| **D-08** | Are `%` and `_` wildcards or literal characters? | **Wildcards**, kept unescaped, so that a user who types one means it. | *Escaping them to match literally* — removes the only way to express a pattern at all. The residual cost is that a literal `%` cannot be searched for; no stored content is expected to contain one. The on-screen help this decision originally carried was withdrawn with REQ-USE-70 once D-30 made an ordinary search need no wildcard. | REQ-SRCH-60, REQ-EXT-40, REQ-USE-70 *(obsolete)* |
 | **D-09** | When is a search executed? | **On every change** to a criterion. | *On an explicit search action* — an extra action per refinement; at the reference volume the query is well inside the limit of REQ-PERF-10. | REQ-SRCH-80 |
 | **D-10** | How much of a question-set file is applied when part of it is wrong? | **None of it.** Validate the whole file, show the effect, then write in one transaction. | *Import what parses* — leaves the user with a partly loaded topic and no way to tell which questions are missing. | REQ-IMP-20, REQ-IMP-40, REQ-IMP-80 |
 | **D-11** | What happens when an imported question already exists? | **Merge**: keep one question, add the file's tags, keep the stored answer, fill an absent answer. | *Store a second copy* — a re-import doubles the library. *Overwrite the stored answer* — an import would silently destroy work the user did by hand. | REQ-IMP-60, REQ-IMP-70 |
@@ -1040,6 +1062,7 @@ change to this document under [5.2](#52-baseline-and-change-control).
 | **D-27** | What happens to a question after it has been asked? | It goes to the **back of the queue**, whatever the submission was worth, and the queue never shortens. | *Removing a question once answered correctly* — turns the game into a single pass, which tests rather than teaches. *Repeating a missed question immediately* — the answer is then still on the screen, and the repetition proves nothing. | REQ-GAME-70 |
 | **D-28** | What counts as a correct answer? | Equality with the stored answer, **ignoring letter case, surrounding spacing and the length of spacing runs**; a blank submission is a skip and counts as incorrect. | *Exact equality* — a trailing space would mark a correct answer wrong. *Fuzzy matching* — a threshold no user can predict, and one that would accept an answer the learner does not actually know. | REQ-GAME-80 |
 | **D-29** | How does the product come to hold the topics the team wants every installation to have? | **Question-set files inside the package, loaded when the database is created**, in the format of MF-IFS-001 and through the same parser and merge rules as an import, and verified when the product is built. | *Rows in the seed script* — SQL states a tag by identifier and cannot be checked against the import format, so a topic added that way is unreviewable and silently breaks the moment the seeded identifiers move. *A screen offering the carried sets* — turns the team's default content into a user task, leaving every installation empty until the user finds it. *Downloading them on first run* — contradicts SN-06. | REQ-IMP-110, REQ-IMP-120, REQ-IMP-130 |
+| **D-30** | Must a user type `%` to find a word inside a question? | **No.** What the user types is enclosed in `%` before matching, and a `%` already at either end is absorbed rather than doubled. `_` is never inserted. | *Matching the text exactly as typed* — the commonest search of all, a word standing somewhere in a question, then returned nothing unless the user knew the SQL wildcard and typed two of them, and every search screen had to carry the help text of REQ-USE-70 to teach it. *Enclosing in `_` as well* — would demand a character that need not be there and make a search for a whole tag name impossible. *Escaping what the user types* — decided against in D-08, and unnecessary: the enclosing pair is what an ordinary search needs, and the wildcards stay available for the searches that need them. The residual cost is that a pattern can no longer be anchored to the beginning or the end of a value; `_` and an inner `%` still fix characters relative to one another. | REQ-SRCH-160, REQ-EXT-40, REQ-USE-70 *(withdrawn by this decision)* |
 
 ---
 
@@ -1069,7 +1092,7 @@ change to this document under [5.2](#52-baseline-and-change-control).
 | **TBD / TBS / TBR** | To Be Defined / Specified / Resolved — placeholders that clause 5.2.6 forbids in a complete requirement set. |
 | **V&V** | Verification and validation. |
 | **Victory** | The end of a game, reached when every question it began with has been answered correctly at least once (REQ-GAME-110). |
-| **Wildcard** | A pattern character: `%` matches zero or more characters, `_` matches exactly one. |
+| **Wildcard** | A pattern character: `%` matches zero or more characters, `_` matches exactly one. A search encloses what the user typed in `%` of its own accord (REQ-SRCH-160); a wildcard typed within the text is the user's own. |
 
 Terms not defined here carry the meaning given in ISO/IEC/IEEE 24765:2017.
 

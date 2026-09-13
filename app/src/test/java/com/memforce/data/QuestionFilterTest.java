@@ -31,8 +31,13 @@ public class QuestionFilterTest {
     }
 
     @Test
-    public void trimsThePatternBeforeUsingIt() {
-        assertEquals("rev", QuestionFilter.of(SearchQuery.empty().withText("  rev  ")).args()[0]);
+    public void trimsThePatternAndLooksForItAnywhereInTheValue() {
+        assertEquals("%rev%", QuestionFilter.of(SearchQuery.empty().withText("  rev  ")).args()[0]);
+    }
+
+    @Test
+    public void keepsAnUnderscoreTheUserTypedAsASingleCharacterWildcard() {
+        assertEquals("%c_t%", QuestionFilter.of(SearchQuery.empty().withText("c_t")).args()[0]);
     }
 
     @Test
@@ -61,7 +66,7 @@ public class QuestionFilterTest {
     public void combinesTheTextWithTheChosenTags() {
         QuestionFilter filter = QuestionFilter.of(SearchQuery.empty().withText("rev").withTag(4L));
 
-        assertArrayEquals(new String[]{"rev", "rev", "4"}, filter.args());
+        assertArrayEquals(new String[]{"%rev%", "%rev%", "4"}, filter.args());
     }
 
     @Test

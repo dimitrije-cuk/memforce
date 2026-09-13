@@ -38,9 +38,11 @@ import java.util.List;
  * search once and the two screens cannot drift apart.
  *
  * <p>Text matches question texts and tag names alike, so typing narrows by either; each tag chosen
- * on top of it narrows further. The suggestions are the tags carried by the questions currently
- * found, most used first, which means a tag that has no question in common with what is already
- * chosen is not offered at all.
+ * on top of it narrows further. What is typed is looked for wherever it stands in the value —
+ * {@link com.memforce.db.SearchPatterns} encloses it in {@code %} on the way to the query, so the
+ * field goes on showing the words the user typed. The suggestions are the tags carried by the
+ * questions currently found, most used first, which means a tag that has no question in common
+ * with what is already chosen is not offered at all.
  *
  * <p>What the screen embedding the view decides: whether tapping a row opens the question
  * ({@link #setOnOpenQuestion}), and whether rows may be swiped

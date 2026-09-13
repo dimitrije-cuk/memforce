@@ -75,7 +75,7 @@ public class TagDao {
     /**
      * Reads the tags with the number of questions each carries, in the requested order.
      *
-     * @param namePattern LIKE pattern applied to the tag name; blank reads every tag
+     * @param namePattern the text to look for anywhere in the tag name; blank reads every tag
      */
     @NonNull
     public List<TagUsage> searchWithCounts(@Nullable String namePattern, @NonNull TagSort sort) {

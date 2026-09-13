@@ -29,8 +29,9 @@ public class TagQueriesTest {
     }
 
     @Test
-    public void passesTheNamePatternThrough() {
-        assertArrayEquals(new String[]{"h%"}, TagQueries.usage("h%", TagSort.ALPHABETICAL).args());
+    public void looksForTheNameAnywhereInATagName() {
+        assertArrayEquals(new String[]{"%h%"}, TagQueries.usage("h%", TagSort.ALPHABETICAL).args());
+        assertArrayEquals(new String[]{"%h%"}, TagQueries.usage("h", TagSort.ALPHABETICAL).args());
     }
 
     @Test
@@ -80,7 +81,7 @@ public class TagQueriesTest {
         TagQueries.Statement statement =
                 TagQueries.suggestions(SearchQuery.empty().withText("rev"), 24);
 
-        assertArrayEquals(new String[]{"rev", "rev", "24"}, statement.args());
+        assertArrayEquals(new String[]{"%rev%", "%rev%", "24"}, statement.args());
     }
 
     @Test

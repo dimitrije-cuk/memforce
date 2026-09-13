@@ -58,14 +58,14 @@ The application follows the device's light or dark appearance; there is no in-ap
 
 ## Searching
 
-Search fields are trimmed and then passed to SQL `LIKE` unescaped, so the wildcards work as
-written:
+Type the words you are looking for. What you type is trimmed and enclosed in `%` before it reaches
+SQL `LIKE`, so `history` finds every question or tag holding the word anywhere — nothing else is
+escaped, so the wildcards still work where you put them:
 
-- `po%` starts with `po`
-- `%ta` ends with `ta`
-- `%sto%` contains `sto`
-- `_br%` has `b` second and `r` third
-- `%__a` at least three letters, ending in `a`
+- `history` contains `history`, the enclosing `%` being added for you
+- `%history`, `history%` and `%history%` are the same search: a `%` at an end is not doubled
+- `c_t` contains `cat`, `cot` or `cut` — `_` stands for exactly one character and is never added for you
+- `s%o` contains an `s` with an `o` somewhere after it
 
 An empty field lists everything, matching ignores letter case, and the list narrows as you type.
 

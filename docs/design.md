@@ -128,7 +128,7 @@ All code is under `app/src/main/java/com/memforce/`.
 | `db` | `DbContract` | Table and column names as constants; the one place a name is spelled. | REQ-DB-20 |
 | `db` | `DatabaseSeeder` | Package-private. Populates a newly created database from `assets/seed/memforce_seed.sql`, two accounts, and the carried question sets. | [3.5.5](#355-seeded-data) |
 | `db` | `BundledQuestionSets` | Package-private. Loads every question set carried in `assets/question-sets/` into a database being created, through the parser and merge rules of an import. | REQ-IMP-110, REQ-IMP-120 |
-| `db` | `SearchPatterns` | Turns a user's typed criterion into a `LIKE` argument. | REQ-SRCH-40, REQ-EXT-40 |
+| `db` | `SearchPatterns` | Encloses a user's typed criterion in `%` and hands it over as the `LIKE` argument. | REQ-SRCH-40, REQ-SRCH-160, REQ-EXT-40 |
 | `data` | `QuestionDao` | Question reads and writes, including tag assignment. Reads by `search(SearchQuery)`, `findById`, `findByIds` and `idsWithTag`; the read path draws each question's tag names with a second statement. | REQ-QST-10…70, REQ-QST-80, REQ-QST-90, REQ-SRCH-90…110 |
 | `data` | `QuestionFilter` | Turns a `SearchQuery` into one SQL condition over a question table aliased `q`, reused by the three statements that must agree on what "matching" means. | REQ-SRCH-90…110 |
 | `data` | `TagDao` | Tag reads and writes. `searchWithCounts` and `countAll` back the tag list; `suggest` backs the search suggestions. | REQ-TAG-10…50, REQ-TAG-70…100, REQ-SRCH-120 |
@@ -161,7 +161,7 @@ All code is under `app/src/main/java/com/memforce/`.
 
 Resources of note: `res/values/themes.xml` and `res/values-night/themes.xml` hold the light and
 dark variants of `Theme.MemForce` (REQ-USE-60); `res/values/strings.xml` holds every user-facing
-message, including the wildcard help of REQ-USE-70 and the import messages of REQ-IMP-20 to
+message, including the import messages of REQ-IMP-20 to
 REQ-IMP-100. `res/layout/view_powerful_search.xml` is the search's `<merge>` layout;
 `item_question_result.xml`, with `item_tag_label.xml`, lays a question's tag names in a
 sideways-scrolling strip so their number never changes the row height, and gives the row's box and
@@ -421,7 +421,7 @@ and questions a lobby identifier refers to remain governed by the schema; the lo
 | `Lobby.add(...)` / `remove` / `clear` / `questionIds()` / `retainAll(existing)` | Adds, removes and reads the question ids in `memforce_lobby`; a question is present at most once; `retainAll` drops ids that name no stored question. | REQ-GAME-10…40 |
 | `GameSession.start(questions, Random)` / `current()` / `submit(answer)` / `getResult()` | Starts a run over a shuffled copy, reports the current question, marks a submission and rotates that question to the back, and reports streak, correct, total and the result. Takes the `Random` so a run repeats in a test. | REQ-GAME-50…110 |
 | `AnswerMatcher.matches(expected, submitted)` | True when the two match after trimming, collapsing internal spaces and lowercasing; an empty submission is never correct. | REQ-GAME-70, REQ-GAME-80 |
-| `SearchPatterns.like(input)` | `null` or blank → `"%"`; otherwise the trimmed input, unescaped. | REQ-SRCH-40, REQ-EXT-40 |
+| `SearchPatterns.like(input)` | `null`, blank, or `%` characters alone → `"%"`; otherwise the trimmed input stripped of the `%` at either end and enclosed in one `%` at each end, unescaped. | REQ-SRCH-40, REQ-SRCH-160, REQ-EXT-40 |
 | `QuestionFilter.of(query)`, `TagQueries.usage`, `TagQueries.suggestions` | Build the one search condition and the two tag-count statements as SQL text plus bound arguments, so the reads share a single definition of "matching". | REQ-SRCH-90…120 |
 
 #### 3.6.2 External interfaces
@@ -472,7 +472,10 @@ User      PowerfulSearchView        SearchQuery      QuestionDao / TagDao
 ```
 
 Text is matched against the question text and the tag names alike, so one field searches both, and
-each tag chosen on top of it narrows the result further (REQ-SRCH-90…110). The suggestions are the
+each tag chosen on top of it narrows the result further (REQ-SRCH-90…110). What is typed is looked
+for wherever it stands in either, the enclosing `%` being added by `SearchPatterns.like` on the way
+to the statement rather than to the text field, which therefore keeps showing the words the user
+typed (REQ-SRCH-160, REQ-EXT-40). The suggestions are the
 tags carried by the questions currently found, counted within that set and most used first, so a
 tag with nothing in common with what is already chosen is never offered and choosing one always
 narrows (REQ-SRCH-120). Selecting results — one at a time or with select-all — and pressing **Add
@@ -606,9 +609,15 @@ baseline is 24 (decision D-16).
 #### 3.9.5 Pattern construction
 
 `SearchPatterns.like` trims the input and returns `"%"` when nothing is left, so an empty
-criterion matches everything (REQ-SRCH-40); otherwise it returns the input unchanged, with no
-escaping, which is what makes `%` and `_` user-facing wildcards (REQ-SRCH-60, decision D-08). The
-value is always passed as a bound argument, never concatenated into SQL.
+criterion matches everything (REQ-SRCH-40); otherwise it encloses what is left in `%`, so the
+text is looked for wherever it stands in the value and the user types the words alone
+(REQ-SRCH-160, decision D-30). The `%` at either end of the input are stripped before that pair
+is added, so `history`, `%history`, `history%` and `%history%` all build `%history%` and no
+pattern carries a doubled wildcard. Nothing else is altered: a `%` inside the input keeps its
+place, `_` is never inserted, and neither is escaped, which is what leaves both as user-facing
+wildcards (REQ-SRCH-60, decision D-08). The text field keeps showing what the user typed, because
+the pair is added here and not to the `SearchQuery` the screen holds (REQ-EXT-40). The value is
+always passed as a bound argument, never concatenated into SQL.
 
 #### 3.9.6 Search condition
 
@@ -709,7 +718,7 @@ specification left open.
 | DD-03 | **Activities, no Fragments, no ViewModel.** | Each screen owns exactly one job, and the platform restores the text fields it manages. The cost is that state the platform does not manage — the tag selection in the question editor, and an import result whose screen was destroyed — is lost on recreation ([A-09](#6-known-deviations-and-design-debt)), and that the list screens re-query in `onResume` ([A-03](#6-known-deviations-and-design-debt)). A ViewModel layer is the answer if that state grows. |
 | DD-04 | **A question's tag names read by a second statement, not `GROUP_CONCAT`.** | One `GROUP_CONCAT` join reads the tags in a single query, but SQLite before 3.44 cannot order the values it collects and a tag name may contain the separator, so the joined string could be neither ordered nor safely split. A second statement returning ordered `(question_id, tag name)` pairs, grouped in the DAO, keeps the order defined and the names intact, at one extra query per result set rather than per row. |
 | DD-05 | **Text-or-tag match and per-tag narrowing as `EXISTS` sub-selects on `question_tags`, not joins.** | Matching the text against tag names, and narrowing by each chosen tag, are `EXISTS` sub-selects: a join would multiply rows before grouping and complicate the tag-name read. Each sub-select is served directly by `idx_question_tags_tag`. This is the multi-tag narrowing the earlier design only kept open. |
-| DD-06 | **Rule-bearing logic kept free of Android types.** | The importer, the `SearchQuery` value, the `QuestionFilter`/`TagQueries` statement builders and the whole game core (`GameSession`, `AnswerMatcher`, `CurrentGame`) use only the Java standard library, or `org.json`, so their rules run on a plain JVM. That is what gives the product its 109 JVM unit tests (REQ-POR-40) — and what lets the question sets carried in the package be held to the import format on the build machine rather than on a device; putting the same logic in a DAO or an activity would need an emulator to test. |
+| DD-06 | **Rule-bearing logic kept free of Android types.** | The importer, the `SearchQuery` value, the `QuestionFilter`/`TagQueries` statement builders and the whole game core (`GameSession`, `AnswerMatcher`, `CurrentGame`) use only the Java standard library, or `org.json`, so their rules run on a plain JVM. That is what gives the product its 117 JVM unit tests (REQ-POR-40) — and what lets the question sets carried in the package be held to the import format on the build machine rather than on a device; putting the same logic in a DAO or an activity would need an emulator to test. |
 | DD-07 | **Errors reported as return values (`-1`, `false`, `null`), not exceptions**, in the DAOs. | A duplicate tag name is an expected outcome of a user action, not an exceptional condition; the screens that call these methods handle both outcomes on the same path. `QuestionSetFormatException` is the deliberate exception: it carries a whole violation list, which no return value could. |
 | DD-08 | **Seeded demo content on first creation.** | An empty first launch gives a user nothing to search, and makes the product look broken; the 105 questions a first launch creates — the SQL fixture and the carried question sets of [3.5.5](#355-seeded-data) — demonstrate every screen. The demo *accounts* that come with it are the part that should not ship — [A-05](#6-known-deviations-and-design-debt). |
 | DD-09 | **One search component reused, not a search box per screen.** | The home screen and the question list embed the same `PowerfulSearchView`, so a user learns the search once and the two screens cannot drift. The cost is a compound view with configuration hooks (`setOnOpenQuestion`, `setSwipeActionsEnabled`, `setResultsBottomPadding`, …); the alternative was two search boxes and two tag pickers kept in step by hand, which the removed `FilterSpinner` had begun to duplicate. |

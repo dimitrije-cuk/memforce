@@ -170,19 +170,21 @@ acquisition and supply support tasks, and independent audits. See
 
 ## 6 Verification coverage
 
-MF-SRS-001 states 121 requirements, each with exactly one verification entry. Distribution by
+MF-SRS-001 defines 122 requirement identifiers, one of which — REQ-USE-70 — is obsolete; the 121
+in force each have exactly one verification entry. Distribution by
 method:
 
 | Method | Requirements | Where executed |
 |---|---|---|
-| Test (`T`) | 84 | JVM unit tests and the device suites of [clause 8](#8-test-suites-and-procedures) |
-| Inspection (`I`) | 21 | Source, manifest, schema and document review |
+| Test (`T`) | 85 | JVM unit tests and the device suites of [clause 8](#8-test-suites-and-procedures) |
+| Inspection (`I`) | 20 | Source, manifest, schema and document review |
 | Demonstration (`D`) | 13 | Manual operation on a device or emulator |
 | Analysis (`A`) | 3 | Reasoning over design and measured data |
 | **Total** | **121** | |
 
 Coverage is checked mechanically at each baseline: every `REQ-` identifier defined in
-MF-SRS-001, clause 3 must appear exactly once in clause 4, and every identifier must appear in at
+MF-SRS-001, clause 3 must appear exactly once in clause 4 — an obsolete one with a dash in place
+of a method, and nothing executed for it — and every identifier in force must appear in at
 least one suite of [clause 8](#8-test-suites-and-procedures). A failure of this check blocks the
 baseline.
 
@@ -196,7 +198,7 @@ Following the test sub-process model of ISO/IEC/IEEE 29119-1:2013:
 
 | Level | Scope | Current state |
 |---|---|---|
-| **Unit** | Parsing, validation and merging (`com.memforce.importer`); the question sets carried in the package (`com.memforce.db`); the search criteria and the statements built from them (`com.memforce.search`, `com.memforce.data`); answer marking and the rules of a game (`com.memforce.game`). Runs on the JVM, no device. | Automated: 8 test classes, 109 tests. |
+| **Unit** | Parsing, validation and merging (`com.memforce.importer`); the question sets carried in the package and the pattern a typed criterion becomes (`com.memforce.db`); the search criteria and the statements built from them (`com.memforce.search`, `com.memforce.data`); answer marking and the rules of a game (`com.memforce.game`). Runs on the JVM, no device. | Automated: 9 test classes, 117 tests. |
 | **Integration (database)** | DAOs against a real SQLite database: constraints, cascades, transactions, collation, pattern search. | **Not automated** — anomaly [A-06](#92-open-anomalies). Executed manually via TS-DB. |
 | **System** | The application on a device or emulator, against MF-SRS-001 clause 3 as a whole. | Manual, by the suites of [clause 8](#8-test-suites-and-procedures). |
 | **Acceptance / validation** | A person uses the product as a learner against MF-SRS-001, 1.4. | Manual, per release. |
@@ -211,7 +213,7 @@ outcomes of its confirmation.
 
 | Technique | Applied to |
 |---|---|
-| Equivalence partitioning | Input fields: empty, valid, over-length; pattern criteria: empty, literal, wildcard; submitted answers: exact, differing only in case or spacing, differing in a word, empty. |
+| Equivalence partitioning | Input fields: empty, valid, over-length; pattern criteria: empty, literal, a wildcard within the text, a `%` at an end of it that the enclosing pair absorbs; submitted answers: exact, differing only in case or spacing, differing in a word, empty. |
 | Boundary value analysis | Field limits of MF-IFS-001 (120, 500, 50, 1 000, 2 000 characters); the 1 MiB file bound; the 10-violation display cap; a game of one question; a lobby of none; the last question of a game. |
 | Decision table | Sign-in: {name known, unknown} × {password matches, does not} × {fields empty}. Import merge: {question exists, does not} × {stored answer present, absent}. Game end: {every question answered correctly, not} × {streak equals the total, does not}. |
 | State transition | The import state machine of MF-SDD-001, 3.8, including every failure exit. The queue of a game: the question asked moves to the back on each of a correct, an incorrect and an empty submission. |
@@ -227,14 +229,15 @@ Executed by `gradlew testDebugUnitTest`.
 | `com.memforce.importer.QuestionSetParserTest` | 34 | Format acceptance and the rejection rules it exercises: version support, missing required fields, unknown fields at both levels, non-object roots, blank and space-padded values, the question and tag length limits, byte order mark, trailing content, single-line tag names, duplicate tags within an array, an empty `questions` array, and the collection of all violations into one failure. Parses the published template and example. Requirements: REQ-IMP-20, REQ-IMP-30, REQ-STD-30, REQ-POR-40. |
 | `com.memforce.importer.MergedQuestionTest` | 6 | Set-level tags precede question-level tags; duplicate tags fold; questions without tags; file order preserved; a repeated question folds into one; the first answer wins. Requirements: REQ-IMP-70. |
 | `com.memforce.search.SearchQueryTest` | 12 | The criteria a search carries: empty means no criterion; text of spaces is no criterion; tags keep the order they were chosen in and are held once; dropping and toggling a tag; text changes leave the tags alone; the value is immutable, so the criteria a screen has already used cannot be altered behind it. Requirements: REQ-SRCH-40, REQ-SRCH-100. |
-| `com.memforce.data.QuestionFilterTest` | 11 | The condition that decides which questions match: the text pattern is asked of the question text and of the tag names, so title and tag matches land in one result; each chosen tag adds a further condition, never an alternative one; the patterns are trimmed and an empty pattern matches everything; each tag condition is named apart from the others. Requirements: REQ-SRCH-30, REQ-SRCH-40, REQ-SRCH-60, REQ-SRCH-90, REQ-SRCH-100. |
-| `com.memforce.data.TagQueriesTest` | 11 | The tag statements: the tag list counts by a sub-select, so a tag no question carries is still read; the three orders and their tie-break by name; the suggestions are drawn only from the questions the search already found, are counted within them, exclude the tags already chosen, and are limited. Requirements: REQ-TAG-70, REQ-TAG-90, REQ-SRCH-110, REQ-SRCH-120. |
+| `com.memforce.data.QuestionFilterTest` | 12 | The condition that decides which questions match: the text pattern is asked of the question text and of the tag names, so title and tag matches land in one result; each chosen tag adds a further condition, never an alternative one; the text is trimmed and enclosed in `%`, an underscore the user typed survives that enclosure, and an empty pattern matches everything; each tag condition is named apart from the others. Requirements: REQ-SRCH-30, REQ-SRCH-40, REQ-SRCH-60, REQ-SRCH-90, REQ-SRCH-100, REQ-SRCH-160. |
+| `com.memforce.data.TagQueriesTest` | 11 | The tag statements: the tag list counts by a sub-select, so a tag no question carries is still read; a name typed into the tag list is looked for anywhere in a tag name; the three orders and their tie-break by name; the suggestions are drawn only from the questions the search already found, are counted within them, exclude the tags already chosen, and are limited. Requirements: REQ-TAG-70, REQ-TAG-90, REQ-SRCH-110, REQ-SRCH-120, REQ-SRCH-160. |
 | `com.memforce.game.AnswerMatcherTest` | 11 | What marking forgives — letter case, surrounding spacing, the length of spacing runs — and what it does not: a missing word, a different answer, an empty submission, and a question with no stored answer. Requirements: REQ-GAME-80. |
 | `com.memforce.game.GameSessionTest` | 18 | The rules of a run: a game needs a question; the shuffle loses nothing and repeats for a fixed source; every other question is asked before one is asked again, whatever the outcome; the streak breaks on a wrong answer and on a skip; a question answered correctly twice counts once; victory when every question has been answered correctly; perfect victory when the streak covers the whole set; no submission is taken once the run is decided. Requirements: REQ-GAME-60, REQ-GAME-70, REQ-GAME-80, REQ-GAME-90, REQ-GAME-100, REQ-GAME-110, REQ-GAME-120. |
 | `com.memforce.db.BundledQuestionSetsTest` | 6 | Every question set carried in the installation package, held to MF-IFS-001 on the build machine: the folder is not empty, each file parses and declares the supported format version, each carries a name, a description and at least one set-level tag, none repeats a question text or folds to fewer questions than it lists, every question inherits the set-level tags, and the two shipped sets carry the counts and tags they are meant to. Requirements: REQ-IMP-120, REQ-IMP-130. |
-| **Total** | **109** | |
+| `com.memforce.db.SearchPatternsTest` | 7 | What a typed criterion becomes: the text is looked for wherever it stands, so `history` is matched as `%history%`; nothing typed, spaces alone, or `%` alone match everything; surrounding spaces are trimmed before the pair is added; a `%` the user typed at either end is absorbed rather than doubled, so `%history`, `history%` and `%history%` all give one pattern; a `%` typed within the text keeps its place; `_` is neither inserted nor altered. Requirements: REQ-SRCH-40, REQ-SRCH-60, REQ-SRCH-160, REQ-EXT-40. |
+| **Total** | **117** | |
 
-Last executed on 2026-09-12 against the current draft: 109 tests, 0 failures, 0 errors, 0 skipped.
+Last executed on 2026-09-13 against the current draft: 117 tests, 0 failures, 0 errors, 0 skipped.
 
 Rules of MF-IFS-001 that the automated suite does **not** yet exercise, and which TS-IMP therefore
 covers by hand: the `name` and `description` length limits, a wrongly typed `answer`, `tags` or
@@ -255,8 +258,8 @@ exist, those requirements are verified by the manual suites of
 
 Planned closure, in priority order: TS-DB (schema, constraints, cascades, transactions) together
 with the search and suggestion statements, which need the same database fixture; then
-`PasswordHasher` and `SearchPatterns` — both of which need no emulator and could move to the JVM
-suite with a thin abstraction — then the screens.
+`PasswordHasher` — which needs no emulator and could move to the JVM suite with a thin
+abstraction — then the screens.
 
 ### 7.4 Entry, exit, suspension and resumption
 
@@ -282,10 +285,10 @@ when every criterion it covers is met.
 | **TS-AUTH** — sign-in, registration, session | REQ-AUTH-10 … REQ-AUTH-80 | System | Manual; database state inspected with the SQLite tool |
 | **TS-QST** — question management | REQ-QST-10 … REQ-QST-90 | System | Manual |
 | **TS-TAG** — tag management | REQ-TAG-10 … REQ-TAG-110 | System | Manual |
-| **TS-SRCH** — search and filtering | REQ-SRCH-10 … REQ-SRCH-150 | Unit + system | JUnit for the criteria and the statements built from them; manual on both screens, against the prepared pattern data set of [8.1](#81-prepared-data-sets) |
+| **TS-SRCH** — search and filtering | REQ-SRCH-10 … REQ-SRCH-160 | Unit + system | JUnit for the criteria, the pattern a typed criterion becomes and the statements built from them; manual on both screens, against the prepared pattern data set of [8.1](#81-prepared-data-sets) |
 | **TS-IMP** — question-set import | REQ-IMP-10 … REQ-IMP-130, REQ-STD-30 | Unit + system | JUnit for parsing, merging and the carried sets; manual for picking, confirming, applying and rollback, and for the first launch of a clean installation (REQ-IMP-110) |
 | **TS-GAME** — lobby and game | REQ-GAME-10 … REQ-GAME-120 | Unit + system | JUnit for marking and the rules of a run; manual for the three ways into the lobby, its retention, and the two endings |
-| **TS-USE** — usability | REQ-USE-10 … REQ-USE-80 | System | Manual, in light and in dark appearance |
+| **TS-USE** — usability | REQ-USE-10 … REQ-USE-80, less the obsolete REQ-USE-70 | System | Manual, in light and in dark appearance |
 | **TS-PERF** — performance | REQ-PERF-10 … REQ-PERF-60 | System | Manual measurement at the reference volume, procedure [8.2](#82-performance-measurement) |
 | **TS-DB** — schema and integrity | REQ-DB-10 … REQ-DB-100 | Integration | Manual through the SQLite tool, procedure [8.3](#83-database-integrity) |
 | **TS-CON** — constraints | REQ-CON-10 … REQ-CON-50 | System | Inspection of the manifest, the dependency set and the package; flight-mode run |
@@ -298,7 +301,7 @@ when every criterion it covers is met.
 
 | Data set | Content | Used by |
 |---|---|---|
-| `DS-PATTERN` | Questions and tags chosen so that each of `po%`, `%ta`, `%sto%`, `_br%`, `%__a` has a known, non-empty expected result and a known non-matching neighbour. **The wildcard procedure runs against a database cleared to this set alone**, not on top of the seed-data baseline of [4.4](#44-resources-and-environment): because a pattern is applied to tag names as well as question text (REQ-SRCH-90), baseline content matching a pattern drags its whole set into the result — the carried tags `nba` and `usa` alone answer `%__a` with 80 questions — and "exactly the expected members" would not be checkable. | TS-SRCH (REQ-SRCH-60) |
+| `DS-PATTERN` | Questions and tags chosen so that each of the entries `po`, `ta`, `s%o`, `_br` and `__a` — matched as `%po%`, `%ta%`, `%s%o%`, `%_br%` and `%__a%` once the search encloses them (REQ-SRCH-160) — has a known, non-empty expected result and a known non-matching neighbour. **The wildcard procedure runs against a database cleared to this set alone**, not on top of the seed-data baseline of [4.4](#44-resources-and-environment): because a pattern is applied to tag names as well as question text (REQ-SRCH-90), baseline content matching a pattern drags its whole set into the result — the carried tags `nba` and `usa` alone answer `%__a%` with 80 questions — and "exactly the expected members" would not be checkable. | TS-SRCH (REQ-SRCH-60, REQ-SRCH-160) |
 | `DS-OVERLAP` | Tags of known and unequal use, including one tag carried by no question, two tags carried by the same questions, and two tags sharing no question; and a question carried by twelve tags. | TS-SRCH (REQ-SRCH-110, REQ-SRCH-120), TS-TAG (REQ-TAG-70, REQ-TAG-90), TS-QST (REQ-QST-80) |
 | `DS-UNANSWERED` | A set of five questions of which two carry no answer. | TS-GAME (REQ-GAME-50) |
 | `DS-CASE` | A tag `Algebra` and a question differing from a stored one only by letter case. | TS-AUTH, TS-TAG, TS-IMP (REQ-AUTH-60, REQ-TAG-20, REQ-IMP-60) |
