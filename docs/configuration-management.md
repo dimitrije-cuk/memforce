@@ -93,7 +93,7 @@ A configuration item is anything whose change must be controlled and traceable.
 | CM | This document | `MF-CMP-001` | The document header |
 | Supporting documents | [MF-DEV-001](development-environment.md), [MF-PRC-001](commit-message-workflow.md), [MF-PRC-002](git-core-hookspath.md), `docs/README.md` | `MF-DEV-001`, `MF-PRC-001`, `MF-PRC-002`, `MF-DOC-000` | The document header |
 | Design artefacts | `docs/database/database-erd.puml` and its rendered PNG and SVG | Path | The commit; the PlantUML source is authoritative and the renderings are regenerated from it |
-| Seed data | `app/src/main/assets/seed/memforce_seed.sql` | Path | The commit |
+| Seed data | `app/src/main/assets/seed/memforce_seed.sql` and `app/src/main/assets/question-sets/**` | Path | The commit |
 
 **Not controlled:** `local.properties`, `.gradle/`, `build/`, IDE files and any downloaded SDK —
 all excluded by `.gitignore`. They are machine state, not product; anything that must survive a

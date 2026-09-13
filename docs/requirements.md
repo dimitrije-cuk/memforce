@@ -429,6 +429,9 @@ implementations of the same idea drift apart, and a user would have to learn eac
 | REQ-IMP-80 | The application shall apply an import as a single transaction, so that after a failure at any point the database holds exactly what it held before the import began. | F | H | SN-04, D-10 |
 | REQ-IMP-90 | The application shall reject a file larger than 1 MiB, a file it cannot read, and a file that is not valid JSON, in each case reporting the reason and writing nothing. | F | H | derived, D-12 |
 | REQ-IMP-100 | The application shall report, after a completed import, how many questions were added, how many stored questions the file matched and updated, and how many tags were created. | F | M | SN-04 |
+| REQ-IMP-110 | The application shall carry question-set files within its installation package and shall load every one of them into a database it has just created, without any action by the user. | F | M | SN-10, D-29 |
+| REQ-IMP-120 | The application shall load a set carried in its installation package under the format of [MF-IFS-001](question-import-format.md) and the merge rules of REQ-IMP-50, REQ-IMP-60 and REQ-IMP-70, so that a carried set and an imported one cannot classify or merge differently. | F | M | SN-10, D-29 |
+| REQ-IMP-130 | A question-set file carried in the installation package shall be verified against [MF-IFS-001](question-import-format.md) when the product is built, and a file that violates it shall fail the build. | C | H | D-29 |
 
 *Rationale.* Import is the one function that changes many records from a single action, so it is
 specified defensively: validate everything first (REQ-IMP-20), show the effect and ask
@@ -437,6 +440,15 @@ rules of REQ-IMP-60 and REQ-IMP-70 exist because the expected source of these fi
 working from a template, which repeats questions across files and within a file; without merging,
 a second import of an improved set would double the library. Keeping the stored answer makes
 import safe to repeat: an import can add classification, never overwrite work.
+
+REQ-IMP-110 to REQ-IMP-130 carry the same idea in the opposite direction. A learner who has just
+installed the product has no file to import and no reason to have prepared one, so the topics the
+team decided everyone should have travel inside the package and load themselves. They are written
+in the format of MF-IFS-001 rather than in the seed script, so that the content the product ships
+with is reviewable as content and is checked by the same parser that guards an import. That the
+check happens at build time (REQ-IMP-130) is what separates the two cases: a user's file is
+untrusted input to be reported on (REQ-IMP-20), whereas a file the team ships is part of the
+product, and a broken one is a defect that must never reach a device.
 
 #### 3.2.6 Gameplay
 
@@ -517,8 +529,9 @@ accounts.
 | REQ-PERF-60 | The application shall support at least the reference volume without loss of function. | Q | M | derived |
 
 *Rationale.* The numbers are stated because clause 5.2.5 requires verifiability and clause 5.2.7
-forbids terms such as "responsive". The reference volume is set roughly two orders of magnitude
-above the seeded starting data and an order of magnitude above realistic single-learner use, so
+forbids terms such as "responsive". The reference volume is set roughly an order of magnitude above
+the seeded starting data ([MF-VVP-001, 4.4](verification-and-validation.md#44-resources-and-environment))
+and above realistic single-learner use, so
 the limits remain feasible while still meaningful. REQ-PERF-40 is stated as a requirement rather
 than left to design because credential derivation is deliberately expensive
 ([REQ-SEC-10](#381-security)) and would otherwise make the sign-in screen appear to hang.
@@ -729,7 +742,7 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-TAG-50 | T | With tags `basics`, `Exam`, `space` stored, the list shows them in that order. |
 | REQ-TAG-60 | T | A tag created while signed in as `alice` is visible and editable after signing in as `bob`. |
 | REQ-TAG-70 | T | With `algebra` carrying 3 questions and `unused` carrying none, the two entries show 3 and 0; assigning a fourth question to `algebra` changes its entry to 4. |
-| REQ-TAG-80 | T | With 9 tags stored, the tag list screen states 9; creating a tag changes the stated number to 10. |
+| REQ-TAG-80 | T | The number stated on the tag list screen equals the number of rows in `tags` — 21 on a clean installation, per the seed-data baseline of [MF-VVP-001, 4.4](verification-and-validation.md#44-resources-and-environment); creating a tag raises both to 22. |
 | REQ-TAG-90 | T | With tags carrying 5, 2, 2 and 0 questions, the three orders produce respectively: descending by count, ascending by name, ascending by count; in the first and third the two tags carrying 2 appear in name order. Changing the choice reorders the displayed list with no further action. |
 | REQ-TAG-100 | T | Swiping a tag entry to the left raises the confirmation of REQ-TAG-40; declining restores the entry and leaves the tag stored; accepting removes it and its assignments. |
 | REQ-TAG-110 | T | Swiping a tag carrying 4 questions to the right leaves the tag stored, restores the entry, and leaves the lobby holding exactly those 4 questions; repeating the swipe adds none and says so. |
@@ -743,7 +756,7 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-SRCH-30 | T | A pattern matching six questions combined with a tag carried by four of them returns exactly the questions in both sets. |
 | REQ-SRCH-40 | T | An empty text field with no chosen tag returns every stored question; an empty text field with a chosen tag returns every question carrying that tag. |
 | REQ-SRCH-50 | T | A pattern applied to the tag list returns exactly the matching tags; an empty pattern returns every tag. |
-| REQ-SRCH-60 | T | The patterns `po%`, `%ta`, `%sto%`, `_br%` and `%__a` each return exactly the members of the prepared data set that satisfy the stated wildcard rule. |
+| REQ-SRCH-60 | T | Against a database holding the prepared wildcard data set alone ([MF-VVP-001, 8.1](verification-and-validation.md#81-prepared-data-sets)), the patterns `po%`, `%ta`, `%sto%`, `_br%` and `%__a` each return exactly the members of that set which satisfy the stated wildcard rule. |
 | REQ-SRCH-70 | T | The patterns `PO%` and `po%` return the same questions. |
 | REQ-SRCH-80 | D | Typing successive characters into a search field narrows the displayed list after each character, with no confirming action. |
 | REQ-SRCH-90 | T | With question `Who was Napoleon?` carrying the tag `france` and question `What caused the French Revolution?` not carrying it, the pattern `%fran%` returns both: the second by its text, the first through its tag. |
@@ -768,6 +781,9 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-IMP-80 | T | An import interrupted by an induced failure after the first write leaves the database exactly as it was before the import. |
 | REQ-IMP-90 | T | A file of 2 MiB, a file whose stream cannot be opened, and a file holding invalid JSON are each rejected with the corresponding message and no write. |
 | REQ-IMP-100 | T | After a completed import the reported counts equal the counts confirmed beforehand, and the reported numbers of created questions and created tags equal the actual change in the tables. |
+| REQ-IMP-110 | D | A first launch of a freshly installed application shows the questions of every carried set in the question list, and their tags in the tag list, without the user importing anything. |
+| REQ-IMP-120 | T | Every carried file parses under the parser of REQ-IMP-20, declares the supported format version, and folds under the merge rules to exactly the number of questions it lists. |
+| REQ-IMP-130 | T | A violation introduced into a carried file fails the build, and the build is not reported as up to date when a carried file has changed. |
 
 #### 4.3.6 Gameplay
 
@@ -906,7 +922,7 @@ This document is a configuration item under [MF-CMP-001](configuration-managemen
 | Questions (`QST`) | 3.2.2 | 9 |
 | Tags (`TAG`) | 3.2.3 | 11 |
 | Search and filtering (`SRCH`) | 3.2.4 | 15 |
-| Question-set import (`IMP`) | 3.2.5 | 10 |
+| Question-set import (`IMP`) | 3.2.5 | 13 |
 | Gameplay (`GAME`) | 3.2.6 | 12 |
 | Usability (`USE`) | 3.3 | 8 |
 | Performance (`PERF`) | 3.4 | 6 |
@@ -916,9 +932,9 @@ This document is a configuration item under [MF-CMP-001](configuration-managemen
 | Security (`SEC`) | 3.8.1 | 6 |
 | Reliability and availability (`REL`) | 3.8.2 | 4 |
 | Portability and maintainability (`POR`) | 3.8.3 | 4 |
-| **Total** | | **118** |
+| **Total** | | **121** |
 
-Priority distribution: 86 High, 31 Medium, 1 Low. The High requirements are those without which
+Priority distribution: 87 High, 33 Medium, 1 Low. The High requirements are those without which
 the product does not meet the purpose of [1.1](#11-purpose); together they form the minimum
 acceptable product.
 
@@ -949,6 +965,7 @@ here so that every requirement has a stated origin.
 | SN-07 | A password stored on the device cannot be recovered from the device's storage. | REQ-SEC-10, REQ-SEC-20, REQ-SEC-30, REQ-SEC-50, REQ-SEC-60, REQ-EXT-60, REQ-DB-10 |
 | SN-08 | The application is comfortable to read in the same lighting conditions as the rest of the device. | REQ-USE-60 |
 | SN-09 | A learner practises a chosen set of questions until the whole set is known, rather than reading it through once. | REQ-GAME-10 … REQ-GAME-120, REQ-SRCH-130, REQ-SRCH-140, REQ-QST-90, REQ-TAG-110, REQ-EXT-10 |
+| SN-10 | A learner finds usable topics in the application from the first launch, without preparing or importing a file first. | REQ-IMP-110, REQ-IMP-120, REQ-IMP-130 |
 
 ### A.2 Forward trace — requirements to verification
 
@@ -1022,6 +1039,7 @@ change to this document under [5.2](#52-baseline-and-change-control).
 | **D-26** | What happens to a question with no answer when a game starts? | It is **left out**, and the number left out is stated before the game begins. | *Asking it and accepting anything* — the question then teaches nothing and the total is dishonest. *Refusing to start* — a lobby assembled from a tag would fail because of one incomplete question. | REQ-GAME-50 |
 | **D-27** | What happens to a question after it has been asked? | It goes to the **back of the queue**, whatever the submission was worth, and the queue never shortens. | *Removing a question once answered correctly* — turns the game into a single pass, which tests rather than teaches. *Repeating a missed question immediately* — the answer is then still on the screen, and the repetition proves nothing. | REQ-GAME-70 |
 | **D-28** | What counts as a correct answer? | Equality with the stored answer, **ignoring letter case, surrounding spacing and the length of spacing runs**; a blank submission is a skip and counts as incorrect. | *Exact equality* — a trailing space would mark a correct answer wrong. *Fuzzy matching* — a threshold no user can predict, and one that would accept an answer the learner does not actually know. | REQ-GAME-80 |
+| **D-29** | How does the product come to hold the topics the team wants every installation to have? | **Question-set files inside the package, loaded when the database is created**, in the format of MF-IFS-001 and through the same parser and merge rules as an import, and verified when the product is built. | *Rows in the seed script* — SQL states a tag by identifier and cannot be checked against the import format, so a topic added that way is unreviewable and silently breaks the moment the seeded identifiers move. *A screen offering the carried sets* — turns the team's default content into a user task, leaving every installation empty until the user finds it. *Downloading them on first run* — contradicts SN-06. | REQ-IMP-110, REQ-IMP-120, REQ-IMP-130 |
 
 ---
 
@@ -1069,7 +1087,7 @@ Terms not defined here carry the meaning given in ISO/IEC/IEEE 24765:2017.
 | **Complete** | Each requirement is understandable on its own; where it depends on another it names it by identifier rather than implying it. | Cross-references were made explicit links. |
 | **Singular** | One capability, constraint or quality per requirement; grouped actions such as "add, edit, delete" were split into separate requirements. | Statements containing a conjunction of *actions* were split; enumerations of *fields* within one action were kept (REQ-QST-30). |
 | **Feasible** | Every requirement is achievable with the platform APIs on the baseline of assumption A-1, and every numeric limit sits well above measured behaviour at the seeded volume. | Each non-functional limit was checked against the reference device of assumption A-4. |
-| **Verifiable** | Each has exactly one entry in [clause 4](#4-verification) with a method and pass criteria. Unmeasurable terms are absent. | Clause 4 was built by walking clause 3 in order; the counts agree at 118. |
+| **Verifiable** | Each has exactly one entry in [clause 4](#4-verification) with a method and pass criteria. Unmeasurable terms are absent. | Clause 4 was built by walking clause 3 in order; the counts agree at 121. |
 | **Correct** | Each requirement is an accurate statement of the need it cites; every decision that shaped it is recorded in [Annex B](#annex-b--decision-record). | Each need was re-read against the requirements claiming it. |
 | **Conforming** | All requirements follow the construct of clause 5.2.4 and the keywords of clause 5.2.7, in the fixed table form of [1.9](#19-conventions). | Every statement uses *shall* with an explicit subject. |
 
@@ -1097,6 +1115,6 @@ several organisations is omitted.
 |---|---|---|---|---|
 | T-1 | Information items of clause 7 (BRS, StRS, SyRS, SRS) | Only the **SRS** is produced. Stakeholder needs are recorded in [A.1](#a1-stakeholder-needs). | There is one stakeholder group and no acquirer to negotiate with; the product is software only, so a system-level specification would restate the software one. | A later change of stakeholder would find the needs stated compactly rather than argued in full; A.1 is then the item to expand first. |
 | T-2 | Requirement attributes of clause 5.2.8.2 | Identification, type, priority, source and verification method are carried; *version number*, *owner*, *risk* and *difficulty* are not. | One owner, and per-requirement versions duplicate the document version held under [MF-CMP-001](configuration-management.md). Risk and difficulty inform planning, which is not this document's purpose. | Requirement-level history is only recoverable from the repository history of this file. |
-| T-3 | Requirements management measurement (clause 6.5) | Volatility is not measured; changes are visible in the document history. | At 118 requirements under one owner, the measure would cost more than it informs. | Requirement churn is not quantified; if the set grows past a few hundred, this should be revisited. |
+| T-3 | Requirements management measurement (clause 6.5) | Volatility is not measured; changes are visible in the document history. | At 121 requirements under one owner, the measure would cost more than it informs. | Requirement churn is not quantified; if the set grows past a few hundred, this should be revisited. |
 | T-4 | Concept of operations and operational concept annexes | Not produced as separate items; the operational context is given in [1.3](#13-product-perspective), [1.4](#14-product-functions) and [5.1](#51-the-problem-being-solved). | A single-user application on one device has no operational environment beyond the device itself. | None material at this scale. |
 | T-5 | Formal review and approval records | Approval is recorded by the baseline label in [MF-CMP-001](configuration-management.md) rather than by a signature page. | No separate acquirer or quality organisation exists to sign. | Approval authority and date are traceable through the repository history only. |

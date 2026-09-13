@@ -14,7 +14,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
-/** Fills a freshly created database with the sample data from the seed asset. */
+/**
+ * Fills a freshly created database with the sample data from the seed asset and with the question
+ * sets bundled in the application package ({@link BundledQuestionSets}).
+ */
 final class DatabaseSeeder {
 
     private static final String SEED_ASSET = "seed/memforce_seed.sql";
@@ -23,10 +26,12 @@ final class DatabaseSeeder {
     private DatabaseSeeder() {
     }
 
+    /** The bundled sets are loaded last, so they merge into the sample data rather than the other way round. */
     static void seed(@NonNull SQLiteDatabase db, @NonNull Context context) {
         insertUser(db, "ana");
         insertUser(db, "marko");
         execAsset(db, context);
+        BundledQuestionSets.load(db, context);
     }
 
     private static void insertUser(SQLiteDatabase db, String name) {

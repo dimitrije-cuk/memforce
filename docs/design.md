@@ -126,7 +126,8 @@ All code is under `app/src/main/java/com/memforce/`.
 |---|---|---|---|
 | `db` | `MemForceDbHelper` | The single `SQLiteOpenHelper`. Creates the schema, switches foreign keys on for every connection, seeds a new database. | REQ-DB-10, REQ-DB-50 |
 | `db` | `DbContract` | Table and column names as constants; the one place a name is spelled. | REQ-DB-20 |
-| `db` | `DatabaseSeeder` | Package-private. Populates a newly created database from `assets/seed/memforce_seed.sql` and two accounts. | [3.5.5](#355-seeded-data) |
+| `db` | `DatabaseSeeder` | Package-private. Populates a newly created database from `assets/seed/memforce_seed.sql`, two accounts, and the carried question sets. | [3.5.5](#355-seeded-data) |
+| `db` | `BundledQuestionSets` | Package-private. Loads every question set carried in `assets/question-sets/` into a database being created, through the parser and merge rules of an import. | REQ-IMP-110, REQ-IMP-120 |
 | `db` | `SearchPatterns` | Turns a user's typed criterion into a `LIKE` argument. | REQ-SRCH-40, REQ-EXT-40 |
 | `data` | `QuestionDao` | Question reads and writes, including tag assignment. Reads by `search(SearchQuery)`, `findById`, `findByIds` and `idsWithTag`; the read path draws each question's tag names with a second statement. | REQ-QST-10…70, REQ-QST-80, REQ-QST-90, REQ-SRCH-90…110 |
 | `data` | `QuestionFilter` | Turns a `SearchQuery` into one SQL condition over a question table aliased `q`, reused by the three statements that must agree on what "matching" means. | REQ-SRCH-90…110 |
@@ -227,8 +228,8 @@ merging to run on a plain JVM under unit test (REQ-POR-40).
 
   importer   search.SearchQuery   game core: GameSession, GameQuestion,  ← pure Java, no Android
      ▲                            AnswerMatcher, CurrentGame
-     └── used by data and, with data.QuestionFilter and data.TagQueries — which build their
-         SQL as plain strings — exercised directly by the JVM unit tests
+     └── used by data and by db and, with data.QuestionFilter and data.TagQueries — which build
+         their SQL as plain strings — exercised directly by the JVM unit tests
 ```
 
 Rules that hold in the delivered code:
@@ -243,7 +244,9 @@ Rules that hold in the delivered code:
    are all exercised on a plain JVM. `game.Lobby` is the exception — it is a preferences adapter and
    sits with `session`.
 3. **`db` does not depend on `data`.** The contract and the helper know nothing about the DAOs
-   that use them.
+   that use them. `db.BundledQuestionSets` reaches *downwards* to `importer` for parsing and
+   merging rather than sideways to `data.QuestionSetImporter`, which keeps the rule intact and is
+   also what the re-entrancy of [3.5.5](#355-seeded-data) requires.
 4. **No element depends on `ui`.** There is no callback from a DAO into an activity; results are
    returned, not published.
 5. **Third-party dependencies are declared once**, in `gradle/libs.versions.toml`, and are limited
@@ -326,10 +329,42 @@ library rather than three empty screens:
 - two accounts, `ana` and `marko`, inserted through `PasswordHasher` so that the stored values are
   derived on the device like any other account;
 - `app/src/main/assets/seed/memforce_seed.sql`, executed statement by statement: 9 tags, 25
-  questions and 53 assignments.
+  questions and 53 assignments;
+- every `*.json` file in `app/src/main/assets/question-sets/`, loaded by `BundledQuestionSets`
+  (REQ-IMP-110): today `nba.json` and `usa-states.json`, together 80 questions, 12 tags and 320
+  assignments.
 
-Seeding runs inside `onCreate` only; it never runs against an existing database. The demo accounts
-are a known deviation — see [A-05](#6-known-deviations-and-design-debt).
+A first launch therefore holds **105 questions, 21 tags and 373 assignments**. That combined state
+is the seed-data baseline of [MF-VVP-001, 4.4](verification-and-validation.md#44-resources-and-environment),
+which every manual procedure starts from, so adding or changing a carried set moves the baseline and
+the procedures that quote a count must move with it.
+
+The two sources differ in kind. The SQL file is a fixture: it states identifiers, and its rows are
+what the screens are measured against. The question sets are **content** — the topics the team
+decided every installation should have — so they are ordinary question-set files of
+[MF-IFS-001](question-import-format.md) rather than SQL, and adding a topic is adding a file. They
+are read by `QuestionSetParser` and applied under the merge rules of REQ-IMP-50 to REQ-IMP-70, so a
+carried set and an imported one cannot disagree about what a question set means (REQ-IMP-120), and
+a set naming a tag the SQL fixture already created reuses that tag rather than duplicating it.
+
+`BundledQuestionSets` cannot go through `QuestionSetImporter`: it runs inside
+`MemForceDbHelper.onCreate`, where asking the helper for a writable database would re-enter the
+open still in progress. It writes on the handle `onCreate` supplies, which is also what makes the
+load atomic — `SQLiteOpenHelper` wraps `onCreate` and the version it then sets in one transaction,
+so a set that fails partway commits no rows and leaves the schema version unset, and the next open
+creates the database again rather than finding it half filled. A carried file that does not parse
+is a defect in the product rather than bad input from a user, so it raises rather than being
+skipped; `BundledQuestionSetsTest` holds every carried file to the format on the build machine
+(REQ-IMP-130) to keep that failure inside the build, and `app/build.gradle.kts` declares the folder
+as an input to the test task so that changing a set cannot leave the check reported as up to date.
+
+Sets load last and in file-name order, so the rows of a fresh database do not depend on the order
+in which the platform happens to list the folder.
+
+Seeding runs inside `onCreate` only; it never runs against an existing database — a set added to a
+later version of the product therefore reaches an existing installation only through
+[A-01](#6-known-deviations-and-design-debt). The demo accounts are a known deviation — see
+[A-05](#6-known-deviations-and-design-debt).
 
 #### 3.5.6 Non-schema persistence
 
@@ -674,9 +709,9 @@ specification left open.
 | DD-03 | **Activities, no Fragments, no ViewModel.** | Each screen owns exactly one job, and the platform restores the text fields it manages. The cost is that state the platform does not manage — the tag selection in the question editor, and an import result whose screen was destroyed — is lost on recreation ([A-09](#6-known-deviations-and-design-debt)), and that the list screens re-query in `onResume` ([A-03](#6-known-deviations-and-design-debt)). A ViewModel layer is the answer if that state grows. |
 | DD-04 | **A question's tag names read by a second statement, not `GROUP_CONCAT`.** | One `GROUP_CONCAT` join reads the tags in a single query, but SQLite before 3.44 cannot order the values it collects and a tag name may contain the separator, so the joined string could be neither ordered nor safely split. A second statement returning ordered `(question_id, tag name)` pairs, grouped in the DAO, keeps the order defined and the names intact, at one extra query per result set rather than per row. |
 | DD-05 | **Text-or-tag match and per-tag narrowing as `EXISTS` sub-selects on `question_tags`, not joins.** | Matching the text against tag names, and narrowing by each chosen tag, are `EXISTS` sub-selects: a join would multiply rows before grouping and complicate the tag-name read. Each sub-select is served directly by `idx_question_tags_tag`. This is the multi-tag narrowing the earlier design only kept open. |
-| DD-06 | **Rule-bearing logic kept free of Android types.** | The importer, the `SearchQuery` value, the `QuestionFilter`/`TagQueries` statement builders and the whole game core (`GameSession`, `AnswerMatcher`, `CurrentGame`) use only the Java standard library, or `org.json`, so their rules run on a plain JVM. That is what gives the product its 103 JVM unit tests (REQ-POR-40); putting the same logic in a DAO or an activity would need an emulator to test. |
+| DD-06 | **Rule-bearing logic kept free of Android types.** | The importer, the `SearchQuery` value, the `QuestionFilter`/`TagQueries` statement builders and the whole game core (`GameSession`, `AnswerMatcher`, `CurrentGame`) use only the Java standard library, or `org.json`, so their rules run on a plain JVM. That is what gives the product its 109 JVM unit tests (REQ-POR-40) — and what lets the question sets carried in the package be held to the import format on the build machine rather than on a device; putting the same logic in a DAO or an activity would need an emulator to test. |
 | DD-07 | **Errors reported as return values (`-1`, `false`, `null`), not exceptions**, in the DAOs. | A duplicate tag name is an expected outcome of a user action, not an exceptional condition; the screens that call these methods handle both outcomes on the same path. `QuestionSetFormatException` is the deliberate exception: it carries a whole violation list, which no return value could. |
-| DD-08 | **Seeded demo content on first creation.** | An empty first launch gives a user nothing to search, and makes the product look broken; 25 seeded questions demonstrate every screen. The demo *accounts* that come with it are the part that should not ship — [A-05](#6-known-deviations-and-design-debt). |
+| DD-08 | **Seeded demo content on first creation.** | An empty first launch gives a user nothing to search, and makes the product look broken; the 105 questions a first launch creates — the SQL fixture and the carried question sets of [3.5.5](#355-seeded-data) — demonstrate every screen. The demo *accounts* that come with it are the part that should not ship — [A-05](#6-known-deviations-and-design-debt). |
 | DD-09 | **One search component reused, not a search box per screen.** | The home screen and the question list embed the same `PowerfulSearchView`, so a user learns the search once and the two screens cannot drift. The cost is a compound view with configuration hooks (`setOnOpenQuestion`, `setSwipeActionsEnabled`, `setResultsBottomPadding`, …); the alternative was two search boxes and two tag pickers kept in step by hand, which the removed `FilterSpinner` had begun to duplicate. |
 | DD-10 | **The lobby stored in preferences, not the database.** | The lobby is a handful of question identifiers naming rows the schema already owns; a table would add a fifth schema object, the owning-key question of [3.5.3](#353-ownership) and a migration to store them. Preferences also give it the persistence it needs — surviving the trip to the game and process death — beside the session it resembles. Holding identifiers rather than questions is what lets an edit show through and a deletion drop out ([3.5.6](#356-non-schema-persistence)). |
 | DD-11 | **A game run held in memory only.** | A run belongs to the moment, not the library. Persisting it would let a player resume a half-finished game after leaving, but would then have to be reconciled with questions edited or deleted meanwhile; discarding it on exit matches what a player expects and keeps the game free of stored state. `CurrentGame` is the single holder, and the game screen returns to the lobby when it finds none. |
@@ -712,7 +747,7 @@ The reverse direction is the "Realises" column throughout [clause 3](#3-design-v
 | Tags (`TAG`) | `TagListActivity`, `TagAdapter`, `TagEditActivity`, `TagDao`, `TagQueries`, `TagUsage`, `TagSort`, `SwipeActions` |
 | Search and filtering (`SRCH`) | `SearchQuery`, `QuestionFilter`, `TagQueries`, `SearchPatterns`, `QuestionDao.search`, `TagDao.suggest`, `PowerfulSearchView`, `QuestionResultAdapter`, [3.7.2](#372-search) |
 | Gameplay (`GAME`) | `Lobby`, `GameSession`, `GameQuestion`, `AnswerMatcher`, `CurrentGame`, `LobbyActivity`, `LobbyAdapter`, `GameActivity`, [3.7.4](#374-gameplay), [3.9.9](#399-game-scoring-and-victory) |
-| Question-set import (`IMP`) | `QuestionSetImportFlow`, `QuestionSetParser`, `MergedQuestion`, `QuestionSetImporter`, [3.9](#39-algorithm-view) |
+| Question-set import (`IMP`) | `QuestionSetImportFlow`, `QuestionSetParser`, `MergedQuestion`, `QuestionSetImporter`, `BundledQuestionSets`, [3.5.5](#355-seeded-data), [3.9](#39-algorithm-view) |
 | Usability (`USE`) | `MainActivity`, confirmation dialogs, `strings.xml`, `themes.xml` + `values-night/themes.xml` |
 | Performance (`PERF`) | [3.10](#310-resource-view), DD-04, DD-05, `idx_question_tags_tag` |
 | Logical database (`DB`) | [3.5](#35-information-view), `MemForceDbHelper`, `DbContract` |
@@ -737,7 +772,7 @@ classification and disposition are held.
 | A-03 | List queries run on the user-interface thread (`onResume` and every keystroke), as do the lobby read (`findByIds`) and the game's answer marking. | REQ-PERF-10 at volume; REQ-PERF-40 is met, since it covers derivation, file reading and import writing. | Measured behaviour is within the limit at the seeded volume; at the reference volume of 2 000 questions it is a risk rather than a defect. | Move list queries to a background executor if measurement at the reference volume approaches 1 s. |
 | A-04 | `questions.name` carries no uniqueness constraint, while import merges questions case-insensitively (REQ-IMP-60). | Consistency between REQ-QST-10 and REQ-IMP-60 | A user can type the same question twice; an import would have merged it. The two paths disagree about what "the same question" means. | Decide deliberately: either add a `UNIQUE COLLATE NOCASE` constraint and a merge on manual entry, or state in MF-SRS-001 that duplicates entered by hand are permitted. |
 | A-05 | `DatabaseSeeder` creates the accounts `ana` and `marko` with a constant password in every build, including release. | REQ-SEC-10 in spirit; no requirement asks for demo accounts | Every fresh installation has two accounts whose password is in the source. Accounts are not a boundary between users' content (MF-SRS-001, 1.6), so the impact is limited to impersonation of a demo name. | Seed content without accounts, or gate account seeding to debug builds. |
-| A-06 | No automated test executes any DAO, the schema, `PasswordHasher`, `Session` or any screen. | Verification coverage, not a product defect | 103 unit tests cover parsing and merging, the `SearchQuery` value and the SQL its filter builds, the tag-count statements, answer matching and the game rules — all on the JVM; every database and user-interface requirement is still verified by hand today. | Add instrumented tests for the DAOs and the schema, as planned in MF-VVP-001, clause 7.3. |
+| A-06 | No automated test executes any DAO, the schema, `PasswordHasher`, `Session` or any screen. | Verification coverage, not a product defect | 109 unit tests cover parsing and merging, the question sets carried in the package, the `SearchQuery` value and the SQL its filter builds, the tag-count statements, answer matching and the game rules — all on the JVM; every database and user-interface requirement is still verified by hand today, including the rows `BundledQuestionSets` writes. | Add instrumented tests for the DAOs and the schema, as planned in MF-VVP-001, clause 7.3. |
 | A-07 | `QuestionDao.replaceTags` ignores the `-1` that `insert` returns on failure, and `insert`/`update` mark their transaction successful unconditionally. | REQ-IMP-80, REQ-REL-20 | A link write that fails **without raising** is not noticed: a question can be committed without some of its tags, inside an import that reports success. Rollback still works for anything that throws. | Use `insertOrThrow`, or check the return value and fail the transaction before it is marked successful. |
 | A-08 | Failed writes are not reported: `QuestionEditActivity.save()` discards the identifier returned by `insert` and closes the editor either way; update and delete failures surface nothing to the user. | REQ-REL-30 | A question that was not stored looks stored until the list refreshes without it. | Return a typed outcome from the DAOs and report it at each call site without closing the form. |
 | A-09 | State the platform does not restore is lost on activity recreation: the question editor's tag selection resets to the stored assignments on rotation, and an import result delivered to a destroyed screen is reported without its counts. | REQ-STD-10, REQ-IMP-100 | A rotation partway through editing silently discards tag changes the user made. | Persist the selection in `onSaveInstanceState`, and deliver the import result through lifecycle-aware state. |

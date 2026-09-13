@@ -41,3 +41,17 @@ dependencies {
     testImplementation(libs.json)
     testImplementation(libs.junit)
 }
+
+/**
+ * The question-set files these tests validate are read from the source tree rather than from the
+ * test classpath, so Gradle cannot infer them as inputs. Without declaring them, editing a bundled
+ * set leaves the validating test up to date and a malformed file reaches the APK unchecked.
+ */
+tasks.withType<Test>().configureEach {
+    inputs.dir(layout.projectDirectory.dir("src/main/assets/question-sets"))
+        .withPropertyName("bundledQuestionSets")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir(rootProject.layout.projectDirectory.dir("docs/templates"))
+        .withPropertyName("questionSetTemplates")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+}

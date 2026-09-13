@@ -46,6 +46,26 @@ it would add and imports it only after that is confirmed. The import follows the
   question carrying the tags of all of them.
 * Questions and tags are shared by every user, so an import is visible to everyone.
 
+## Sets bundled with the application
+
+The same format is used for the question sets that ship inside the application. They are files in
+the source tree, under `app/src/main/assets/question-sets/`; the build packages them into the APK,
+and the application loads every one of them the first time it creates its database, without the
+user importing anything.
+
+Two things differ from an import, and nothing else does:
+
+* **There is no file picker, no confirmation and no report.** The load is part of creating the
+  database, so the counts an import would show have no one to show them to.
+* **A bundled file that breaks the format fails the build,** rather than being reported to a user.
+  A file the team ships is part of the product, so a broken one is a defect, and it is caught by
+  the build rather than on a device.
+
+Every other rule on this page applies unchanged — the same fields, the same limits, the same tag
+inheritance, and the same merge rules, applied by the same parser. A bundled set may therefore
+reuse a tag that already exists, and a question text that already exists gains the set's tags
+instead of being stored twice.
+
 ## Files
 
 | File | Purpose |

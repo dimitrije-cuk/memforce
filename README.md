@@ -136,9 +136,31 @@ leaving the game, or returning after the app was restarted, goes back to the lob
 ## First launch
 
 Creating the database seeds a small demo library — 25 questions, 9 tags — so the screens have
-something to show, plus two demo accounts (`ana` and `marko`). The demo *accounts* should not ship
-in a release build; this is recorded as anomaly
+something to show, plus two demo accounts (`ana` and `marko`). On top of that it loads every
+question set bundled with the build (see [Bundled question sets](#bundled-question-sets)), so a
+fresh install already holds real topics: **105 questions and 21 tags** in total. The demo
+*accounts* should not ship in a release build; this is recorded as anomaly
 [A-05](docs/verification-and-validation.md#92-open-anomalies) with the other known deviations.
+
+## Bundled question sets
+
+Sets that should be present in every installation live in the repository, as ordinary question-set
+files under [`app/src/main/assets/question-sets/`](app/src/main/assets/question-sets). The build
+packages that folder into the APK, and the first time the database is created every file in it is
+loaded — no user action, and nothing to configure. The sets shipped today are `nba.json` and
+`usa-states.json`.
+
+**Adding one is adding a file.** Drop a `.json` file that follows
+[the import format](docs/question-import-format.md) into that folder and rebuild; no code, resource
+or manifest changes. `gradlew test` validates every file there with the same parser the import uses,
+so a malformed set fails the build instead of crashing a device on first run.
+
+Because loading follows the import merge rules, a bundled set may reuse tags the seed data or
+another set already created, and two sets sharing a question text end up as one question carrying
+both sets' tags. Sets are loaded in file-name order.
+
+Seeding only ever runs for a *newly created* database, so adding a set does not reach an
+installation that already exists — it appears after the app's data is cleared or it is reinstalled.
 
 ## Contributing
 
