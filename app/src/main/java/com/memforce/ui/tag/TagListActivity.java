@@ -31,7 +31,7 @@ public class TagListActivity extends AppCompatActivity {
 
     /** The orders offered, in the order of the labels the spinner shows. */
     private static final TagSort[] SORTS = {
-            TagSort.MOST_USED, TagSort.ALPHABETICAL, TagSort.LEAST_USED};
+            TagSort.ALPHABETICAL, TagSort.MOST_USED, TagSort.LEAST_USED};
 
     private ActivityTagListBinding binding;
     private TagDao tagDao;
@@ -60,8 +60,8 @@ public class TagListActivity extends AppCompatActivity {
 
         ArrayAdapter<String> sortLabels = new ArrayAdapter<>(
                 this, android.R.layout.simple_spinner_item, new String[]{
-                getString(R.string.tag_sort_most_used),
                 getString(R.string.tag_sort_alphabetical),
+                getString(R.string.tag_sort_most_used),
                 getString(R.string.tag_sort_least_used)});
         sortLabels.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         binding.sortSpinner.setAdapter(sortLabels);

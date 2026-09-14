@@ -50,7 +50,7 @@ Platform baseline: `minSdk` 24, `compileSdk` and `targetSdk` 34, Java 17, Gradle
 | Sign in | Signs in; an unknown user name is registered on first use |
 | Main menu | Shows who is signed in; carries the search; turns the tags within each result on or off; leads to questions, tags and the game lobby; signs out |
 | Questions | The same search with swipe actions; add, edit, delete; assign tags; import a question set |
-| Tags | Each tag with how many questions carry it, and the total; order by most used, name, or least used; swipe left to delete, right to send its questions to the lobby; add, edit |
+| Tags | Each tag with how many questions carry it, and the total; order by name, most used, or least used; swipe left to delete, right to send its questions to the lobby; add, edit |
 | Game lobby | The questions gathered for the next game; remove one or clear it; start the game |
 | Game | Asks the questions and marks the answers; shows streak, correct and total |
 
