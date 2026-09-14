@@ -24,6 +24,7 @@ import com.memforce.model.Question;
 import com.memforce.model.Tag;
 import com.memforce.model.TagUsage;
 import com.memforce.search.SearchQuery;
+import com.memforce.settings.DisplaySettings;
 import com.memforce.ui.common.SwipeActions;
 
 import java.util.ArrayList;
@@ -46,7 +47,11 @@ import java.util.List;
  *
  * <p>What the screen embedding the view decides: whether tapping a row opens the question
  * ({@link #setOnOpenQuestion}), and whether rows may be swiped
- * ({@link #setSwipeActionsEnabled}).
+ * ({@link #setSwipeActionsEnabled}). What the user decides, in the home screen's menu, is whether
+ * a result row shows the tags of its question; the view reads that setting on every refresh, so
+ * the choice holds wherever the search is shown rather than only where it was made. The tags
+ * offered below the text field are criteria rather than display, and the setting leaves them
+ * alone.
  */
 public class PowerfulSearchView extends LinearLayout {
 
@@ -58,6 +63,7 @@ public class PowerfulSearchView extends LinearLayout {
     private QuestionDao questionDao;
     private TagDao tagDao;
     private Lobby lobby;
+    private DisplaySettings displaySettings;
 
     private SearchQuery query = SearchQuery.empty();
 
@@ -75,6 +81,7 @@ public class PowerfulSearchView extends LinearLayout {
         questionDao = new QuestionDao(context);
         tagDao = new TagDao(context);
         lobby = new Lobby(context);
+        displaySettings = new DisplaySettings(context);
 
         adapter = new QuestionResultAdapter(this::showSelection);
         binding.results.setLayoutManager(new LinearLayoutManager(context));
@@ -125,8 +132,12 @@ public class PowerfulSearchView extends LinearLayout {
         results.setClipToPadding(false);
     }
 
-    /** Reads the suggestions and the results again, after the stored data may have changed. */
+    /**
+     * Reads the setting, the suggestions and the results again, after the stored data or the
+     * display choice may have changed.
+     */
     public void refresh() {
+        adapter.setTagsShown(displaySettings.areQuestionTagsShown());
         List<Tag> chosen = resolveChosenTags();
         List<Question> questions = questionDao.search(query);
         adapter.submit(questions);

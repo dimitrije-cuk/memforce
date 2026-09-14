@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     The menu of the home screen. The first group names the signed-in user and is disabled, because
-    it reports rather than acts; the second holds the ways off this screen. The user item and the
-    lobby item each carry a value that changes, so the title given here is only what they read
+    it reports rather than acts; the second holds what the user may choose to see; the third holds
+    the ways off this screen. The user item and the lobby item each carry a value that changes, and
+    the display item carries a state, so the title and the tick given here are only what they read
     before the screen fills them in as the menu is opened.
 -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
@@ -13,6 +14,15 @@
             android:id="@+id/menuSignedInAs"
             android:enabled="false"
             android:title="@string/menu_account" />
+
+    </group>
+
+    <group android:id="@+id/menuGroupDisplay">
+
+        <item
+            android:id="@+id/menuShowQuestionTags"
+            android:checkable="true"
+            android:title="@string/menu_show_question_tags" />
 
     </group>
 

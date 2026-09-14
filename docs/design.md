@@ -93,14 +93,15 @@ meet.
                         └───┬───────────────┬──────────────────┬───┘
                             │               │                  │
               SQLiteOpenHelper       SharedPreferences   ContentResolver +
-                (memforce.db)        (session + lobby)  OpenDocument picker
+                (memforce.db)         (three stores)    OpenDocument picker
                             │               │                  │
                             ▼               ▼                  ▼
                    ┌────────────────┐ ┌─────────────┐ ┌──────────────────┐
                    │ SQLite database│ │ Preferences │ │ Question-set file│
                    │ private storage│ │ private:    │ │ user-chosen,     │
-                   │ questions/tags/│ │ identity +  │ │ read-only, JSON  │
-                   │ accounts       │ │ lobby ids   │ │                  │
+                   │ questions/tags/│ │ identity,   │ │ read-only, JSON  │
+                   │ accounts       │ │ lobby ids,  │ │                  │
+                   │                │ │ display     │ │                  │
                    └────────────────┘ └─────────────┘ └──────────────────┘
 ```
 
@@ -110,9 +111,10 @@ meet.
 | SQLite database `memforce.db` | in/out | All questions, tags, assignments and accounts | REQ-EXT-60, REQ-DB-10 |
 | Preferences `memforce_session` | in/out | Signed-in account identifier and name only | REQ-AUTH-70, REQ-SEC-50 |
 | Preferences `memforce_lobby` | in/out | Identifiers of the questions gathered for the next game | REQ-GAME-10, REQ-GAME-40 |
+| Preferences `memforce_settings` | in/out | The display choices the user has made, currently whether a question shows its tags | REQ-SRCH-170 |
 | Question-set file | in | One JSON document per import, read once, never written | REQ-EXT-70, REQ-IMP-10 |
 
-The two preferences stores share one interface kind, so there is no further arrow: the application
+The three preferences stores share one interface kind, so there is no further arrow: the application
 holds no permission, opens no socket, starts no service,
 and registers no receiver (REQ-EXT-50, REQ-CON-50).
 
@@ -142,18 +144,19 @@ All code is under `app/src/main/java/com/memforce/`.
 | `security` | `PasswordHasher` | PBKDF2 derivation, Base64 encoding, constant-time comparison. | REQ-SEC-10, REQ-SEC-20 |
 | `search` | `SearchQuery` | Immutable value carrying a text pattern and the chosen tag ids in order; a screen holds one and replaces it. | REQ-SRCH-90, REQ-SRCH-100, REQ-SRCH-130 |
 | `session` | `Session` | Reads and writes the signed-in identity in preferences. | REQ-AUTH-70, REQ-AUTH-80, REQ-SEC-50 |
+| `settings` | `DisplaySettings` | Reads and writes the display choices in the `memforce_settings` preferences store: whether a question in a result list shows the tags it carries. | REQ-SRCH-170 |
 | `game` | `Lobby` | The question ids gathered for the next game, held in the `memforce_lobby` preferences store, not the database. | REQ-GAME-10…40 |
 | `game` | `GameSession`, `GameQuestion` | One run: a circular queue of questions and the streak/correct/total it keeps. Holds no Android type. | REQ-GAME-60…120 |
 | `game` | `AnswerMatcher` | Decides whether a submission counts, after trimming, collapsing runs of spaces and lowercasing. | REQ-GAME-80 |
 | `game` | `CurrentGame` | Holds the run the game screen is showing, in memory only. | [DD-11](#42-decisions-that-shape-the-structure) |
-| `ui` | `MainActivity` | The home screen: the heading, the embedded search, and the menu carrying the signed-in user, the lobby, the question list, the tag list and sign-out. | REQ-EXT-20, REQ-USE-10, REQ-SRCH-90 |
+| `ui` | `MainActivity` | The home screen: the heading, the embedded search, and the menu carrying the signed-in user, the display choice of REQ-SRCH-170, the lobby, the question list, the tag list and sign-out. | REQ-EXT-20, REQ-USE-10, REQ-SRCH-90, REQ-SRCH-170 |
 | `ui.login` | `LoginActivity` | Sign-in form; derivation on a background executor; skips itself when a session exists. | REQ-AUTH-10…80, REQ-PERF-40 |
 | `ui.question` | `QuestionListActivity` | Hosts the search with swipe actions enabled; entry to the editor and to import. | REQ-QST-40, REQ-QST-50, REQ-SRCH-80, REQ-SRCH-90…150 |
 | `ui.question` | `QuestionEditActivity` | Create and edit a question, including its tag selection. | REQ-QST-10, REQ-QST-20, REQ-QST-30, REQ-QST-70 |
 | `ui.question` | `QuestionSetImportFlow` | The import interaction: pick, read, validate, plan, confirm, apply, report. | REQ-IMP-10…100 |
 | `ui.tag` | `TagListActivity`, `TagAdapter`, `TagEditActivity` | Tag list showing each tag's question count and the total, in a chosen order; swipe left deletes (after confirmation), swipe right sends the tag's questions to the lobby; tag create and rename. | REQ-TAG-10…50, REQ-TAG-70…110 |
-| `ui.search` | `PowerfulSearchView` | The compound view carrying the text field, chosen-tag chips, suggestion chips, result list, select-all box, selection count and "add to lobby" button. Embedded by the home screen and the question list. | REQ-SRCH-90…150 |
-| `ui.search` | `QuestionResultAdapter` | The result rows; selection is held as question ids, so it survives a re-read, and ids no longer shown are dropped. | REQ-SRCH-130, REQ-SRCH-140, REQ-QST-80 |
+| `ui.search` | `PowerfulSearchView` | The compound view carrying the text field, chosen-tag chips, suggestion chips, result list, select-all box, selection count and "add to lobby" button. Embedded by the home screen and the question list. Reads `DisplaySettings` on every refresh, which is what carries the home screen's choice to the question list. | REQ-SRCH-90…150, REQ-SRCH-170 |
+| `ui.search` | `QuestionResultAdapter` | The result rows; selection is held as question ids, so it survives a re-read, and ids no longer shown are dropped. `setTagsShown` hides or shows every row's tag strip without disturbing the rows or the selection. | REQ-SRCH-130, REQ-SRCH-140, REQ-SRCH-170, REQ-QST-80 |
 | `ui.common` | `SwipeActions` | An `ItemTouchHelper` callback drawing a coloured background and icon; absolute left/right so the gesture is the same whichever way the layout runs; a swipe never removes the row by itself. | REQ-QST-90, REQ-TAG-100, REQ-TAG-110, REQ-USE-80 |
 | `ui.common` | `TagPicker` | Multi-choice tag dialog used by the question editor. | REQ-QST-70 |
 | `ui.game` | `LobbyActivity`, `LobbyAdapter` | Lists the lobby, removes one or clears it, states how many carry no answer, and starts the game. | REQ-GAME-10…50 |
@@ -223,10 +226,10 @@ merging to run on a plain JVM under unit test (REQ-POR-40).
                           ▼
       data (DAOs, QuestionFilter, TagQueries, QuestionSetImporter)     ← application services
                           │
-           ┌──────────────┼───────────────┬──────────────┐
-           ▼              ▼               ▼              ▼
-          db          security         session      game.Lobby         ← platform adapters
-           │                                        (memforce_lobby)
+           ┌──────────────┼───────────┬───────────┬───────────┐
+           ▼              ▼           ▼           ▼           ▼
+          db          security     session    settings    game.Lobby   ← platform adapters
+           │                                              (memforce_lobby)
            ▼
      Android SQLite
 
@@ -372,13 +375,15 @@ later version of the product therefore reaches an existing installation only thr
 
 #### 3.5.6 Non-schema persistence
 
-Two things outlive a screen without belonging in the database. Both are kept in `SharedPreferences`,
+Three things outlive a screen without belonging in the database. All are kept in `SharedPreferences`,
 private to the application, beside — not inside — `memforce.db`:
 
 - the signed-in identity, in `memforce_session` (see [3.5.4](#354-credential-storage) and
   [3.8](#38-state-dynamics-view));
 - the game lobby, in `memforce_lobby`: the identifiers of the questions gathered for the next game,
-  stored as a set of strings under one key.
+  stored as a set of strings under one key;
+- the display choices, in `memforce_settings`: at present the single flag of REQ-SRCH-170, whether
+  a question in a result list shows the tags it carries.
 
 The lobby is deliberately **not** a table. It holds identifiers rather than questions, so a question
 edited between being chosen and being played shows its current text, and a question deleted
@@ -389,6 +394,12 @@ all three. A table would instead add a fifth schema object, the owning-key quest
 [3.5.3](#353-ownership) and a migration, all to store what is only a handful of numbers. The tags
 and questions a lobby identifier refers to remain governed by the schema; the lobby only names them
 (decision [DD-10](#42-decisions-that-shape-the-structure)).
+
+The display choices are a third store rather than a corner of the session, because they describe
+the device and not the account: `Session.signOut` clears its store outright, and a choice about how
+a list reads must not be undone by signing out (decision
+[DD-14](#42-decisions-that-shape-the-structure)). They name nothing the schema owns, so a store
+that is absent or a key that was never written simply reads as the default.
 
 ### 3.6 Interface view
 
@@ -423,6 +434,7 @@ and questions a lobby identifier refers to remain governed by the schema; the lo
 | `PasswordHasher.newSalt()` / `hash(password, salt)` / `matches(password, salt, expectedHash)` | Generates a 16-byte Base64 salt; derives the value; compares in constant time. Clears the key material afterwards. | REQ-SEC-10, REQ-SEC-20 |
 | `Session.signIn(user)` / `isSignedIn()` / `signOut()` | Stores, reports and clears the identifier and name in `memforce_session`. | REQ-AUTH-70, REQ-AUTH-80, REQ-SEC-50 |
 | `Lobby.add(...)` / `remove` / `clear` / `questionIds()` / `retainAll(existing)` | Adds, removes and reads the question ids in `memforce_lobby`; a question is present at most once; `retainAll` drops ids that name no stored question. | REQ-GAME-10…40 |
+| `DisplaySettings.areQuestionTagsShown()` / `setQuestionTagsShown(shown)` | Reads and writes the one display flag in `memforce_settings`; unset reads as shown, so tags are displayed until the user hides them. | REQ-SRCH-170 |
 | `GameSession.start(questions, Random)` / `current()` / `submit(answer)` / `getResult()` | Starts a run over a shuffled copy, reports the current question, marks a submission and rotates that question to the back, and reports streak, correct, total and the result. Takes the `Random` so a run repeats in a test. | REQ-GAME-50…110 |
 | `AnswerMatcher.matches(expected, submitted)` | True when the two match after trimming, collapsing internal spaces and lowercasing; an empty submission is never correct. | REQ-GAME-70, REQ-GAME-80 |
 | `SearchPatterns.like(input)` | `null`, blank, or `%` characters alone → `"%"`; otherwise the trimmed input stripped of the `%` at either end and enclosed in one `%` at each end, unescaped. | REQ-SRCH-40, REQ-SRCH-160, REQ-EXT-40 |
@@ -484,6 +496,14 @@ tags carried by the questions currently found, counted within that set and most 
 tag with nothing in common with what is already chosen is never offered and choosing one always
 narrows (REQ-SRCH-120). Selecting results — one at a time or with select-all — and pressing **Add
 to lobby** hands the chosen identifiers to the lobby (REQ-SRCH-130…150, [3.7.4](#374-gameplay)).
+
+`refresh()` also reads `DisplaySettings`, so each pass renders the rows under the display choice
+that holds now: a question shows the tags it carries, or shows none, according to **Show question
+tags** in the home screen's menu (REQ-SRCH-170). The choice reaches the question list because that
+screen embeds this same view and refreshes in `onResume`, which is what keeps the two presentations
+identical under REQ-SRCH-150 without a control on each. It governs the rows alone — the chosen-tag
+chips and the suggestion chips are criteria rather than content, and a user who could not see the
+tag they had chosen would have no way to take it off again.
 
 #### 3.7.3 Question-set import
 
@@ -685,7 +705,7 @@ many and asks before starting, and will not start when none can be marked (REQ-G
 | Memory — import | The chosen file is read whole into memory as UTF-8 text, bounded at 1 MiB (`MAX_FILE_BYTES`); anything larger is refused before it is read. | REQ-IMP-90, decision D-12 |
 | Memory — lists | A query returns the matching rows as objects; each question's tag names are attached from a second statement rather than joined by `GROUP_CONCAT`, and the lobby is read in chunks of 400 ids. At the reference volume this is a few thousand short strings. | REQ-PERF-60 |
 | Memory — game | A run holds one deque of the chosen questions and a set of the ids answered correctly, in memory, discarded when the run ends. | REQ-GAME-100 |
-| Storage | One database file, plus two small preferences files (the session and the lobby). No cache, no temporary file, no export. | REQ-EXT-60, REQ-DB-10 |
+| Storage | One database file, plus three small preferences files (the session, the lobby and the display settings). No cache, no temporary file, no export. | REQ-EXT-60, REQ-DB-10 |
 | Screen | Two themes, selected by the platform from `values/` and `values-night/`; no in-application switch and therefore no stored preference. | REQ-USE-60 |
 
 ### 3.11 Patterns use view
@@ -730,6 +750,7 @@ specification left open.
 | DD-11 | **A game run held in memory only.** | A run belongs to the moment, not the library. Persisting it would let a player resume a half-finished game after leaving, but would then have to be reconciled with questions edited or deleted meanwhile; discarding it on exit matches what a player expects and keeps the game free of stored state. `CurrentGame` is the single holder, and the game screen returns to the lobby when it finds none. |
 | DD-12 | **Swipe gestures in absolute left/right, not start/end.** | Binding delete and add-to-lobby to absolute directions makes the gesture identical whichever way the layout runs; start/end would flip them under a right-to-left layout. Neither direction removes the row itself — the handler decides and the row is put back — so a cancelled confirmation leaves the list unchanged. |
 | DD-13 | **The home screen given over to the search, with its navigation behind one menu.** | The screen a signed-in user lands on is the screen they browse in, so the questions are given the whole of it, and the lobby, the two lists and sign-out sit in a single menu that costs one press and no height. The alternative — the four buttons this screen used to stack beneath the results — took a fifth of the screen, would have grown with every destination added, and pushed the result list into what was left. The menu is built on each press, so the lobby count it names is read rather than kept in step by a listener; the search's `setOnLobbyChanged` hook went with the buttons that needed it. |
+| DD-14 | **The display choice stored, and read by the search rather than pushed into it.** | "Show question tags" is offered in the home screen's menu, which is where the user is looking when they decide the rows are too busy, but it is stored in `memforce_settings` and read by `PowerfulSearchView` on every refresh. That is what satisfies REQ-SRCH-150 without a second control: the question list embeds the same view and already refreshes in `onResume`, so it shows the choice without knowing one was made. Holding the flag in the view instead would make the two screens disagree, and passing it in from each host would put the same wiring in every screen that ever embeds the search. It is a third preferences store rather than a key beside the session, because signing out clears the session and must not clear a display choice ([3.5.6](#356-non-schema-persistence)). |
 
 ### 4.3 What the structure keeps open
 
@@ -758,7 +779,7 @@ The reverse direction is the "Realises" column throughout [clause 3](#3-design-v
 | Authentication and session (`AUTH`) | `LoginActivity`, `UserDao`, `PasswordHasher`, `Session`, [3.7.1](#371-sign-in) |
 | Questions (`QST`) | `QuestionListActivity`, `QuestionEditActivity`, `QuestionDao`, `QuestionFilter`, `TagPicker`, `PowerfulSearchView`, `QuestionResultAdapter` |
 | Tags (`TAG`) | `TagListActivity`, `TagAdapter`, `TagEditActivity`, `TagDao`, `TagQueries`, `TagUsage`, `TagSort`, `SwipeActions` |
-| Search and filtering (`SRCH`) | `SearchQuery`, `QuestionFilter`, `TagQueries`, `SearchPatterns`, `QuestionDao.search`, `TagDao.suggest`, `PowerfulSearchView`, `QuestionResultAdapter`, [3.7.2](#372-search) |
+| Search and filtering (`SRCH`) | `SearchQuery`, `QuestionFilter`, `TagQueries`, `SearchPatterns`, `QuestionDao.search`, `TagDao.suggest`, `PowerfulSearchView`, `QuestionResultAdapter`, `DisplaySettings`, [3.7.2](#372-search) |
 | Gameplay (`GAME`) | `Lobby`, `GameSession`, `GameQuestion`, `AnswerMatcher`, `CurrentGame`, `LobbyActivity`, `LobbyAdapter`, `GameActivity`, [3.7.4](#374-gameplay), [3.9.9](#399-game-scoring-and-victory) |
 | Question-set import (`IMP`) | `QuestionSetImportFlow`, `QuestionSetParser`, `MergedQuestion`, `QuestionSetImporter`, `BundledQuestionSets`, [3.5.5](#355-seeded-data), [3.9](#39-algorithm-view) |
 | Usability (`USE`) | `MainActivity`, confirmation dialogs, `strings.xml`, `themes.xml` + `values-night/themes.xml` |

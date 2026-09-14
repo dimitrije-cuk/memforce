@@ -48,7 +48,7 @@ Platform baseline: `minSdk` 24, `compileSdk` and `targetSdk` 34, Java 17, Gradle
 | Screen | Purpose |
 | --- | --- |
 | Sign in | Signs in; an unknown user name is registered on first use |
-| Main menu | Shows who is signed in; carries the search; leads to questions, tags and the game lobby; signs out |
+| Main menu | Shows who is signed in; carries the search; turns the tags within each result on or off; leads to questions, tags and the game lobby; signs out |
 | Questions | The same search with swipe actions; add, edit, delete; assign tags; import a question set |
 | Tags | Each tag with how many questions carry it, and the total; order by most used, name, or least used; swipe left to delete, right to send its questions to the lobby; add, edit |
 | Game lobby | The questions gathered for the next game; remove one or clear it; start the game |
@@ -74,6 +74,11 @@ titles and tag names at once, so typing finds a question by either. Below it, ta
 questions found are suggested, most used first; choosing one adds it as a filter and narrows the
 result, and choosing more narrows further. Results can be ticked one by one or with select-all, and
 the ticked questions sent to the game lobby.
+
+Each result also lists the tags its question carries. **Show question tags** in the home screen's
+menu turns that strip off for a plainer list, and the choice is remembered and applies to the
+questions screen as well. It affects only the tags inside a result — the tags suggested beneath the
+search field stay, because they are the controls that narrow and widen the search.
 
 ## Data model
 

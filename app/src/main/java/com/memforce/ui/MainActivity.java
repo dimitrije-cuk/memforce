@@ -14,6 +14,7 @@ import com.memforce.R;
 import com.memforce.databinding.ActivityMainBinding;
 import com.memforce.game.Lobby;
 import com.memforce.session.Session;
+import com.memforce.settings.DisplaySettings;
 import com.memforce.ui.game.LobbyActivity;
 import com.memforce.ui.login.LoginActivity;
 import com.memforce.ui.question.QuestionEditActivity;
@@ -26,13 +27,16 @@ import com.memforce.ui.tag.TagListActivity;
  * <p>The heading, the search and its results have the screen to themselves, because browsing is
  * what a user comes here to do. The ways off it — the lobby, the question list, the tag list and
  * sign-out — and the name of the signed-in user sit behind the menu button, one press away and
- * taking no room from the questions.
+ * taking no room from the questions. The menu also carries the one choice about what the results
+ * show, whether a question displays the tags it carries, because that choice is read while
+ * browsing and is worth no permanent control of its own.
  */
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private Session session;
     private Lobby lobby;
+    private DisplaySettings displaySettings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         lobby = new Lobby(this);
+        displaySettings = new DisplaySettings(this);
 
         binding.search.setOnOpenQuestion(question ->
                 startActivity(QuestionEditActivity.editIntent(this, question.getId())));
@@ -62,8 +67,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Builds the menu afresh on every press, so the lobby count it names and the user it greets
-     * are the ones that hold now rather than the ones that held when the screen was drawn.
+     * Builds the menu afresh on every press, so the lobby count it names, the user it greets and
+     * the tick it carries are the ones that hold now rather than the ones that held when the
+     * screen was drawn.
      */
     private void showMenu(@NonNull View anchor) {
         PopupMenu menu = new PopupMenu(this, anchor);
@@ -73,13 +79,23 @@ public class MainActivity extends AppCompatActivity {
                 .setTitle(getString(R.string.menu_greeting, session.getUserName()));
         menu.getMenu().findItem(R.id.menuLobby)
                 .setTitle(getString(R.string.menu_lobby, lobby.size()));
+        menu.getMenu().findItem(R.id.menuShowQuestionTags)
+                .setChecked(displaySettings.areQuestionTagsShown());
         menu.setOnMenuItemClickListener(this::onMenuItemSelected);
         menu.show();
     }
 
+    /**
+     * The tick the item was built with is the setting as it stands, so the choice the user has
+     * just made is its opposite. The search is then read again, because the rows it has already
+     * drawn were drawn under the old choice.
+     */
     private boolean onMenuItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.menuLobby) {
+        if (id == R.id.menuShowQuestionTags) {
+            displaySettings.setQuestionTagsShown(!item.isChecked());
+            binding.search.refresh();
+        } else if (id == R.id.menuLobby) {
             startActivity(LobbyActivity.createIntent(this));
         } else if (id == R.id.menuQuestions) {
             startActivity(QuestionListActivity.createIntent(this));

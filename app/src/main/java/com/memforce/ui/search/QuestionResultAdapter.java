@@ -23,7 +23,8 @@ import java.util.Set;
  *
  * <p>The tags are laid out in a strip that scrolls sideways, so a question carrying a dozen tags
  * takes exactly as much height as one carrying none and the question text stays the first thing
- * read.
+ * read. The strip can be turned off altogether through {@link #setTagsShown}, for the user who
+ * wants the plainest possible list of questions.
  *
  * <p>A selection is made of question identifiers rather than positions, so it survives the list
  * being read again; identifiers that the new result no longer contains are dropped, because a
@@ -39,6 +40,8 @@ public class QuestionResultAdapter extends RecyclerView.Adapter<QuestionResultAd
     private final Set<Long> selectedIds = new LinkedHashSet<>();
     private final Runnable onSelectionChanged;
 
+    private boolean tagsShown = true;
+
     @Nullable
     private QuestionAction onClick;
 
@@ -48,6 +51,20 @@ public class QuestionResultAdapter extends RecyclerView.Adapter<QuestionResultAd
 
     public void setOnClick(@Nullable QuestionAction onClick) {
         this.onClick = onClick;
+    }
+
+    /**
+     * Shows or hides the tag strip of every row.
+     *
+     * <p>Only the strip goes: the rows stand for the same questions in the same order, and a
+     * selection already made survives, because hiding a detail is not a change to the result.
+     */
+    public void setTagsShown(boolean shown) {
+        if (tagsShown == shown) {
+            return;
+        }
+        tagsShown = shown;
+        notifyDataSetChanged();
     }
 
     public void submit(@NonNull List<Question> questions) {
@@ -164,8 +181,11 @@ public class QuestionResultAdapter extends RecyclerView.Adapter<QuestionResultAd
 
         private void bindTags(@NonNull Question question) {
             binding.tags.removeAllViews();
-            binding.tagScroll.setVisibility(
-                    question.getTagNames().isEmpty() ? View.GONE : View.VISIBLE);
+            boolean visible = tagsShown && !question.getTagNames().isEmpty();
+            binding.tagScroll.setVisibility(visible ? View.VISIBLE : View.GONE);
+            if (!visible) {
+                return;
+            }
             LayoutInflater inflater = LayoutInflater.from(binding.getRoot().getContext());
             for (String tag : question.getTagNames()) {
                 TextView label = (TextView) inflater.inflate(

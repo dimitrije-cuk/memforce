@@ -285,7 +285,7 @@ when every criterion it covers is met.
 | **TS-AUTH** — sign-in, registration, session | REQ-AUTH-10 … REQ-AUTH-80 | System | Manual; database state inspected with the SQLite tool |
 | **TS-QST** — question management | REQ-QST-10 … REQ-QST-90 | System | Manual |
 | **TS-TAG** — tag management | REQ-TAG-10 … REQ-TAG-110 | System | Manual |
-| **TS-SRCH** — search and filtering | REQ-SRCH-10 … REQ-SRCH-160 | Unit + system | JUnit for the criteria, the pattern a typed criterion becomes and the statements built from them; manual on both screens, against the prepared pattern data set of [8.1](#81-prepared-data-sets) |
+| **TS-SRCH** — search and filtering | REQ-SRCH-10 … REQ-SRCH-170 | Unit + system | JUnit for the criteria, the pattern a typed criterion becomes and the statements built from them; manual on both screens, against the prepared pattern data set of [8.1](#81-prepared-data-sets) |
 | **TS-IMP** — question-set import | REQ-IMP-10 … REQ-IMP-130, REQ-STD-30 | Unit + system | JUnit for parsing, merging and the carried sets; manual for picking, confirming, applying and rollback, and for the first launch of a clean installation (REQ-IMP-110) |
 | **TS-GAME** — lobby and game | REQ-GAME-10 … REQ-GAME-120 | Unit + system | JUnit for marking and the rules of a run; manual for the three ways into the lobby, its retention, and the two endings |
 | **TS-USE** — usability | REQ-USE-10 … REQ-USE-80, less the obsolete REQ-USE-70 | System | Manual, in light and in dark appearance |
@@ -302,7 +302,7 @@ when every criterion it covers is met.
 | Data set | Content | Used by |
 |---|---|---|
 | `DS-PATTERN` | Questions and tags chosen so that each of the entries `po`, `ta`, `s%o`, `_br` and `__a` — matched as `%po%`, `%ta%`, `%s%o%`, `%_br%` and `%__a%` once the search encloses them (REQ-SRCH-160) — has a known, non-empty expected result and a known non-matching neighbour. **The wildcard procedure runs against a database cleared to this set alone**, not on top of the seed-data baseline of [4.4](#44-resources-and-environment): because a pattern is applied to tag names as well as question text (REQ-SRCH-90), baseline content matching a pattern drags its whole set into the result — the carried tags `nba` and `usa` alone answer `%__a%` with 80 questions — and "exactly the expected members" would not be checkable. | TS-SRCH (REQ-SRCH-60, REQ-SRCH-160) |
-| `DS-OVERLAP` | Tags of known and unequal use, including one tag carried by no question, two tags carried by the same questions, and two tags sharing no question; and a question carried by twelve tags. | TS-SRCH (REQ-SRCH-110, REQ-SRCH-120), TS-TAG (REQ-TAG-70, REQ-TAG-90), TS-QST (REQ-QST-80) |
+| `DS-OVERLAP` | Tags of known and unequal use, including one tag carried by no question, two tags carried by the same questions, and two tags sharing no question; and a question carried by twelve tags. | TS-SRCH (REQ-SRCH-110, REQ-SRCH-120, REQ-SRCH-170), TS-TAG (REQ-TAG-70, REQ-TAG-90), TS-QST (REQ-QST-80) |
 | `DS-UNANSWERED` | A set of five questions of which two carry no answer. | TS-GAME (REQ-GAME-50) |
 | `DS-CASE` | A tag `Algebra` and a question differing from a stored one only by letter case. | TS-AUTH, TS-TAG, TS-IMP (REQ-AUTH-60, REQ-TAG-20, REQ-IMP-60) |
 | `DS-VOLUME` | Question-set files that together produce the reference volume. | TS-PERF |

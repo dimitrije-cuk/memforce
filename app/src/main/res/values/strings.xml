@@ -18,6 +18,7 @@
     <string name="menu_tags">Tags</string>
     <string name="menu_questions">Questions</string>
     <string name="menu_lobby">Game lobby (%1$d)</string>
+    <string name="menu_show_question_tags">Show question tags</string>
 
     <string name="action_add">Add</string>
     <string name="action_save">Save</string>
