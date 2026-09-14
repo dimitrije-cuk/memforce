@@ -30,9 +30,10 @@ public class QuestionSetParserTest {
     public void parsesShippedTemplate() throws Exception {
         QuestionSet set = QuestionSetParser.parse(readTemplate("question-set-template.json"));
 
-        assertEquals(QuestionSetParser.SUPPORTED_FORMAT_VERSION, set.getFormatVersion());
+        assertEquals(QuestionSetParser.CURRENT_FORMAT_VERSION, set.getFormatVersion());
         assertEquals(2, set.getQuestions().size());
         assertEquals(2, set.getTags().size());
+        assertEquals(2, set.getQuestions().get(0).getAlternativeAnswers().size());
     }
 
     @Test
@@ -42,12 +43,16 @@ public class QuestionSetParserTest {
         assertEquals("World history basics", set.getName());
         assertNotNull(set.getDescription());
         assertEquals(Arrays.asList("history", "world-history"), set.getTags());
-        assertEquals(3, set.getQuestions().size());
+        assertEquals(4, set.getQuestions().size());
 
         QuestionSetEntry first = set.getQuestions().get(0);
         assertEquals("Who was the first emperor of Rome?", first.getQuestion());
         assertEquals("Augustus", first.getAnswer());
+        assertEquals(Arrays.asList("Octavian", "Caesar Augustus"), first.getAlternativeAnswers());
         assertEquals(Arrays.asList("ancient-history", "1st-century-bc"), first.getTags());
+
+        assertTrue("a question without alternatives stays valid",
+                set.getQuestions().get(1).getAlternativeAnswers().isEmpty());
     }
 
     @Test
@@ -98,6 +103,111 @@ public class QuestionSetParserTest {
                 + "\"questions\":[{\"question\":\"Q\",\"tags\":[\"history\"]}]}");
 
         assertEquals(Arrays.asList("history"), set.getQuestions().get(0).getTags());
+    }
+
+    @Test
+    public void readsAlternativeAnswersInTheOrderOfTheFile() throws Exception {
+        QuestionSet set = QuestionSetParser.parse("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":[{\"question\":\"How many?\",\"answer\":\"Four\","
+                + "\"alternativeAnswers\":[\"  4  \",\"IV\"]}]}");
+
+        assertEquals("Four", set.getQuestions().get(0).getAnswer());
+        assertEquals(Arrays.asList("4", "IV"),
+                set.getQuestions().get(0).getAlternativeAnswers());
+    }
+
+    /** A minor version only adds an optional field, so the older version stays readable. */
+    @Test
+    public void readsBothFormatVersions() throws Exception {
+        assertEquals("1.0", QuestionSetParser.parse(VALID).getFormatVersion());
+        assertEquals("1.1",
+                QuestionSetParser.parse(VALID.replace("\"1.0\"", "\"1.1\"")).getFormatVersion());
+        assertEquals(Arrays.asList("1.0", "1.1"), QuestionSetParser.SUPPORTED_FORMAT_VERSIONS);
+    }
+
+    @Test
+    public void acceptsAnEmptyAlternativeAnswerArray() throws Exception {
+        QuestionSet set = QuestionSetParser.parse("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":[{\"question\":\"Q\",\"answer\":\"A\","
+                + "\"alternativeAnswers\":[]}]}");
+
+        assertTrue(set.getQuestions().get(0).getAlternativeAnswers().isEmpty());
+    }
+
+    @Test
+    public void rejectsAlternativeAnswersWithoutAnAnswer() {
+        List<ValidationError> errors = assertReasons("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":[{\"question\":\"Q\",\"alternativeAnswers\":[\"4\"]}]}",
+                Reason.ALTERNATIVES_WITHOUT_ANSWER);
+
+        assertEquals("questions[0].alternativeAnswers", errors.get(0).getLocation());
+    }
+
+    @Test
+    public void rejectsAlternativeAnswersBesideABlankAnswer() {
+        assertReasons("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":[{\"question\":\"Q\",\"answer\":\"  \","
+                + "\"alternativeAnswers\":[\"4\"]}]}", Reason.ALTERNATIVES_WITHOUT_ANSWER);
+    }
+
+    @Test
+    public void rejectsDuplicateAlternativeAnswers() {
+        List<ValidationError> errors = assertReasons("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":[{\"question\":\"Q\",\"answer\":\"Four\","
+                + "\"alternativeAnswers\":[\"4\",\" 4 \"]}]}", Reason.DUPLICATE_ANSWER);
+
+        assertEquals("questions[0].alternativeAnswers[1]", errors.get(0).getLocation());
+        assertEquals("4", errors.get(0).getDetail());
+    }
+
+    @Test
+    public void rejectsBlankAlternativeAnswer() {
+        assertReasons("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":[{\"question\":\"Q\",\"answer\":\"A\","
+                + "\"alternativeAnswers\":[\"\\u00a0 \"]}]}", Reason.BLANK);
+    }
+
+    @Test
+    public void rejectsAlternativeAnswerOfTheWrongType() {
+        assertReasons("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":[{\"question\":\"Q\",\"answer\":\"A\","
+                + "\"alternativeAnswers\":[4]}]}", Reason.WRONG_TYPE);
+    }
+
+    @Test
+    public void rejectsAlternativeAnswersThatAreNotAnArray() {
+        assertReasons("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":[{\"question\":\"Q\",\"answer\":\"A\","
+                + "\"alternativeAnswers\":\"4\"}]}", Reason.WRONG_TYPE);
+    }
+
+    @Test
+    public void rejectsOverLongAlternativeAnswer() {
+        List<ValidationError> errors = assertReasons("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":[{\"question\":\"Q\",\"answer\":\"A\","
+                + "\"alternativeAnswers\":[\""
+                + repeat('a', QuestionSetParser.MAX_ANSWER_LENGTH + 1) + "\"]}]}",
+                Reason.TOO_LONG);
+
+        assertEquals(QuestionSetParser.MAX_ANSWER_LENGTH, errors.get(0).getLimit());
+    }
+
+    /** An over-long answer is reported once, not twice because the alternatives lost it too. */
+    @Test
+    public void doesNotBlameTheAlternativesForAFaultyAnswer() {
+        assertReasons("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":[{\"question\":\"Q\",\"answer\":42,"
+                + "\"alternativeAnswers\":[\"4\"]}]}", Reason.WRONG_TYPE);
     }
 
     @Test

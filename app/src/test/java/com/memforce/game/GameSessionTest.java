@@ -9,6 +9,8 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -99,6 +101,26 @@ public class GameSessionTest {
         assertEquals(0, game.getStreak());
         assertEquals(0, game.getCorrectCount());
         assertEquals(1, game.getAttempts());
+    }
+
+    @Test
+    public void countsAnAlternativeAnswerAsCorrect() {
+        GameSession game = GameSession.start(Collections.singletonList(
+                new GameQuestion(1, "How many chambers does the human heart have?", "Four",
+                        Arrays.asList("4", "IV"))), new Random(1));
+
+        assertEquals(GameSession.Outcome.CORRECT, game.submit(" iv "));
+        assertEquals(1, game.getCorrectCount());
+        assertEquals(GameSession.Result.PERFECT_VICTORY, game.getResult());
+    }
+
+    @Test
+    public void refusesASubmissionMatchingNeitherTheAnswerNorAnAlternative() {
+        GameSession game = GameSession.start(Collections.singletonList(
+                new GameQuestion(1, "How many?", "Four", Arrays.asList("4"))), new Random(1));
+
+        assertEquals(GameSession.Outcome.INCORRECT, game.submit("five"));
+        assertFalse(game.isFinished());
     }
 
     @Test

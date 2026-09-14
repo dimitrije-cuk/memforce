@@ -28,6 +28,10 @@ public final class ValidationError {
         TOO_LONG,
         /** The same tag appears twice in one tag array. */
         DUPLICATE_TAG,
+        /** The same answer appears twice in one {@code alternativeAnswers} array. */
+        DUPLICATE_ANSWER,
+        /** {@code alternativeAnswers} is given for a question that carries no answer to vary. */
+        ALTERNATIVES_WITHOUT_ANSWER,
         /** {@code formatVersion} names a version this app cannot read. */
         UNSUPPORTED_VERSION,
         /** {@code questions} is present but empty. */
@@ -74,7 +78,7 @@ public final class ValidationError {
         return location;
     }
 
-    /** The offending value, when repeating it helps: the unreadable version, the duplicated tag, ... */
+    /** The offending value, when repeating it helps: the unreadable version, the duplicated tag or answer, ... */
     @Nullable
     public String getDetail() {
         return detail;

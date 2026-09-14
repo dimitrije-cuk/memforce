@@ -12,11 +12,17 @@ public final class QuestionSetEntry {
 
     private final String question;
     private final String answer;
+    private final List<String> alternativeAnswers;
     private final List<String> tags;
 
-    QuestionSetEntry(@NonNull String question, @Nullable String answer, @NonNull List<String> tags) {
+    QuestionSetEntry(@NonNull String question,
+                     @Nullable String answer,
+                     @NonNull List<String> alternativeAnswers,
+                     @NonNull List<String> tags) {
         this.question = question;
         this.answer = answer;
+        this.alternativeAnswers =
+                Collections.unmodifiableList(new ArrayList<>(alternativeAnswers));
         this.tags = Collections.unmodifiableList(new ArrayList<>(tags));
     }
 
@@ -29,6 +35,15 @@ public final class QuestionSetEntry {
     @Nullable
     public String getAnswer() {
         return answer;
+    }
+
+    /**
+     * Further wordings of {@link #getAnswer()} that a game accepts as well, in the order the file
+     * lists them; empty when the file gives none.
+     */
+    @NonNull
+    public List<String> getAlternativeAnswers() {
+        return alternativeAnswers;
     }
 
     /** Tags of this question alone; the set level tags come on top of these at import time. */

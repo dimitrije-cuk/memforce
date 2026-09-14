@@ -35,6 +35,19 @@ public final class DbContract {
         }
     }
 
+    /**
+     * Further wordings of a question's answer that a game accepts as correct as well; a question
+     * may carry any number of them, or none.
+     */
+    public static final class AlternativeAnswers implements BaseColumns {
+        public static final String TABLE = "alternative_answers";
+        public static final String QUESTION_ID = "question_id";
+        public static final String ANSWER = "answer";
+
+        private AlternativeAnswers() {
+        }
+    }
+
     /** Question to tag assignment; a question may carry any number of tags. */
     public static final class QuestionTags {
         public static final String TABLE = "question_tags";

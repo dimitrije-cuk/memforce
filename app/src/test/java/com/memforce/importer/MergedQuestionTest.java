@@ -2,6 +2,7 @@ package com.memforce.importer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -78,6 +79,46 @@ public class MergedQuestionTest {
 
         assertEquals(1, merged.size());
         assertEquals("First", merged.get(0).getAnswer());
+    }
+
+    @Test
+    public void keepsAlternativeAnswersInTheOrderOfTheFile() throws Exception {
+        List<MergedQuestion> merged = mergeAll("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":[{\"question\":\"Q\",\"answer\":\"Four\","
+                + "\"alternativeAnswers\":[\"4\",\"IV\"]}]}");
+
+        assertEquals(Arrays.asList("4", "IV"), merged.get(0).getAlternativeAnswers());
+    }
+
+    @Test
+    public void dropsAnAlternativeRepeatingTheAnswer() throws Exception {
+        List<MergedQuestion> merged = mergeAll("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":[{\"question\":\"Q\",\"answer\":\"Four\","
+                + "\"alternativeAnswers\":[\"four\",\"4\"]}]}");
+
+        assertEquals(Arrays.asList("4"), merged.get(0).getAlternativeAnswers());
+    }
+
+    @Test
+    public void unitesTheAlternativesOfARepeatedQuestion() throws Exception {
+        List<MergedQuestion> merged = mergeAll("{"
+                + "\"formatVersion\":\"1.1\","
+                + "\"questions\":["
+                + "{\"question\":\"Q\",\"answer\":\"Four\",\"alternativeAnswers\":[\"4\"]},"
+                + "{\"question\":\"q\",\"answer\":\"Four\",\"alternativeAnswers\":[\"IV\",\"4\"]}]}");
+
+        assertEquals(1, merged.size());
+        assertEquals(Arrays.asList("4", "IV"), merged.get(0).getAlternativeAnswers());
+    }
+
+    @Test
+    public void leavesAQuestionWithoutAlternativesEmpty() throws Exception {
+        List<MergedQuestion> merged = mergeAll(
+                "{\"formatVersion\":\"1.1\",\"questions\":[{\"question\":\"Q\"}]}");
+
+        assertTrue(merged.get(0).getAlternativeAnswers().isEmpty());
     }
 
     private static List<MergedQuestion> mergeAll(String json) throws QuestionSetFormatException {

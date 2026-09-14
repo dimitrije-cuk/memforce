@@ -66,3 +66,34 @@ INSERT INTO question_tags (question_id, tag_id) VALUES
     (23, 3), (23, 9),
     (24, 9),
     (25, 6), (25, 9);
+
+-- Further wordings of the same answer. Each is marked correct just as the answer above is, so a
+-- learner who knows the fact is not failed by the form it was asked for.
+INSERT INTO alternative_answers (_id, question_id, answer) VALUES
+    (1, 2, 'Milky Way'),
+    (2, 3, 'Gravitation'),
+    (3, 4, 'Mitochondrion'),
+    (4, 4, 'Mitochondria'),
+    (5, 5, 'Deoxyribonucleic acid'),
+    (6, 6, '4'),
+    (7, 8, 'Seven'),
+    (8, 9, 'CO2'),
+    (9, 9, 'CO₂'),
+    (10, 10, 'Lisboa'),
+    (11, 11, 'Nile'),
+    (12, 12, 'Pacific Ocean'),
+    (13, 12, 'Pacific'),
+    (14, 14, 'Washington'),
+    (15, 15, 'Roman Empire'),
+    (16, 15, 'Rome'),
+    (17, 16, '2 x'),
+    (18, 17, 'The quadratic formula'),
+    (19, 17, 'Quadratic formula'),
+    (20, 18, '3,14'),
+    (21, 20, 'Underscore'),
+    (22, 20, '_'),
+    (23, 22, 'Recycler View'),
+    (24, 23, '11'),
+    (25, 24, 'Every 4 years'),
+    (26, 24, 'Once every four years'),
+    (27, 25, 'Brazilian Portuguese');

@@ -1,5 +1,5 @@
 {
-  "formatVersion": "1.0",
+  "formatVersion": "1.1",
   "name": "World history basics",
   "description": "A short mixed-era history set used as a worked example of the import format.",
   "tags": ["history", "world-history"],
@@ -7,6 +7,7 @@
     {
       "question": "Who was the first emperor of Rome?",
       "answer": "Augustus",
+      "alternativeAnswers": ["Octavian", "Caesar Augustus"],
       "tags": ["ancient-history", "1st-century-bc"]
     },
     {
@@ -15,8 +16,15 @@
       "tags": ["18th-century", "france"]
     },
     {
+      "question": "How many wives did Henry VIII have?",
+      "answer": "Six",
+      "alternativeAnswers": ["6"],
+      "tags": ["16th-century", "england"]
+    },
+    {
       "question": "Which renaissance artist painted the ceiling of the Sistine Chapel?",
       "answer": "Michelangelo",
+      "alternativeAnswers": ["Michelangelo Buonarroti"],
       "tags": ["renaissance", "art"]
     }
   ]

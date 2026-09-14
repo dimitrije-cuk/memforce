@@ -62,6 +62,9 @@
 
     <string name="question_text">Question</string>
     <string name="question_answer">Answer (optional)</string>
+    <string name="question_alternative_answers">Alternative answers (optional)</string>
+    <string name="question_alternative_answers_help">One per line. Each is accepted as correct too, for example 4 beside four.</string>
+    <string name="question_alternatives_need_answer">Add an answer before listing alternatives to it</string>
     <string name="question_title_new">New question</string>
     <string name="question_title_edit">Edit question</string>
     <string name="question_delete_title">Delete this question?</string>
@@ -71,6 +74,7 @@
     <string name="lobby_nothing_added">Already in the lobby</string>
     <string name="lobby_tag_empty">%1$s carries no question, so nothing was added</string>
     <string name="lobby_answer">Answer: %1$s</string>
+    <string name="lobby_answer_with_alternatives">Answer: %1$s (also accepted: %2$s)</string>
     <string name="lobby_no_answer">No answer, left out of the game</string>
     <string name="lobby_clear_title">Clear the lobby?</string>
     <string name="lobby_clear_message">Every question is taken out of the lobby. The questions themselves are kept.</string>
@@ -83,6 +87,7 @@
     <string name="game_correct">Correct</string>
     <string name="game_incorrect">Not quite. The answer is: %1$s</string>
     <string name="game_skipped">Skipped. The answer is: %1$s</string>
+    <string name="game_also_accepted">Also accepted: %1$s</string>
     <string name="game_none_answerable_title">No question can be marked</string>
     <string name="game_none_answerable_message">A game needs questions that carry an answer. Every question in the lobby is stored without one.</string>
     <string name="game_excluded_title">Start without some questions?</string>
@@ -96,7 +101,7 @@
 
     <string name="import_title">Import question set</string>
     <string name="import_confirm_counts">New questions: %1$d\nExisting questions to update: %2$d\nNew tags: %3$d</string>
-    <string name="import_confirm_merge_hint">Existing questions keep their answer and only gain the tags of this file.</string>
+    <string name="import_confirm_merge_hint">Existing questions keep their answer and only gain the tags and alternative answers of this file.</string>
     <string name="import_confirm_question">Import now?</string>
     <string name="import_result_title">Import finished</string>
     <string name="import_cancelled">Nothing was imported.</string>
@@ -114,6 +119,8 @@
     <string name="import_error_blank">%1$s must not be empty or padded with spaces.</string>
     <string name="import_error_not_one_line">%1$s must stay on a single line.</string>
     <string name="import_error_duplicate_tag">%1$s repeats the tag %2$s.</string>
-    <string name="import_error_unsupported_version">Format version %1$s cannot be read; this app reads version %2$s.</string>
+    <string name="import_error_duplicate_answer">%1$s repeats the answer %2$s.</string>
+    <string name="import_error_alternatives_without_answer">%1$s needs an answer for the alternatives to vary.</string>
+    <string name="import_error_unsupported_version">Format version %1$s cannot be read; this app reads %2$s.</string>
     <string name="import_error_no_questions">questions must hold at least one question.</string>
 </resources>

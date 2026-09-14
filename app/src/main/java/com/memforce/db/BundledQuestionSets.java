@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Loads the question sets that ship inside the application package, so that a fresh database
@@ -106,8 +108,9 @@ final class BundledQuestionSets {
 
     /**
      * Applies one set with the rules of the user-facing import: a tag or a question already
-     * present is reused rather than duplicated, matched without regard to letter case, and an
-     * answer already stored is never overwritten.
+     * present is reused rather than duplicated, matched without regard to letter case, an answer
+     * already stored is never overwritten, and alternative answers are added to whatever the
+     * question already accepts.
      */
     private static void store(SQLiteDatabase db, QuestionSet set, Map<String, Long> tagIds) {
         for (MergedQuestion question : MergedQuestion.mergeAll(set)) {
@@ -128,12 +131,17 @@ final class BundledQuestionSets {
 
             Long existing = findQuestionId(db, question.getQuestion());
             if (existing == null) {
-                addTags(db, insertQuestion(db, question), ids);
+                long id = insertQuestion(db, question);
+                addTags(db, id, ids);
+                addAlternativeAnswers(db, id, question.getAnswer(),
+                        question.getAlternativeAnswers());
             } else {
                 addTags(db, existing, ids);
                 if (question.getAnswer() != null) {
                     fillMissingAnswer(db, existing, question.getAnswer());
                 }
+                addAlternativeAnswers(db, existing, storedAnswer(db, existing),
+                        question.getAlternativeAnswers());
             }
         }
     }
@@ -193,5 +201,41 @@ final class BundledQuestionSets {
                         + " AND (" + DbContract.Questions.ANSWER + " IS NULL"
                         + " OR TRIM(" + DbContract.Questions.ANSWER + ") = '')",
                 new String[]{String.valueOf(id)});
+    }
+
+    @Nullable
+    private static String storedAnswer(SQLiteDatabase db, long id) {
+        try (Cursor cursor = db.rawQuery("SELECT " + DbContract.Questions.ANSWER
+                + " FROM " + DbContract.Questions.TABLE
+                + " WHERE " + DbContract.Questions._ID + " = ?",
+                new String[]{String.valueOf(id)})) {
+            return cursor.moveToFirst() && !cursor.isNull(0) ? cursor.getString(0) : null;
+        }
+    }
+
+    /**
+     * An alternative repeating the stored answer or one already accepted adds nothing, so it is
+     * left out; the unique index holds the same rule, which is why a row already present is
+     * ignored rather than raised.
+     */
+    private static void addAlternativeAnswers(SQLiteDatabase db,
+                                              long questionId,
+                                              @Nullable String answer,
+                                              List<String> alternativeAnswers) {
+        Set<String> seen = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        if (answer != null && !answer.trim().isEmpty()) {
+            seen.add(answer.trim());
+        }
+        for (String alternative : alternativeAnswers) {
+            String value = alternative.trim();
+            if (value.isEmpty() || !seen.add(value)) {
+                continue;
+            }
+            ContentValues values = new ContentValues();
+            values.put(DbContract.AlternativeAnswers.QUESTION_ID, questionId);
+            values.put(DbContract.AlternativeAnswers.ANSWER, value);
+            db.insertWithOnConflict(DbContract.AlternativeAnswers.TABLE, null, values,
+                    SQLiteDatabase.CONFLICT_IGNORE);
+        }
     }
 }

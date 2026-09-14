@@ -6,11 +6,16 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import androidx.annotation.NonNull;
 
-/** Creates and opens the on-device SQLite database. */
+/** Creates, opens and migrates the on-device SQLite database. */
 public final class MemForceDbHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "memforce.db";
-    private static final int DATABASE_VERSION = 1;
+
+    /**
+     * 1 — the schema of baseline BL-1.<br>
+     * 2 — adds {@code alternative_answers}.
+     */
+    private static final int DATABASE_VERSION = 2;
 
     private static MemForceDbHelper instance;
 
@@ -51,6 +56,8 @@ public final class MemForceDbHelper extends SQLiteOpenHelper {
                 + DbContract.Questions.NAME + " TEXT NOT NULL, "
                 + DbContract.Questions.ANSWER + " TEXT)");
 
+        createAlternativeAnswers(db);
+
         db.execSQL("CREATE TABLE " + DbContract.QuestionTags.TABLE + " ("
                 + DbContract.QuestionTags.QUESTION_ID + " INTEGER NOT NULL REFERENCES "
                 + DbContract.Questions.TABLE + "(" + DbContract.Questions._ID + ") ON DELETE CASCADE, "
@@ -65,12 +72,40 @@ public final class MemForceDbHelper extends SQLiteOpenHelper {
         DatabaseSeeder.seed(db, context);
     }
 
+    /**
+     * Brings an existing database up to {@value #DATABASE_VERSION} one version at a time, so that
+     * an installation's questions, tags, assignments and accounts survive the upgrade. A version
+     * added later adds a step here; none of them may drop a table that holds a user's work.
+     *
+     * @throws IllegalStateException when no step is known for a version, which would otherwise
+     *                               leave the database silently short of the expected schema
+     */
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + DbContract.QuestionTags.TABLE);
-        db.execSQL("DROP TABLE IF EXISTS " + DbContract.Questions.TABLE);
-        db.execSQL("DROP TABLE IF EXISTS " + DbContract.Tags.TABLE);
-        db.execSQL("DROP TABLE IF EXISTS " + DbContract.Users.TABLE);
-        onCreate(db);
+        for (int version = oldVersion + 1; version <= newVersion; version++) {
+            if (version == 2) {
+                createAlternativeAnswers(db);
+            } else {
+                throw new IllegalStateException(
+                        "No migration to database version " + version);
+            }
+        }
+    }
+
+    /**
+     * The unique index is what stops the same wording being stored twice for one question; it
+     * compares without regard to letter case, exactly as the game marks a submission.
+     */
+    private static void createAlternativeAnswers(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE " + DbContract.AlternativeAnswers.TABLE + " ("
+                + DbContract.AlternativeAnswers._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + DbContract.AlternativeAnswers.QUESTION_ID + " INTEGER NOT NULL REFERENCES "
+                + DbContract.Questions.TABLE + "(" + DbContract.Questions._ID + ") ON DELETE CASCADE, "
+                + DbContract.AlternativeAnswers.ANSWER + " TEXT NOT NULL)");
+
+        db.execSQL("CREATE UNIQUE INDEX idx_alternative_answers_answer ON "
+                + DbContract.AlternativeAnswers.TABLE
+                + "(" + DbContract.AlternativeAnswers.QUESTION_ID + ", "
+                + DbContract.AlternativeAnswers.ANSWER + " COLLATE NOCASE)");
     }
 }

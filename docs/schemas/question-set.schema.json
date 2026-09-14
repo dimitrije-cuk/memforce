@@ -9,8 +9,8 @@
   "properties": {
     "formatVersion": {
       "type": "string",
-      "description": "Version of this question-set format. Bump only when the structure below changes incompatibly.",
-      "enum": ["1.0"]
+      "description": "Version of this question-set format. A new minor version adds optional fields; a new major version changes or removes existing ones. Prefer the newest version a file needs: \"1.1\" defines alternativeAnswers, \"1.0\" does not.",
+      "enum": ["1.0", "1.1"]
     },
     "name": {
       "type": "string",
@@ -45,10 +45,20 @@
       "maxLength": 50,
       "pattern": "^[^\\s].*[^\\s]$|^[^\\s]$"
     },
+    "alternativeAnswer": {
+      "type": "string",
+      "description": "One further wording that counts as correct. Must carry at least one non-whitespace character.",
+      "minLength": 1,
+      "maxLength": 2000,
+      "pattern": "\\S"
+    },
     "question": {
       "type": "object",
       "additionalProperties": false,
       "required": ["question"],
+      "dependencies": {
+        "alternativeAnswers": ["answer"]
+      },
       "properties": {
         "question": {
           "type": "string",
@@ -60,6 +70,13 @@
           "type": ["string", "null"],
           "description": "The answer text. Optional; MemForce allows questions without a stored answer.",
           "maxLength": 2000
+        },
+        "alternativeAnswers": {
+          "type": "array",
+          "description": "Further wordings of the same answer, each of which the game accepts as correct alongside \"answer\" — for example \"4\" beside \"four\", or \"CO2\" beside \"carbon dioxide\". Requires \"answer\" to be present. Since format version 1.1.",
+          "items": { "$ref": "#/definitions/alternativeAnswer" },
+          "uniqueItems": true,
+          "default": []
         },
         "tags": {
           "type": "array",

@@ -1,5 +1,5 @@
 {
-  "formatVersion": "1.0",
+  "formatVersion": "1.1",
   "name": "Replace with a short name for this question set",
   "description": "Replace with an optional one- or two-sentence summary of the topic",
   "tags": ["replace-with-a-set-level-tag", "add-another-if-needed"],
@@ -7,11 +7,13 @@
     {
       "question": "Replace with the question text",
       "answer": "Replace with the answer text (omit this field or use null if there is no single answer)",
+      "alternativeAnswers": ["Replace with another wording that should also count as correct", "Add as many as apply, or omit this field entirely"],
       "tags": ["optional-tag-specific-to-this-question"]
     },
     {
       "question": "Add as many question objects as needed",
       "answer": "Each one may add its own tags on top of the set-level tags above",
+      "alternativeAnswers": [],
       "tags": []
     }
   ]

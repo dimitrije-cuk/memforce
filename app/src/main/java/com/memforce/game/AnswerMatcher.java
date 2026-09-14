@@ -3,6 +3,7 @@ package com.memforce.game;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Collection;
 import java.util.Locale;
 
 /**
@@ -11,26 +12,34 @@ import java.util.Locale;
  * <p>Comparison ignores the differences a keyboard produces rather than the ones knowledge
  * produces: leading and trailing spaces, runs of spaces inside the text, and letter case. An empty
  * submission is the skip described by the game rules and is never correct.
+ *
+ * <p>A question may accept more than one wording — "4" beside "four", "CO2" beside "carbon
+ * dioxide" — and every one of them is worth the same: a submission matching any accepted answer is
+ * correct.
  */
 public final class AnswerMatcher {
 
     private AnswerMatcher() {
     }
 
-    public static boolean matches(@Nullable String expected, @Nullable String submitted) {
-        String wanted = normalize(expected);
+    /** True when the submission matches any of the answers the question accepts. */
+    public static boolean matchesAny(@NonNull Collection<String> accepted,
+                                     @Nullable String submitted) {
         String given = normalize(submitted);
-        return !wanted.isEmpty() && !given.isEmpty() && wanted.equals(given);
+        if (given.isEmpty()) {
+            return false;
+        }
+        for (String candidate : accepted) {
+            if (given.equals(normalize(candidate))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** True when a submission carries anything other than spacing. */
     public static boolean isAnswered(@Nullable String submitted) {
         return !normalize(submitted).isEmpty();
-    }
-
-    /** True when a stored answer can be compared against, which a game requires. */
-    public static boolean isAnswerable(@Nullable String storedAnswer) {
-        return !normalize(storedAnswer).isEmpty();
     }
 
     @NonNull

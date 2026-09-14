@@ -142,7 +142,8 @@ public class LobbyActivity extends AppCompatActivity {
         for (Question question : playable) {
             String answer = question.getAnswer();
             if (answer != null) {
-                asked.add(new GameQuestion(question.getId(), question.getName(), answer));
+                asked.add(new GameQuestion(question.getId(), question.getName(), answer,
+                        question.getAlternativeAnswers()));
             }
         }
         CurrentGame.start(GameSession.start(asked));

@@ -4,8 +4,8 @@
 |---|---|
 | Document title | MemForce — Software Design Description |
 | Document identifier | MF-SDD-001 |
-| Version | 1.0 |
-| Date | 2026-09-10 |
+| Version | 1.1 |
+| Date | 2026-09-14 |
 | Status | Draft — proposed for baseline **BL-1**, which is declared when the tag is applied ([MF-CMP-001, 4.3](configuration-management.md#43-baselines)) |
 | Subject | MemForce, version 1.0 (`versionCode` 1, `versionName` "1.0"), package `com.memforce` |
 | Information item | Software Design Description (SDD) |
@@ -27,7 +27,7 @@ standard is not used, and the reason is stated below.
 | Composition | Yes | [3.2](#32-composition-view) — packages and their responsibilities. |
 | Logical | Yes | [3.3](#33-logical-view) — domain entities and the classes that carry them. |
 | Dependency | Yes | [3.4](#34-dependency-view) — the layering rule and what enforces it. |
-| Information | Yes | [3.5](#35-information-view) — the persistent schema, integrity rules, seeded data and the preferences stores. |
+| Information | Yes | [3.5](#35-information-view) — the persistent schema, integrity rules, seeded data, schema evolution and the preferences stores. |
 | Interface | Yes | [3.6](#36-interface-view) — the internal service interfaces and the two external ones. |
 | Interaction | Yes | [3.7](#37-interaction-view) — sign-in, search and import, end to end. |
 | State dynamics | Yes | [3.8](#38-state-dynamics-view) — session state and the import state machine. |
@@ -126,33 +126,33 @@ All code is under `app/src/main/java/com/memforce/`.
 
 | Package | Element | Responsibility | Realises |
 |---|---|---|---|
-| `db` | `MemForceDbHelper` | The single `SQLiteOpenHelper`. Creates the schema, switches foreign keys on for every connection, seeds a new database. | REQ-DB-10, REQ-DB-50 |
+| `db` | `MemForceDbHelper` | The single `SQLiteOpenHelper`. Creates the schema, migrates an existing database one version at a time, switches foreign keys on for every connection, seeds a new database. | REQ-DB-10, REQ-DB-50, REQ-DB-100 |
 | `db` | `DbContract` | Table and column names as constants; the one place a name is spelled. | REQ-DB-20 |
 | `db` | `DatabaseSeeder` | Package-private. Populates a newly created database from `assets/seed/memforce_seed.sql`, two accounts, and the carried question sets. | [3.5.5](#355-seeded-data) |
 | `db` | `BundledQuestionSets` | Package-private. Loads every question set carried in `assets/question-sets/` into a database being created, through the parser and merge rules of an import. | REQ-IMP-110, REQ-IMP-120 |
 | `db` | `SearchPatterns` | Encloses a user's typed criterion in `%` and hands it over as the `LIKE` argument. | REQ-SRCH-40, REQ-SRCH-160, REQ-EXT-40 |
-| `data` | `QuestionDao` | Question reads and writes, including tag assignment. Reads by `search(SearchQuery)`, `findById`, `findByIds` and `idsWithTag`; the read path draws each question's tag names with a second statement. | REQ-QST-10…70, REQ-QST-80, REQ-QST-90, REQ-SRCH-90…110 |
+| `data` | `QuestionDao` | Question reads and writes, including tag assignment and alternative answers. Reads by `search(SearchQuery)`, `findById`, `findByIds` and `idsWithTag`; the read path draws each question's tag names and alternative answers with a further statement each. | REQ-QST-10…70, REQ-QST-80, REQ-QST-90, REQ-QST-100, REQ-SRCH-90…110 |
 | `data` | `QuestionFilter` | Turns a `SearchQuery` into one SQL condition over a question table aliased `q`, reused by the three statements that must agree on what "matching" means. | REQ-SRCH-90…110 |
 | `data` | `TagDao` | Tag reads and writes. `searchWithCounts` and `countAll` back the tag list; `suggest` backs the search suggestions. | REQ-TAG-10…50, REQ-TAG-70…100, REQ-SRCH-120 |
 | `data` | `TagQueries` | Builds the two tag-count statements: `usage` for the tag list, `suggestions` for the search. | REQ-TAG-70…90, REQ-SRCH-120 |
 | `data` | `UserDao` | `authenticateOrRegister` — the whole of sign-in as one database operation. | REQ-AUTH-20…40 |
 | `data` | `QuestionSetImporter` | Two-phase import: `plan()` counts, `apply()` writes in one transaction. Carries `ImportPlan` and `ImportResult`. | REQ-IMP-40, REQ-IMP-50…80, REQ-IMP-100 |
 | `importer` | `QuestionSetParser` | Parses and validates a question-set document; collects every violation before failing. | REQ-IMP-20, REQ-IMP-30, REQ-STD-30 |
-| `importer` | `MergedQuestion` | Folds repeated questions within one file and unites their tags. | REQ-IMP-70 |
+| `importer` | `MergedQuestion` | Folds repeated questions within one file and unites their tags and alternative answers. | REQ-IMP-70 |
 | `importer` | `QuestionSet`, `QuestionSetEntry`, `ValidationError`, `QuestionSetFormatException` | The parsed document, one entry, one violation, and the failure that carries them all. | REQ-IMP-20 |
-| `model` | `Question`, `Tag`, `User`, `TagUsage`, `Named`, `TagSort` | Immutable row carriers. `Question` holds its tag names as an ordered list and reports `isAnswerable()`; `TagUsage` adds a question count; `TagSort` is the tag-list order; `Named` is the `getId()`/`getName()` pair the carriers share. | [3.3](#33-logical-view) |
+| `model` | `Question`, `Tag`, `User`, `TagUsage`, `Named`, `TagSort` | Immutable row carriers. `Question` holds its tag names as an ordered list and its alternative answers in stored order, reports `isAnswerable()` and answers `getAcceptedAnswers()`; `TagUsage` adds a question count; `TagSort` is the tag-list order; `Named` is the `getId()`/`getName()` pair the carriers share. | [3.3](#33-logical-view) |
 | `security` | `PasswordHasher` | PBKDF2 derivation, Base64 encoding, constant-time comparison. | REQ-SEC-10, REQ-SEC-20 |
 | `search` | `SearchQuery` | Immutable value carrying a text pattern and the chosen tag ids in order; a screen holds one and replaces it. | REQ-SRCH-90, REQ-SRCH-100, REQ-SRCH-130 |
 | `session` | `Session` | Reads and writes the signed-in identity in preferences. | REQ-AUTH-70, REQ-AUTH-80, REQ-SEC-50 |
 | `settings` | `DisplaySettings` | Reads and writes the display choices in the `memforce_settings` preferences store: whether a question in a result list shows the tags it carries. | REQ-SRCH-170 |
 | `game` | `Lobby` | The question ids gathered for the next game, held in the `memforce_lobby` preferences store, not the database. | REQ-GAME-10…40 |
-| `game` | `GameSession`, `GameQuestion` | One run: a circular queue of questions and the streak/correct/total it keeps. Holds no Android type. | REQ-GAME-60…120 |
-| `game` | `AnswerMatcher` | Decides whether a submission counts, after trimming, collapsing runs of spaces and lowercasing. | REQ-GAME-80 |
+| `game` | `GameSession`, `GameQuestion` | One run: a circular queue of questions and the streak/correct/total it keeps. A `GameQuestion` carries the answer it shows and the further wordings it accepts. Holds no Android type. | REQ-GAME-60…120 |
+| `game` | `AnswerMatcher` | Decides whether a submission counts, after trimming, collapsing runs of spaces and lowercasing, against any of the wordings the question accepts. | REQ-GAME-80 |
 | `game` | `CurrentGame` | Holds the run the game screen is showing, in memory only. | [DD-11](#42-decisions-that-shape-the-structure) |
 | `ui` | `MainActivity` | The home screen: the heading, the embedded search, and the menu carrying the signed-in user, the display choice of REQ-SRCH-170, the lobby, the question list, the tag list and sign-out. | REQ-EXT-20, REQ-USE-10, REQ-SRCH-90, REQ-SRCH-170 |
 | `ui.login` | `LoginActivity` | Sign-in form; derivation on a background executor; skips itself when a session exists. | REQ-AUTH-10…80, REQ-PERF-40 |
 | `ui.question` | `QuestionListActivity` | Hosts the search with swipe actions enabled; entry to the editor and to import. | REQ-QST-40, REQ-QST-50, REQ-SRCH-80, REQ-SRCH-90…150 |
-| `ui.question` | `QuestionEditActivity` | Create and edit a question, including its tag selection. | REQ-QST-10, REQ-QST-20, REQ-QST-30, REQ-QST-70 |
+| `ui.question` | `QuestionEditActivity` | Create and edit a question, including its alternative answers — one per line, because an answer may itself hold any separator — and its tag selection. | REQ-QST-10, REQ-QST-20, REQ-QST-30, REQ-QST-70, REQ-QST-100, REQ-QST-110 |
 | `ui.question` | `QuestionSetImportFlow` | The import interaction: pick, read, validate, plan, confirm, apply, report. | REQ-IMP-10…100 |
 | `ui.tag` | `TagListActivity`, `TagAdapter`, `TagEditActivity` | Tag list showing each tag's question count and the total, in a chosen order; swipe left deletes (after confirmation), swipe right sends the tag's questions to the lobby; tag create and rename. | REQ-TAG-10…50, REQ-TAG-70…110 |
 | `ui.search` | `PowerfulSearchView` | The compound view carrying the text field, chosen-tag chips, suggestion chips, result list, select-all box, selection count and "add to lobby" button. Embedded by the home screen and the question list. Reads `DisplaySettings` on every refresh, which is what carries the home screen's choice to the question list. | REQ-SRCH-90…150, REQ-SRCH-170 |
@@ -184,21 +184,24 @@ both boxes take the negative start margin `res/values/dimens.xml` holds as
    User                Question  ────<  assignment  >────  Tag
    ├ id                ├ id                                ├ id
    ├ name              ├ name (question text)              └ name
-   ├ passwordHash      └ answer (nullable)
-   └ salt
+   ├ passwordHash      ├ answer (nullable)
+   └ salt              └ alternativeAnswers[]  (further wordings the answer may take)
 
    QuestionSet                     MergedQuestion
    ├ formatVersion                 ├ question text
    ├ name, description             ├ answer (first non-null wins)
-   ├ tags (set level)              └ tags (set level ∪ entry level, deduplicated)
-   └ entries: QuestionSetEntry[]
+   ├ tags (set level)              ├ alternativeAnswers (union, none repeating the answer)
+   └ entries: QuestionSetEntry[]   └ tags (set level ∪ entry level, deduplicated)
 ```
 
 `Question`, `Tag` and `User` are row carriers: they hold what a query returned and nothing more,
 with no reference to the database. `Question` additionally carries its tag names as a list ordered
-by name — from which it derives a comma-joined label — and reports `isAnswerable()`, true when it
-holds an answer a game can mark a submission against. The tag names are read for the whole result
-in one further statement rather than per row, which is what keeps a search within REQ-PERF-10.
+by name — from which it derives a comma-joined label — its alternative answers in the order they
+were stored, and reports `isAnswerable()`, true when it holds an answer a game can mark a
+submission against. `getAcceptedAnswers()` puts the answer in front of the alternatives, which is
+the whole of what a submission may match and is empty for a question that cannot be marked. The
+tag names and the alternative answers are each read for the whole result in one further statement
+rather than per row, which is what keeps a search within REQ-PERF-10.
 
 `Named` (`getId()`, `getName()`) is the shared shape of the row carriers: `Question`, `Tag` and
 `TagUsage` implement it, so anything that shows a list or a picker by name can take them uniformly.
@@ -267,7 +270,7 @@ the application's help.
 
 #### 3.5.1 Schema
 
-Database file `memforce.db`, schema version 1, created by `MemForceDbHelper.onCreate`:
+Database file `memforce.db`, schema version 2, created by `MemForceDbHelper.onCreate`:
 
 ```sql
 CREATE TABLE users (
@@ -284,6 +287,14 @@ CREATE TABLE questions (
     _id    INTEGER PRIMARY KEY AUTOINCREMENT,
     name   TEXT NOT NULL,
     answer TEXT);
+
+CREATE TABLE alternative_answers (
+    _id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    question_id INTEGER NOT NULL REFERENCES questions(_id) ON DELETE CASCADE,
+    answer      TEXT NOT NULL);
+
+CREATE UNIQUE INDEX idx_alternative_answers_answer
+    ON alternative_answers(question_id, answer COLLATE NOCASE);
 
 CREATE TABLE question_tags (
     question_id INTEGER NOT NULL REFERENCES questions(_id) ON DELETE CASCADE,
@@ -303,23 +314,28 @@ The rendered entity-relationship diagram is kept beside this document:
 | `AUTOINCREMENT` | Guarantees a deleted key is never handed out again, which `INTEGER PRIMARY KEY` alone does not. | REQ-DB-30 |
 | `COLLATE NOCASE` on `users.name` and `tags.name` | Makes uniqueness case-insensitive **in the database**, so the rule holds even if a future caller forgets it. | REQ-DB-80, REQ-AUTH-60, REQ-TAG-20 |
 | Composite primary key on `question_tags` | A tag applies to a question at most once, enforced by the schema rather than by the caller. | REQ-DB-40, REQ-QST-70 |
-| `ON DELETE CASCADE` on both foreign keys | Deleting a question or a tag removes its assignments and nothing else. | REQ-DB-60, REQ-DB-70 |
+| `ON DELETE CASCADE` on every foreign key | Deleting a question or a tag removes its assignments, and deleting a question removes its alternative answers, and nothing else. | REQ-DB-60, REQ-DB-70 |
 | `idx_question_tags_tag` | The search's per-tag narrowing and the tag-usage counts both select by `tag_id`; without the index each is a scan of the assignment table at every keystroke. | REQ-PERF-10 |
 | `questions.answer` nullable | A question may be captured before its answer is known. | REQ-QST-10 |
+| A **table** for alternative answers, not a column | An answer may contain any character, so no separator inside one text could be relied on; a row per wording also lets the database itself hold the uniqueness rule. | REQ-QST-100, D-32 |
+| `idx_alternative_answers_answer`, unique and `COLLATE NOCASE` | One question cannot accept the same wording twice, and the comparison that decides "the same" is the one the game marks by. It also serves every read, which is by `question_id`, so no second index is declared. | REQ-DB-110, REQ-QST-100 |
+| No `ON DELETE` from `alternative_answers` upwards | The table is owned by its question and referenced by nothing; the ordering of the wordings is the ascending `_id`, which is the order they were stored in. | REQ-DB-70 |
 
 #### 3.5.2 Integrity enforcement
 
 SQLite disables foreign keys by default, per connection. `MemForceDbHelper.onConfigure` calls
 `setForeignKeyConstraintsEnabled(true)`, which the platform applies to every connection the helper
-opens; without it the two `ON DELETE CASCADE` clauses above would be inert and deleting a tag
-would leave orphaned assignment rows (REQ-DB-50, decision D-14).
+opens; without it the three `ON DELETE CASCADE` clauses above would be inert and deleting a tag
+would leave orphaned assignment rows, or deleting a question orphaned alternative answers
+(REQ-DB-50, decision D-14).
 
 #### 3.5.3 Ownership
 
-No content table carries an account key: questions, tags and assignments are global, which is what
-REQ-QST-60 and REQ-TAG-60 require. `users` therefore stands alone in the schema and participates
+No content table carries an account key: questions, tags, assignments and alternative answers are
+global, which is what REQ-QST-60 and REQ-TAG-60 require. `users` therefore stands alone in the
+schema and participates
 in no relationship — it backs sign-in only. Introducing the personal collections deferred in
-MF-SRS-001, 1.8 means adding an owning key to a new table, not changing these four.
+MF-SRS-001, 1.8 means adding an owning key to a new table, not changing these five.
 
 #### 3.5.4 Credential storage
 
@@ -336,12 +352,13 @@ library rather than three empty screens:
 - two accounts, `ana` and `marko`, inserted through `PasswordHasher` so that the stored values are
   derived on the device like any other account;
 - `app/src/main/assets/seed/memforce_seed.sql`, executed statement by statement: 9 tags, 25
-  questions and 53 assignments;
+  questions, 53 assignments and 27 alternative answers;
 - every `*.json` file in `app/src/main/assets/question-sets/`, loaded by `BundledQuestionSets`
-  (REQ-IMP-110): today `nba.json` and `usa-states.json`, together 80 questions, 12 tags and 320
-  assignments.
+  (REQ-IMP-110): today `nba.json` and `usa-states.json`, together 80 questions, 12 tags, 320
+  assignments and 66 alternative answers.
 
-A first launch therefore holds **105 questions, 21 tags and 373 assignments**. That combined state
+A first launch therefore holds **105 questions, 21 tags, 373 assignments and 93 alternative
+answers**. That combined state
 is the seed-data baseline of [MF-VVP-001, 4.4](verification-and-validation.md#44-resources-and-environment),
 which every manual procedure starts from, so adding or changing a carried set moves the baseline and
 the procedures that quote a count must move with it.
@@ -369,8 +386,9 @@ Sets load last and in file-name order, so the rows of a fresh database do not de
 in which the platform happens to list the folder.
 
 Seeding runs inside `onCreate` only; it never runs against an existing database — a set added to a
-later version of the product therefore reaches an existing installation only through
-[A-01](#6-known-deviations-and-design-debt). The demo accounts are a known deviation — see
+later version of the product therefore reaches an existing installation only by being imported by
+hand, since a migration ([3.5.7](#357-schema-evolution)) changes the schema and not its content.
+The demo accounts are a known deviation — see
 [A-05](#6-known-deviations-and-design-debt).
 
 #### 3.5.6 Non-schema persistence
@@ -390,7 +408,7 @@ edited between being chosen and being played shows its current text, and a quest
 afterwards simply names nothing — `Lobby.retainAll` drops such identifiers when the lobby is next
 read. It carries no content of its own, belongs to one device's momentary intent rather than to the
 shared library, and must survive leaving the application on the way to the game; preferences meet
-all three. A table would instead add a fifth schema object, the owning-key question of
+all three. A table would instead add a sixth schema object, the owning-key question of
 [3.5.3](#353-ownership) and a migration, all to store what is only a handful of numbers. The tags
 and questions a lobby identifier refers to remain governed by the schema; the lobby only names them
 (decision [DD-10](#42-decisions-that-shape-the-structure)).
@@ -401,6 +419,26 @@ a list reads must not be undone by signing out (decision
 [DD-14](#42-decisions-that-shape-the-structure)). They name nothing the schema owns, so a store
 that is absent or a key that was never written simply reads as the default.
 
+#### 3.5.7 Schema evolution
+
+`MemForceDbHelper.onUpgrade` brings an existing database to `DATABASE_VERSION` by applying one
+step per version, from the version found upwards, each altering the database in place:
+
+| To version | Step |
+|---|---|
+| 2 | Creates `alternative_answers` and its unique index. Nothing else is touched, so every question, tag, assignment and account an installation already held survives. |
+
+Two rules hold over that table. A version with no step raises rather than leaving the database
+short of the schema the code expects, so a step forgotten in a release fails loudly on the first
+open rather than as a missing-table error somewhere later. And no step may drop a table holding a
+user's work: that is what REQ-DB-100 asks for, and what the earlier drop-and-recreate
+implementation — anomaly [A-01](#6-known-deviations-and-design-debt), closed by this design —
+did not do.
+
+Seeding is not part of an upgrade. `DatabaseSeeder` runs inside `onCreate` only, so an upgraded
+installation gains the new table empty; the demo rows and the carried sets of
+[3.5.5](#355-seeded-data) reach only a database being created.
+
 ### 3.6 Interface view
 
 *Concern addressed:* the operations each element offers, and their contract.
@@ -409,17 +447,18 @@ that is absent or a key that was never written simply reads as the default.
 
 | Operation | Contract | Realises |
 |---|---|---|
-| `QuestionDao.search(SearchQuery)` | Returns the questions the query selects — text matched against the question text or any tag name, each chosen tag narrowing further — with their tag names, ordered by `name COLLATE NOCASE ASC`. | REQ-SRCH-90…110, REQ-QST-50 |
-| `QuestionDao.findById(id)` | The single question, with tag names, or `null`. | REQ-QST-30 |
-| `QuestionDao.findByIds(ids)` | The named questions, with tag names, ordered by text; ids matching no row are skipped, and the read is chunked at 400 because SQLite binds at most 999 arguments. | REQ-GAME-10, REQ-GAME-40 |
+| `QuestionDao.search(SearchQuery)` | Returns the questions the query selects — text matched against the question text or any tag name, each chosen tag narrowing further — with their tag names and alternative answers, ordered by `name COLLATE NOCASE ASC`. | REQ-SRCH-90…110, REQ-QST-50 |
+| `QuestionDao.findById(id)` | The single question, with tag names and alternative answers, or `null`. | REQ-QST-30 |
+| `QuestionDao.findByIds(ids)` | The named questions, with tag names and alternative answers, ordered by text; ids matching no row are skipped, and the read is chunked at 400 because SQLite binds at most 999 arguments. | REQ-GAME-10, REQ-GAME-40 |
 | `QuestionDao.idsWithTag(tagId)` | The identifiers of every question carrying a tag; the swipe that fills the lobby from a tag. | REQ-TAG-110 |
 | `QuestionDao.findIdByName(name)` | The identifier of the question whose text equals `name` ignoring case, or `null`. The importer's duplicate test. | REQ-IMP-60 |
 | `QuestionDao.tagIdsOf(questionId)` | The tag identifiers assigned to a question; used to pre-select the tag picker. | REQ-QST-70 |
-| `QuestionDao.insert(name, answer, tagIds)` | Inserts a question and its assignments in one transaction; returns the new identifier or `-1`. | REQ-QST-10, REQ-REL-20 |
-| `QuestionDao.update(id, name, answer, tagIds)` | Updates the row and replaces its assignments in one transaction. | REQ-QST-30 |
+| `QuestionDao.insert(name, answer, alternativeAnswers, tagIds)` | Inserts a question, its alternative answers and its assignments in one transaction; returns the new identifier or `-1`. | REQ-QST-10, REQ-QST-100, REQ-REL-20 |
+| `QuestionDao.update(id, name, answer, alternativeAnswers, tagIds)` | Updates the row and replaces its alternative answers and its assignments in one transaction. | REQ-QST-30, REQ-QST-100 |
 | `QuestionDao.addTags(questionId, tagIds)` | Adds assignments, ignoring those that exist. Used by import merge. | REQ-IMP-60 |
+| `QuestionDao.addAlternativeAnswers(questionId, alternativeAnswers)` | Adds wordings the question does not accept yet and keeps the ones it has, leaving out any that repeats its stored answer or one already held. Used by import merge; never removes. | REQ-IMP-60, REQ-QST-100 |
 | `QuestionDao.fillMissingAnswer(id, answer)` | Sets the answer **only** where the stored answer is null or blank; never overwrites. | REQ-IMP-60 |
-| `QuestionDao.delete(id)` | Deletes the question; assignments cascade. | REQ-QST-40, REQ-DB-70 |
+| `QuestionDao.delete(id)` | Deletes the question; assignments and alternative answers cascade. | REQ-QST-40, REQ-DB-70 |
 | `TagDao.search(namePattern)` | Tags matching the pattern, ordered by `name COLLATE NOCASE ASC`. Backs the tag picker. | REQ-TAG-50 |
 | `TagDao.searchWithCounts(pattern, sort)` | Tags matching the pattern with the number of questions each carries — zero included — in the chosen order. Backs the tag list. | REQ-TAG-70…90 |
 | `TagDao.countAll()` | The number of stored tags, shown as the tag list's total. | REQ-TAG-80 |
@@ -436,7 +475,7 @@ that is absent or a key that was never written simply reads as the default.
 | `Lobby.add(...)` / `remove` / `clear` / `questionIds()` / `retainAll(existing)` | Adds, removes and reads the question ids in `memforce_lobby`; a question is present at most once; `retainAll` drops ids that name no stored question. | REQ-GAME-10…40 |
 | `DisplaySettings.areQuestionTagsShown()` / `setQuestionTagsShown(shown)` | Reads and writes the one display flag in `memforce_settings`; unset reads as shown, so tags are displayed until the user hides them. | REQ-SRCH-170 |
 | `GameSession.start(questions, Random)` / `current()` / `submit(answer)` / `getResult()` | Starts a run over a shuffled copy, reports the current question, marks a submission and rotates that question to the back, and reports streak, correct, total and the result. Takes the `Random` so a run repeats in a test. | REQ-GAME-50…110 |
-| `AnswerMatcher.matches(expected, submitted)` | True when the two match after trimming, collapsing internal spaces and lowercasing; an empty submission is never correct. | REQ-GAME-70, REQ-GAME-80 |
+| `AnswerMatcher.matchesAny(accepted, submitted)` | True when the submission matches any of the wordings a question accepts, after trimming, collapsing internal spaces and lowercasing; an empty submission, and an empty set of wordings, are never correct. The one marking path, so a question accepting a single wording is judged by the same rule as one accepting several. | REQ-GAME-80, REQ-QST-100 |
 | `SearchPatterns.like(input)` | `null`, blank, or `%` characters alone → `"%"`; otherwise the trimmed input stripped of the `%` at either end and enclosed in one `%` at each end, unescaped. | REQ-SRCH-40, REQ-SRCH-160, REQ-EXT-40 |
 | `QuestionFilter.of(query)`, `TagQueries.usage`, `TagQueries.suggestions` | Build the one search condition and the two tag-count statements as SQL text plus bound arguments, so the reads share a single definition of "matching". | REQ-SRCH-90…120 |
 
@@ -445,7 +484,7 @@ that is absent or a key that was never written simply reads as the default.
 | Interface | Realisation | Realises |
 |---|---|---|
 | Document selection | `ActivityResultContracts.OpenDocument`, MIME filter `application/json`, `text/plain`, `application/octet-stream`; the stream is opened through `ContentResolver.openInputStream` and closed after one read. | REQ-EXT-70, REQ-IMP-10 |
-| Question-set document | [MF-IFS-001](question-import-format.md) and its JSON Schema. `formatVersion` `"1.0"` only. | REQ-IMP-30, REQ-STD-30 |
+| Question-set document | [MF-IFS-001](question-import-format.md) and its JSON Schema. `formatVersion` `"1.0"` and `"1.1"`; a file declaring either is read, and a refusal names both. | REQ-IMP-30, REQ-STD-30 |
 | Navigation | `LoginActivity` is the launcher; `MainActivity` is `exported=false`; each of the six list, editor and game activities declares `parentActivityName`, so the system Back button returns to the screen that opened it. Both themes are `NoActionBar` and no toolbar is installed: the home screen opens the other screens from the menu behind its own button (`res/menu/main.xml`), and the way back from each is the system Back button rather than an on-screen arrow. | REQ-EXT-20 |
 
 ### 3.7 Interaction view
@@ -551,7 +590,10 @@ User    LobbyActivity     Lobby       QuestionDao    GameSession   CurrentGame  
 ```
 
 The lobby reads its questions on every visit, because it stores identifiers; the same read is where
-a question deleted since it was added drops out. It refuses to start a game when no question carries
+a question deleted since it was added drops out. Each question it reads brings the wordings it
+accepts with it, so the row can name the answer and the alternatives beside it and the
+`GameQuestion` handed to the run is marked against exactly what the lobby showed. It refuses to
+start a game when no question carries
 an answer, and asks first when some do and some do not, stating how many will be left out
 (REQ-GAME-120). A run is held only by `CurrentGame`, in memory: leaving the game, or returning after
 the process was restarted, finds no run and returns to the lobby rather than resuming one whose
@@ -603,23 +645,34 @@ mechanism.
 `QuestionSetFormatException` carrying all of them (REQ-IMP-20). It rejects: an unsupported
 `formatVersion`; a document that is not a single JSON object; any content after the closing brace;
 unknown fields at either level; wrong types; empty or space-padded strings; tag names that span
-lines; duplicate tags within one array; an absent or empty `questions` array; and any string
-longer than the limits of [MF-IFS-001](question-import-format.md). A leading byte order mark is
+lines; duplicate tags within one array; duplicate entries within one `alternativeAnswers` array;
+`alternativeAnswers` given for a question that carries no answer; an absent or empty `questions`
+array; and any string longer than the limits of
+[MF-IFS-001](question-import-format.md). A leading byte order mark is
 stripped. The user interface shows at most ten violations followed by a count of the rest.
+
+Both minor versions are read by the one parser, since `1.1` only adds an optional field; which
+version a file declares therefore changes nothing about how it is parsed, and a refusal names every
+version the app reads rather than a single one.
 
 #### 3.9.2 Merge within a file
 
 `MergedQuestion.mergeAll` keys entries by question text lower-cased, so repeated questions fold
 into one. Tags are accumulated set-level first and then entry-level into a case-insensitive
 ordered set, the first non-null answer wins, and the order of first appearance in the file is
-preserved (REQ-IMP-70).
+preserved (REQ-IMP-70). Alternative answers are accumulated the same way, into a case-insensitive
+ordered set that the winning answer is put into first — so an alternative repeating the answer, or
+one already collected, is dropped rather than stored as a wording the question already accepts.
 
 #### 3.9.3 Merge into the database
 
 `QuestionSetImporter.apply` resolves each tag name through a case-insensitive cache, creating the
 tag only when `TagDao.findByName` returns nothing (REQ-IMP-50). For each merged question it looks
-up `findIdByName`: an existing question receives `addTags` and `fillMissingAnswer` — which cannot
-overwrite an answer — and a new question is inserted (REQ-IMP-60).
+up `findIdByName`: an existing question receives `addTags`, `fillMissingAnswer` — which cannot
+overwrite an answer — and `addAlternativeAnswers`, and a new question is inserted with all three
+at once (REQ-IMP-60). Tags and alternative answers are both applied additively, because both only
+ever widen a question: a tag widens what finds it, an alternative widens what is accepted for it,
+and neither can remove what the user already had.
 
 #### 3.9.4 Credential derivation
 
@@ -676,6 +729,14 @@ descending then name, so the number beside a suggestion says how much choosing i
 lowercases with `Locale.ROOT`; two answers match when their normalised forms are equal and
 non-empty. It forgives the differences a keyboard produces, not the ones knowledge produces, and an
 empty submission — the skip — is never correct (REQ-GAME-70, REQ-GAME-80).
+
+The differences knowledge produces are recorded instead, per question, as its alternative answers.
+`matchesAny` compares the normalised submission against the question's answer and then against each
+alternative, and is correct on the first match, so every wording a question carries is worth exactly
+the same. `Question.getAcceptedAnswers` is what a `GameQuestion` is built from, so the screen and
+the marking can never disagree about which wordings count (REQ-QST-100, decision D-32). After a
+wrong or skipped submission the screen names the answer and then the alternatives, which is where a
+learner finds out that the form they wrote was not among them.
 
 #### 3.9.9 Game scoring and victory
 
@@ -738,15 +799,15 @@ specification left open.
 | ID | Decision | Alternatives rejected |
 |---|---|---|
 | DD-01 | **Java, no Kotlin** (`android.builtInKotlin=false`). | Kotlin would suit the code well, but adds a compiler and a standard library to a product whose entire runtime dependency set is four libraries — AppCompat, ConstraintLayout, RecyclerView and Material Components. The decision is reversible per file if it is ever revisited. |
-| DD-02 | **`SQLiteOpenHelper` and hand-written SQL, not Room.** | Room would generate the DAOs, but the schema is four tables and the statements that matter — the search condition reused across three reads and the two tag-count statements — are ones we would hand-write in Room anyway. Room also brings an annotation processor into a build that currently has none. |
+| DD-02 | **`SQLiteOpenHelper` and hand-written SQL, not Room.** | Room would generate the DAOs, but the schema is five tables and the statements that matter — the search condition reused across three reads and the two tag-count statements — are ones we would hand-write in Room anyway. Room also brings an annotation processor into a build that currently has none. |
 | DD-03 | **Activities, no Fragments, no ViewModel.** | Each screen owns exactly one job, and the platform restores the text fields it manages. The cost is that state the platform does not manage — the tag selection in the question editor, and an import result whose screen was destroyed — is lost on recreation ([A-09](#6-known-deviations-and-design-debt)), and that the list screens re-query in `onResume` ([A-03](#6-known-deviations-and-design-debt)). A ViewModel layer is the answer if that state grows. |
 | DD-04 | **A question's tag names read by a second statement, not `GROUP_CONCAT`.** | One `GROUP_CONCAT` join reads the tags in a single query, but SQLite before 3.44 cannot order the values it collects and a tag name may contain the separator, so the joined string could be neither ordered nor safely split. A second statement returning ordered `(question_id, tag name)` pairs, grouped in the DAO, keeps the order defined and the names intact, at one extra query per result set rather than per row. |
 | DD-05 | **Text-or-tag match and per-tag narrowing as `EXISTS` sub-selects on `question_tags`, not joins.** | Matching the text against tag names, and narrowing by each chosen tag, are `EXISTS` sub-selects: a join would multiply rows before grouping and complicate the tag-name read. Each sub-select is served directly by `idx_question_tags_tag`. This is the multi-tag narrowing the earlier design only kept open. |
-| DD-06 | **Rule-bearing logic kept free of Android types.** | The importer, the `SearchQuery` value, the `QuestionFilter`/`TagQueries` statement builders and the whole game core (`GameSession`, `AnswerMatcher`, `CurrentGame`) use only the Java standard library, or `org.json`, so their rules run on a plain JVM. That is what gives the product its 117 JVM unit tests (REQ-POR-40) — and what lets the question sets carried in the package be held to the import format on the build machine rather than on a device; putting the same logic in a DAO or an activity would need an emulator to test. |
+| DD-06 | **Rule-bearing logic kept free of Android types.** | The importer, the `SearchQuery` value, the `QuestionFilter`/`TagQueries` statement builders and the whole game core (`GameSession`, `AnswerMatcher`, `CurrentGame`) use only the Java standard library, or `org.json`, so their rules run on a plain JVM. That is what gives the product its 141 JVM unit tests (REQ-POR-40) — and what lets the question sets carried in the package, and the demo seed beside them, be held to the format on the build machine rather than on a device; putting the same logic in a DAO or an activity would need an emulator to test. |
 | DD-07 | **Errors reported as return values (`-1`, `false`, `null`), not exceptions**, in the DAOs. | A duplicate tag name is an expected outcome of a user action, not an exceptional condition; the screens that call these methods handle both outcomes on the same path. `QuestionSetFormatException` is the deliberate exception: it carries a whole violation list, which no return value could. |
 | DD-08 | **Seeded demo content on first creation.** | An empty first launch gives a user nothing to search, and makes the product look broken; the 105 questions a first launch creates — the SQL fixture and the carried question sets of [3.5.5](#355-seeded-data) — demonstrate every screen. The demo *accounts* that come with it are the part that should not ship — [A-05](#6-known-deviations-and-design-debt). |
 | DD-09 | **One search component reused, not a search box per screen.** | The home screen and the question list embed the same `PowerfulSearchView`, so a user learns the search once and the two screens cannot drift. The cost is a compound view with configuration hooks (`setOnOpenQuestion`, `setSwipeActionsEnabled`, `setResultsBottomPadding`, …); the alternative was two search boxes and two tag pickers kept in step by hand, which the removed `FilterSpinner` had begun to duplicate. |
-| DD-10 | **The lobby stored in preferences, not the database.** | The lobby is a handful of question identifiers naming rows the schema already owns; a table would add a fifth schema object, the owning-key question of [3.5.3](#353-ownership) and a migration to store them. Preferences also give it the persistence it needs — surviving the trip to the game and process death — beside the session it resembles. Holding identifiers rather than questions is what lets an edit show through and a deletion drop out ([3.5.6](#356-non-schema-persistence)). |
+| DD-10 | **The lobby stored in preferences, not the database.** | The lobby is a handful of question identifiers naming rows the schema already owns; a table would add a sixth schema object, the owning-key question of [3.5.3](#353-ownership) and a migration to store them. Preferences also give it the persistence it needs — surviving the trip to the game and process death — beside the session it resembles. Holding identifiers rather than questions is what lets an edit show through and a deletion drop out ([3.5.6](#356-non-schema-persistence)). |
 | DD-11 | **A game run held in memory only.** | A run belongs to the moment, not the library. Persisting it would let a player resume a half-finished game after leaving, but would then have to be reconciled with questions edited or deleted meanwhile; discarding it on exit matches what a player expects and keeps the game free of stored state. `CurrentGame` is the single holder, and the game screen returns to the lobby when it finds none. |
 | DD-12 | **Swipe gestures in absolute left/right, not start/end.** | Binding delete and add-to-lobby to absolute directions makes the gesture identical whichever way the layout runs; start/end would flip them under a right-to-left layout. Neither direction removes the row itself — the handler decides and the row is put back — so a cancelled confirmation leaves the list unchanged. |
 | DD-13 | **The home screen given over to the search, with its navigation behind one menu.** | The screen a signed-in user lands on is the screen they browse in, so the questions are given the whole of it, and the lobby, the two lists and sign-out sit in a single menu that costs one press and no height. The alternative — the four buttons this screen used to stack beneath the results — took a fifth of the screen, would have grown with every destination added, and pushed the result list into what was left. The menu is built on each press, so the lobby count it names is read rather than kept in step by a listener; the search's `setOnLobbyChanged` hook went with the buttons that needed it. |
@@ -784,7 +845,7 @@ The reverse direction is the "Realises" column throughout [clause 3](#3-design-v
 | Question-set import (`IMP`) | `QuestionSetImportFlow`, `QuestionSetParser`, `MergedQuestion`, `QuestionSetImporter`, `BundledQuestionSets`, [3.5.5](#355-seeded-data), [3.9](#39-algorithm-view) |
 | Usability (`USE`) | `MainActivity`, confirmation dialogs, `strings.xml`, `themes.xml` + `values-night/themes.xml` |
 | Performance (`PERF`) | [3.10](#310-resource-view), DD-04, DD-05, `idx_question_tags_tag` |
-| Logical database (`DB`) | [3.5](#35-information-view), `MemForceDbHelper`, `DbContract` |
+| Logical database (`DB`) | [3.5](#35-information-view), [3.5.7](#357-schema-evolution), `MemForceDbHelper`, `DbContract` |
 | Design constraints (`CON`) | [3.1](#31-context-view), [3.4](#34-dependency-view), manifest, `libs.versions.toml` |
 | Standards compliance (`STD`) | [3.6.2](#362-external-interfaces), [MF-IFS-001](question-import-format.md), this document |
 | Security (`SEC`) | [3.5.4](#354-credential-storage), [3.9.4](#394-credential-derivation), `Session`, manifest |
@@ -801,12 +862,12 @@ classification and disposition are held.
 
 | ID | Deviation | Requirement affected | Consequence today | Intended resolution |
 |---|---|---|---|---|
-| A-01 | `MemForceDbHelper.onUpgrade` drops all four tables and recreates the schema. | REQ-DB-100 | None yet: the schema is at version 1, so `onUpgrade` has never run. The first schema change would destroy every installation's data. | Replace with versioned `ALTER TABLE` migrations **before** the schema version is raised. Blocking for any change to [3.5.1](#351-schema). |
+| A-01 | *(closed in version 1.1 of this document)* `MemForceDbHelper.onUpgrade` now applies one versioned step per schema version, altering the database in place ([3.5.7](#357-schema-evolution)). | REQ-DB-100 | None. The step to version 2 adds `alternative_answers` and touches nothing else, so an installation created at version 1 keeps every question, tag, assignment and account. | Closed. A future version adds a step; a step that drops a table holding a user's work reopens this. |
 | A-02 | The manifest sets `allowBackup="true"` and declares no backup rules, so the platform may copy `memforce.db` and the session preferences off the device. | REQ-SEC-60 | Content and credential material can leave the device through the platform backup transport, although the application itself opens no socket. | Set `allowBackup="false"`, or declare backup rules that exclude the database and `memforce_session`. |
 | A-03 | List queries run on the user-interface thread (`onResume` and every keystroke), as do the lobby read (`findByIds`) and the game's answer marking. | REQ-PERF-10 at volume; REQ-PERF-40 is met, since it covers derivation, file reading and import writing. | Measured behaviour is within the limit at the seeded volume; at the reference volume of 2 000 questions it is a risk rather than a defect. | Move list queries to a background executor if measurement at the reference volume approaches 1 s. |
 | A-04 | `questions.name` carries no uniqueness constraint, while import merges questions case-insensitively (REQ-IMP-60). | Consistency between REQ-QST-10 and REQ-IMP-60 | A user can type the same question twice; an import would have merged it. The two paths disagree about what "the same question" means. | Decide deliberately: either add a `UNIQUE COLLATE NOCASE` constraint and a merge on manual entry, or state in MF-SRS-001 that duplicates entered by hand are permitted. |
 | A-05 | `DatabaseSeeder` creates the accounts `ana` and `marko` with a constant password in every build, including release. | REQ-SEC-10 in spirit; no requirement asks for demo accounts | Every fresh installation has two accounts whose password is in the source. Accounts are not a boundary between users' content (MF-SRS-001, 1.6), so the impact is limited to impersonation of a demo name. | Seed content without accounts, or gate account seeding to debug builds. |
-| A-06 | No automated test executes any DAO, the schema, `PasswordHasher`, `Session` or any screen. | Verification coverage, not a product defect | 109 unit tests cover parsing and merging, the question sets carried in the package, the `SearchQuery` value and the SQL its filter builds, the tag-count statements, answer matching and the game rules — all on the JVM; every database and user-interface requirement is still verified by hand today, including the rows `BundledQuestionSets` writes. | Add instrumented tests for the DAOs and the schema, as planned in MF-VVP-001, clause 7.3. |
+| A-06 | No automated test executes any DAO, the schema, `PasswordHasher`, `Session` or any screen. | Verification coverage, not a product defect | 141 unit tests cover parsing and merging, the question sets carried in the package and the demo seed, the `SearchQuery` value and the SQL its filter builds, the tag-count statements, answer matching and the game rules — all on the JVM; every database and user-interface requirement is still verified by hand today, including the rows `BundledQuestionSets` writes and the migration of [3.5.7](#357-schema-evolution). | Add instrumented tests for the DAOs and the schema, as planned in MF-VVP-001, clause 7.3. |
 | A-07 | `QuestionDao.replaceTags` ignores the `-1` that `insert` returns on failure, and `insert`/`update` mark their transaction successful unconditionally. | REQ-IMP-80, REQ-REL-20 | A link write that fails **without raising** is not noticed: a question can be committed without some of its tags, inside an import that reports success. Rollback still works for anything that throws. | Use `insertOrThrow`, or check the return value and fail the transaction before it is marked successful. |
 | A-08 | Failed writes are not reported: `QuestionEditActivity.save()` discards the identifier returned by `insert` and closes the editor either way; update and delete failures surface nothing to the user. | REQ-REL-30 | A question that was not stored looks stored until the list refreshes without it. | Return a typed outcome from the DAOs and report it at each call site without closing the form. |
 | A-09 | State the platform does not restore is lost on activity recreation: the question editor's tag selection resets to the stored assignments on rotation, and an import result delivered to a destroyed screen is reported without its counts. | REQ-STD-10, REQ-IMP-100 | A rotation partway through editing silently discards tag changes the user made. | Persist the selection in `onSaveInstanceState`, and deliver the import result through lifecycle-aware state. |

@@ -1,5 +1,6 @@
 package com.memforce.ui.game;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +19,8 @@ import java.util.List;
  * The questions gathered for the next game.
  *
  * <p>A question stored without an answer is shown too, marked as one the game leaves out, so that
- * a lobby the game will shorten does not do so silently.
+ * a lobby the game will shorten does not do so silently. A question that accepts more than one
+ * wording names them all, because that is part of what will be asked of the player.
  */
 public class LobbyAdapter extends RecyclerView.Adapter<LobbyAdapter.ViewHolder> {
 
@@ -68,10 +70,19 @@ public class LobbyAdapter extends RecyclerView.Adapter<LobbyAdapter.ViewHolder> 
         void bind(@NonNull Question question) {
             View root = binding.getRoot();
             binding.title.setText(question.getName());
-            binding.answer.setText(question.isAnswerable()
-                    ? root.getContext().getString(R.string.lobby_answer, question.getAnswer())
-                    : root.getContext().getString(R.string.lobby_no_answer));
+            binding.answer.setText(answerLabel(root.getContext(), question));
             binding.removeButton.setOnClickListener(v -> onRemove.invoke(question));
+        }
+
+        private String answerLabel(@NonNull Context context, @NonNull Question question) {
+            if (!question.isAnswerable()) {
+                return context.getString(R.string.lobby_no_answer);
+            }
+            if (question.getAlternativeAnswers().isEmpty()) {
+                return context.getString(R.string.lobby_answer, question.getAnswer());
+            }
+            return context.getString(R.string.lobby_answer_with_alternatives,
+                    question.getAnswer(), question.getAlternativeAnswersLabel());
         }
     }
 }

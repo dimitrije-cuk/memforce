@@ -4,8 +4,8 @@
 |---|---|
 | Document title | MemForce — Configuration Management Plan |
 | Document identifier | MF-CMP-001 |
-| Version | 1.0 |
-| Date | 2026-09-10 |
+| Version | 1.1 |
+| Date | 2026-09-14 |
 | Status | Draft — proposed for baseline **BL-1**, which is declared when the tag is applied ([MF-CMP-001, 4.3](configuration-management.md#43-baselines)) |
 | Subject | The MemForce repository and everything it delivers |
 | Information item | Configuration Management Plan (CMP) |
@@ -116,7 +116,7 @@ fresh clone belongs in a controlled item instead.
 
 | Baseline | What it fixes | Declared when |
 |---|---|---|
-| **BL-1 — functional baseline** | [MF-SRS-001](requirements.md) v1.0, [MF-SDD-001](design.md) v1.0, [MF-VVP-001](verification-and-validation.md) v1.0, this plan v1.0, and the source they describe. | The documentation set is reviewed and consistent with the source at that commit. |
+| **BL-1 — functional baseline** | [MF-SRS-001](requirements.md) v1.1, [MF-SDD-001](design.md) v1.1, [MF-VVP-001](verification-and-validation.md) v1.1, [MF-IFS-001](question-import-format.md) v1.1, this plan v1.1, and the source they describe. | The documentation set is reviewed and consistent with the source at that commit. |
 | **Product baseline** | The application package of a release, together with the exact documents and source it was built from. | A release tag is applied, after the release checklist of [clause 10](#10-release-management) passes. |
 
 A baseline is not a snapshot of intent, it is a snapshot of fact: it may only be declared when the
@@ -172,8 +172,9 @@ and reviewed retrospectively before the next baseline.
 
 A decision to ship with a known deviation from a requirement is recorded as an anomaly with an
 explicit disposition in [MF-VVP-001, clause 9](verification-and-validation.md#9-anomaly-management),
-naming the requirement, the reason and the condition that would reopen it. Anomalies A-01 to A-10
-are the deviations currently accepted, deferred or awaiting a fix. A deviation that is not written
+naming the requirement, the reason and the condition that would reopen it. Anomalies A-02 to A-10
+are the deviations currently accepted, deferred or awaiting a fix; A-01 is recorded there as
+closed. A deviation that is not written
 down is not a deviation, it is a defect nobody has found yet.
 
 ---
@@ -241,10 +242,15 @@ chatbots produce outside this repository, so a change to it is a change to other
 ### 8.2 Database schema
 
 `DATABASE_VERSION` and the DDL change together, in one commit, with the ERD source regenerated in
-the same commit. **Raising the schema version is blocked** until the migration path required by
-[REQ-DB-100](requirements.md#35-logical-database-requirements) exists — anomaly
-[A-01](verification-and-validation.md#92-open-anomalies) — because the current upgrade path
-recreates the schema and would discard every installation's data.
+the same commit. Raising the version also adds the migration step for it, so that
+[REQ-DB-100](requirements.md#35-logical-database-requirements) holds for an installation already in
+use: each step alters the database in place, no step may drop a table holding a user's work, and a
+version for which no step is known raises rather than opening a database short of the schema
+([MF-SDD-001, 3.5.7](design.md#357-schema-evolution)). Procedure
+[MF-VVP-001, 8.3](verification-and-validation.md#83-database-integrity) step 9 is executed at every
+such change. This replaces the blocking condition formerly carried by anomaly
+[A-01](verification-and-validation.md#92-open-anomalies), closed when the versioned migrations
+arrived.
 
 ### 8.3 Platform interface
 

@@ -59,6 +59,8 @@ public class QuestionEditActivity extends AppCompatActivity {
             }
             binding.nameInput.setText(question.getName());
             binding.answerInput.setText(question.getAnswer());
+            binding.alternativeAnswersInput.setText(
+                    TextUtils.join("\n", question.getAlternativeAnswers()));
             selectedTagIds.addAll(questionDao.tagIdsOf(questionId));
         }
         showSelectedTags();
@@ -85,22 +87,52 @@ public class QuestionEditActivity extends AppCompatActivity {
     }
 
     private void save() {
+        binding.nameLayout.setError(null);
+        binding.alternativeAnswersLayout.setError(null);
+
         String name = text(binding.nameInput.getText());
         if (TextUtils.isEmpty(name)) {
             binding.nameLayout.setError(getString(R.string.error_required));
             return;
         }
         String answer = text(binding.answerInput.getText());
+        List<String> alternatives = lines(binding.alternativeAnswersInput.getText());
+        if (answer.isEmpty() && !alternatives.isEmpty()) {
+            binding.alternativeAnswersLayout.setError(
+                    getString(R.string.question_alternatives_need_answer));
+            return;
+        }
 
         if (questionId == NO_ID) {
-            questionDao.insert(name, answer.isEmpty() ? null : answer, selectedTagIds);
+            questionDao.insert(name, answer.isEmpty() ? null : answer, alternatives,
+                    selectedTagIds);
         } else {
-            questionDao.update(questionId, name, answer.isEmpty() ? null : answer, selectedTagIds);
+            questionDao.update(questionId, name, answer.isEmpty() ? null : answer, alternatives,
+                    selectedTagIds);
         }
         finish();
     }
 
     private static String text(@Nullable CharSequence value) {
         return value == null ? "" : value.toString().trim();
+    }
+
+    /**
+     * One alternative answer per line: an answer may itself contain a comma or a semicolon, so a
+     * line break is the only separator that cannot be part of what is being separated.
+     */
+    @NonNull
+    private static List<String> lines(@Nullable CharSequence value) {
+        List<String> lines = new ArrayList<>();
+        if (value == null) {
+            return lines;
+        }
+        for (String line : value.toString().split("\r\n|\r|\n", -1)) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty()) {
+                lines.add(trimmed);
+            }
+        }
+        return lines;
     }
 }

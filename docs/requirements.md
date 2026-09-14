@@ -4,8 +4,8 @@
 |---|---|
 | Document title | MemForce — Software Requirements Specification |
 | Document identifier | MF-SRS-001 |
-| Version | 1.0 |
-| Date | 2026-09-10 |
+| Version | 1.1 |
+| Date | 2026-09-14 |
 | Status | Draft — proposed for baseline **BL-1**, which is declared when the tag is applied ([MF-CMP-001, 4.3](configuration-management.md#43-baselines)) |
 | Product | MemForce, version 1.0 (`versionCode` 1, `versionName` "1.0") |
 | Information item | Software Requirements Specification (SRS) |
@@ -120,8 +120,9 @@ MemForce provides six groups of function.
 - **Authentication and session.** A person signs in with a user name and a password. An unknown
   user name creates an account, so first use and subsequent use follow the same path. The signed-in
   identity persists until the person signs out.
-- **Question management.** A question — its text, an optional answer, and any number of tags — is
-  created, changed, listed and deleted. Questions are shared: every account sees every question.
+- **Question management.** A question — its text, an optional answer, any number of alternative
+  wordings of that answer, and any number of tags — is created, changed, listed and deleted.
+  Questions are shared: every account sees every question.
 - **Tag management.** A tag is the multi-valued classification of a question (*algebra*,
   *space*, *exam*). Tags are created, renamed, searched and deleted, are shown with the number of
   questions carrying them, and are shared by all accounts.
@@ -133,7 +134,9 @@ MemForce provides six groups of function.
 - **Question-set import.** A JSON file conforming to [MF-IFS-001](question-import-format.md) is
   validated as a whole and then merged into the stored questions and tags in one transaction.
 - **Gameplay.** Questions chosen anywhere in the application are gathered in a lobby and then
-  practised: the game asks them in turn until every one of them has been answered correctly.
+  practised: the game asks them in turn until every one of them has been answered correctly. A
+  question may accept more than one wording of its answer, so a fact known is not marked wrong for
+  having been spelled differently.
 
 ### 1.5 User characteristics
 
@@ -194,7 +197,7 @@ this specification.
 |---|---|
 | A record of past games, statistics, progress over time | A game reports its own result ([REQ-GAME-110](#326-gameplay)); nothing is kept once it ends, so no history is stored and none can be shown. |
 | Spaced-repetition scheduling | The game of [3.2.6](#326-gameplay) repeats within one run only. Scheduling repetitions across days would require the per-question history the row above defers. |
-| Multiple-choice or other question forms, partial credit | A submission is compared with the stored answer as a whole ([REQ-GAME-80](#326-gameplay)); other forms would each need their own marking rule. |
+| Multiple-choice or other question forms, partial credit | A submission is compared with the stored answer, or one of its alternatives, as a whole ([REQ-GAME-80](#326-gameplay)); other forms would each need their own marking rule. |
 | Export of questions or tags to a file | The import format is defined for one direction in 1.0; export would make the format a two-way contract and is deferred until the format stabilises ([MF-IFS-001](question-import-format.md), *Extensibility*). |
 | Personal collections of questions owned by one account | 1.0 shares all content between accounts ([REQ-QST-60](#322-questions)); ownership would require an owning key on content and a per-account filter throughout. |
 | Synchronisation, cloud backup, multi-device use | Excluded by the standalone constraint ([REQ-CON-10](#36-design-constraints)). |
@@ -352,6 +355,8 @@ credential is stored is a security attribute and is specified in [3.8.1](#381-se
 | REQ-QST-70 | The application shall allow a user to assign any of the existing tags to a question and to withdraw any assignment, and a tag shall apply to a question at most once. | F | H | SN-02 |
 | REQ-QST-80 | Each entry of the question list shall display the question text above the names of its tags, and shall keep the same height whatever the number of tags, the tag names being scrollable along the entry when they do not fit. | F | M | SN-01, SN-03, D-22 |
 | REQ-QST-90 | The application shall delete the question of a list entry swiped to the left, subject to the confirmation of REQ-QST-40, and shall add the question of a list entry swiped to the right to the gameplay lobby. | F | M | SN-09, D-21 |
+| REQ-QST-100 | The application shall allow a user to record against a question that carries an answer any number of alternative answers, including none, and to modify and withdraw them; each alternative answer shall apply to a question at most once, compared without regard to letter case. | F | M | SN-09, D-32 |
+| REQ-QST-110 | The application shall reject the recording of an alternative answer against a question whose answer text is empty, and shall state that an answer is required first. | F | M | derived, D-32 |
 
 *Rationale.* An answer is optional because a question captured during a lecture is often written
 before its answer is known, and forcing a placeholder answer would corrupt the data; the import
@@ -360,6 +365,13 @@ the list so that "the list shows the questions" is verifiable, and so that a use
 edited a question can find it again in a predictable place. REQ-QST-80 states the height rule
 because a question carrying a dozen tags would otherwise push the questions around it off the
 screen, and the question text — the thing being looked for — is what must stay visible.
+
+REQ-QST-100 exists because one fact has more than one spelling: `4` and `four`, `CO₂` and `carbon
+dioxide` are the same knowledge, and a learner who writes one of them has not made a mistake. The
+alternatives sit beside the answer rather than replacing it, so the question still has one wording
+to show (REQ-GAME-80); they are a property of the question, which is why they belong to it and not
+to the game. REQ-QST-110 follows from that: a question with no answer is one the game leaves out
+altogether (REQ-GAME-50), so an alternative to nothing would be data that can never be used.
 
 #### 3.2.3 Tags
 
@@ -446,8 +458,8 @@ be the drift that requirement exists to prevent.
 | REQ-IMP-30 | The application shall accept only a question set whose declared format version is one it supports, and shall otherwise report the declared version and the supported version. | F | H | SN-04 |
 | REQ-IMP-40 | Before writing, the application shall display the number of questions that would be created, the number of stored questions the file matches and would update, and the number of tags that would be created, and shall write only after the user confirms. | F | H | SN-04, D-10 |
 | REQ-IMP-50 | For each tag named in the file that matches no stored tag when compared without regard to letter case, the application shall create a tag; for each tag that matches a stored tag, it shall use the stored tag. | F | H | SN-04 |
-| REQ-IMP-60 | When the question text in the file matches a stored question without regard to letter case, the application shall add the file's tags to the stored question rather than store a second question, shall keep the stored answer, and shall set the answer from the file only when the stored question has no answer. | F | H | SN-04, D-11 |
-| REQ-IMP-70 | When one file repeats the same question text, the application shall store one question carrying the union of the tags of every repetition and the first answer given for it. | F | H | SN-04, D-11 |
+| REQ-IMP-60 | When the question text in the file matches a stored question without regard to letter case, the application shall add the file's tags and alternative answers to the stored question rather than store a second question, shall keep the stored answer, and shall set the answer from the file only when the stored question has no answer. | F | H | SN-04, D-11, D-32 |
+| REQ-IMP-70 | When one file repeats the same question text, the application shall store one question carrying the union of the tags and of the alternative answers of every repetition and the first answer given for it. | F | H | SN-04, D-11, D-32 |
 | REQ-IMP-80 | The application shall apply an import as a single transaction, so that after a failure at any point the database holds exactly what it held before the import began. | F | H | SN-04, D-10 |
 | REQ-IMP-90 | The application shall reject a file larger than 1 MiB, a file it cannot read, and a file that is not valid JSON, in each case reporting the reason and writing nothing. | F | H | derived, D-12 |
 | REQ-IMP-100 | The application shall report, after a completed import, how many questions were added, how many stored questions the file matched and updated, and how many tags were created. | F | M | SN-04 |
@@ -461,7 +473,9 @@ specified defensively: validate everything first (REQ-IMP-20), show the effect a
 rules of REQ-IMP-60 and REQ-IMP-70 exist because the expected source of these files is a chatbot
 working from a template, which repeats questions across files and within a file; without merging,
 a second import of an improved set would double the library. Keeping the stored answer makes
-import safe to repeat: an import can add classification, never overwrite work.
+import safe to repeat: an import can add classification, never overwrite work. Alternative answers
+merge the same way and for the same reason — they only ever widen what a question accepts, so
+adding them to a stored question can destroy nothing, while overwriting its answer could.
 
 REQ-IMP-110 to REQ-IMP-130 carry the same idea in the opposite direction. A learner who has just
 installed the product has no file to import and no reason to have prepared one, so the topics the
@@ -483,7 +497,7 @@ product, and a broken one is a defect that must never reach a device.
 | REQ-GAME-50 | The application shall play a game with the questions in the gameplay lobby that carry an answer; it shall exclude the questions that carry none, shall state how many are excluded before the game begins, and shall refuse to begin when no question in the lobby carries an answer. | F | H | SN-09, D-26 |
 | REQ-GAME-60 | The application shall determine the order of the questions of a game by a shuffle performed once, when the game begins. | F | H | SN-09 |
 | REQ-GAME-70 | The application shall move the question just asked to the end of the queue after every submission, whatever the submission was worth, and shall ask the question at the front of the queue next. | F | H | SN-09, D-27 |
-| REQ-GAME-80 | The application shall treat a submission as correct when it equals the stored answer of the question ignoring letter case, leading and trailing spacing, and the length of the runs of spacing within it; it shall treat a submission that carries nothing but spacing as a skip, and shall treat a skip as an incorrect submission. | F | H | SN-09, D-28 |
+| REQ-GAME-80 | The application shall treat a submission as correct when it equals the stored answer of the question, or any of that question's alternative answers, ignoring letter case, leading and trailing spacing, and the length of the runs of spacing within it; it shall treat a submission that carries nothing but spacing as a skip, and shall treat a skip as an incorrect submission. | F | H | SN-09, D-28, D-32 |
 | REQ-GAME-90 | The application shall display, at every point of a game, the number of correct submissions made in an unbroken run, the number of different questions answered correctly at least once, and the number of questions the game began with. | F | H | SN-09 |
 | REQ-GAME-100 | The application shall reset the unbroken run of correct submissions to zero on any submission that is not correct, and shall not decrease the number of different questions answered correctly. | F | H | SN-09 |
 | REQ-GAME-110 | The application shall end the game in a victory when the number of different questions answered correctly equals the number of questions the game began with. | F | H | SN-09 |
@@ -514,6 +528,14 @@ for never having been tested on it.
 REQ-GAME-50 follows from [REQ-QST-10](#322-questions): an answer is optional, so some questions
 cannot be marked at all. Excluding them silently would make the total the player is working
 towards disagree with the lobby they assembled, which is why the number is stated first.
+
+REQ-GAME-80 forgives two different things, and the difference matters. Spacing and letter case are
+what a keyboard produces, so the rule disregards them for every question alike. The alternative
+answers of [REQ-QST-100](#322-questions) are what *knowledge* produces: they are recorded against
+one question, by whoever wrote it, because that question genuinely has more than one right
+wording. The game does not guess at the second kind, and every wording a question carries is worth
+exactly the same — a submission matching any of them is correct, and no wording ranks above
+another in scoring.
 
 ### 3.3 Usability requirements
 
@@ -564,15 +586,16 @@ than left to design because credential derivation is deliberately expensive
 | ID | Requirement | Type | Pri | Source |
 |---|---|---|---|---|
 | REQ-DB-10 | All persistent question, tag and account records shall be held in a single SQLite database stored in application-private storage on the device, the retained signed-in identity of [REQ-AUTH-70](#321-authentication-and-session) and the gameplay lobby of [REQ-GAME-30](#326-gameplay) excepted. | D | H | SN-06, SN-07 |
-| REQ-DB-20 | The database shall represent the entities Users, Questions, Tags and QuestionTags with at least the attributes and constraints listed in [3.5.1](#351-entities-and-attributes). | D | H | SN-01, SN-02, SN-05 |
+| REQ-DB-20 | The database shall represent the entities Users, Questions, Tags, QuestionTags and AlternativeAnswers with at least the attributes and constraints listed in [3.5.1](#351-entities-and-attributes). | D | H | SN-01, SN-02, SN-05 |
 | REQ-DB-30 | Each of Users, Questions and Tags shall have an integer primary key that is unique within its entity and that is not reused after a deletion. | D | H | derived |
 | REQ-DB-40 | QuestionTags shall relate Questions to Tags as a many-to-many relation whose primary key is the pair of referenced keys, so that a tag applies to a question at most once. | D | H | SN-02 |
 | REQ-DB-50 | The database shall enforce referential integrity for every foreign key on every connection it opens, so that no record may reference a non-existent record. | D | H | derived, D-14 |
 | REQ-DB-60 | Deleting a tag shall delete every QuestionTags record that references it, and shall delete no question. | D | H | SN-02 |
-| REQ-DB-70 | Deleting a question shall delete every QuestionTags record that references it, and shall delete no tag. | D | H | SN-01 |
+| REQ-DB-70 | Deleting a question shall delete every QuestionTags record and every AlternativeAnswers record that references it, and shall delete no tag. | D | H | SN-01 |
 | REQ-DB-80 | The database shall reject a second Users record whose name equals an existing name, and a second Tags record whose name equals an existing name, in both cases comparing without regard to letter case. | D | H | derived, D-02 |
 | REQ-DB-90 | Data committed by a completed operation shall remain available after the application is closed and reopened and after the device is restarted. | D | H | derived |
 | REQ-DB-100 | The database shall carry a schema version number, and when that number increases the application shall convert an existing database to the new version without loss of stored questions, tags, assignments or accounts. | D | H | derived, D-15 |
+| REQ-DB-110 | The database shall reject a second AlternativeAnswers record holding, for the same question, an answer text equal to one already held for it, compared without regard to letter case. | D | M | derived, D-32 |
 
 #### 3.5.1 Entities and attributes
 
@@ -594,13 +617,18 @@ weaken the stated constraints. The realised schema is given in [MF-SDD-001](desi
 | **QuestionTags** | question identifier | INTEGER | Not null; references Questions; deletion cascades (REQ-DB-70) |
 | | tag identifier | INTEGER | Not null; references Tags; deletion cascades (REQ-DB-60) |
 | | — | — | Primary key is the pair (question identifier, tag identifier) (REQ-DB-40) |
+| **AlternativeAnswers** | identifier | INTEGER | Primary key, not reused (REQ-DB-30) |
+| | question identifier | INTEGER | Not null; references Questions; deletion cascades (REQ-DB-70) |
+| | answer text | TEXT | Not null; unique for one question without regard to letter case (REQ-DB-110) |
 
 #### 3.5.2 Relationships
 
 ```text
 Users                Questions  >────  QuestionTags  ────<  Tags
 (sign-in only,       (shared)          (M:N, cascading)     (shared)
- no content link)
+ no content link)        │
+                         └────<  AlternativeAnswers
+                                 (1:N, cascading)
 ```
 
 Users has no relationship to content: version 1.0 shares all questions and tags between accounts
@@ -755,6 +783,8 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-QST-70 | T | Two tags are assigned to a question and one is withdrawn; the assignment table holds exactly one row for that question; re-selecting an assigned tag does not create a second row. |
 | REQ-QST-80 | T | A question carrying one tag and a question carrying twelve are shown in the same list; both entries have the same height, both show the question text above the tags, and the tag area of the second scrolls along the entry to reveal the tags that do not fit. |
 | REQ-QST-90 | T | Swiping an entry to the left raises the confirmation of REQ-QST-40 — declining restores the entry and leaves the question stored, accepting removes it; swiping an entry to the right leaves the question stored, restores the entry, and leaves the lobby holding that question. |
+| REQ-QST-100 | T | A question with the answer `Four` is saved with the alternative answers `4` and `IV`; both are held against it, are shown again when it is edited, and are withdrawn by deleting them; saving `4` a second time, and saving `iv`, leave exactly the two already held. |
+| REQ-QST-110 | T | Saving alternative answers against a question whose answer field is empty is refused with a message stating that an answer is required first, and nothing is written. |
 
 #### 4.3.3 Tags
 
@@ -803,8 +833,8 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-IMP-30 | T | A file declaring an unsupported format version is rejected with a message naming the declared and the supported version. |
 | REQ-IMP-40 | T | For a file of 10 questions of which 3 already exist and which names 2 unknown tags, the confirmation shows 7, 3 and 2; declining leaves the database unchanged. |
 | REQ-IMP-50 | T | Importing a file naming the existing tag `Algebra` and the unknown tag `topology` creates exactly one tag, and the imported questions reference the existing `algebra` row. |
-| REQ-IMP-60 | T | Importing a question whose text matches a stored question in different case adds the file's tags to the stored question, creates no second question, keeps the stored answer, and fills the answer only where the stored question had none. |
-| REQ-IMP-70 | T | A file repeating one question text three times with different tags produces one question carrying the union of those tags and the first answer given. |
+| REQ-IMP-60 | T | Importing a question whose text matches a stored question in different case adds the file's tags and alternative answers to the stored question, creates no second question, keeps the stored answer, and fills the answer only where the stored question had none. |
+| REQ-IMP-70 | T | A file repeating one question text three times with different tags and different alternative answers produces one question carrying the union of those tags, the union of those alternative answers, and the first answer given. |
 | REQ-IMP-80 | T | An import interrupted by an induced failure after the first write leaves the database exactly as it was before the import. |
 | REQ-IMP-90 | T | A file of 2 MiB, a file whose stream cannot be opened, and a file holding invalid JSON are each rejected with the corresponding message and no write. |
 | REQ-IMP-100 | T | After a completed import the reported counts equal the counts confirmed beforehand, and the reported numbers of created questions and created tags equal the actual change in the tables. |
@@ -823,7 +853,7 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | REQ-GAME-50 | T | With a lobby of 5 questions of which 2 carry no answer, starting states that 2 are excluded and 3 will be asked, and the game's total is 3; with a lobby in which no question carries an answer, the game does not begin and the reason is stated. |
 | REQ-GAME-60 | T | Two games started from the same lobby with different shuffle sources ask the questions in different orders; a game started from a fixed source asks them in the same order every time; no question is lost or duplicated by the shuffle. |
 | REQ-GAME-70 | T | In a game of three questions, the first three submissions ask three different questions and the fourth asks the first one again — for a correct submission, an incorrect one and a skip alike. |
-| REQ-GAME-80 | T | For a stored answer `Otto von Bismarck`: `otto von bismarck`, `  Otto von Bismarck `, and `Otto   von\tBismarck` are correct; `Otto Bismarck` and `Metternich` are not; an empty submission and one of spaces alone are reported as skips and counted as incorrect. |
+| REQ-GAME-80 | T | For a stored answer `Otto von Bismarck`: `otto von bismarck`, `  Otto von Bismarck `, and `Otto   von\tBismarck` are correct; `Otto Bismarck` and `Metternich` are not; an empty submission and one of spaces alone are reported as skips and counted as incorrect. For a question answered `Carbon dioxide` with the alternative answers `CO2` and `CO₂`: each of the three, in any case and spacing, is correct, and `oxygen` is not; the feedback after a wrong submission names `Carbon dioxide` and then the two alternatives. |
 | REQ-GAME-90 | T | After a correct, a wrong and a correct submission in a game of 30 questions, the display reads `1 / 2 / 30`. |
 | REQ-GAME-100 | T | A wrong submission and a skip each set the run to zero; answering an already-correct question correctly again raises the run but leaves the number of different questions unchanged; no submission ever lowers that number. |
 | REQ-GAME-110 | T | A game of three questions ends exactly when the third different question has been answered correctly, and not before, however many correct submissions were made for the others. |
@@ -858,15 +888,16 @@ build is exercised end to end against the product functions of [1.4](#14-product
 | ID | Method | Acceptance criteria |
 |---|---|---|
 | REQ-DB-10 | I | Exactly one SQLite database file holds all question, tag and account data; no such data is found in preferences, plain files, or any other store. |
-| REQ-DB-20 | I | The schema declares all four entities, each with at least the attributes and constraints of [3.5.1](#351-entities-and-attributes). |
+| REQ-DB-20 | I | The schema declares all five entities, each with at least the attributes and constraints of [3.5.1](#351-entities-and-attributes). |
 | REQ-DB-30 | T | Each of the three principal entities declares an integer primary key; a record inserted after a deletion does not reuse the deleted key. |
 | REQ-DB-40 | I | QuestionTags declares both foreign keys and a composite primary key over the pair. |
 | REQ-DB-50 | T | On a freshly opened connection, an insert naming a non-existent parent key is rejected by the database. |
 | REQ-DB-60 | T | Deleting a tag carried by three questions removes exactly those three assignment rows and leaves all three questions stored. |
-| REQ-DB-70 | T | Deleting a question carrying two tags removes exactly those two assignment rows and leaves both tags stored. |
+| REQ-DB-70 | T | Deleting a question carrying two tags and two alternative answers removes exactly those two assignment rows and those two alternative-answer rows, and leaves both tags stored. |
 | REQ-DB-80 | T | Inserting a user name and a tag name that differ from an existing one only by case is rejected by the database, not only by the user interface. |
 | REQ-DB-90 | T | Records created before the application is closed are present after it is reopened, and again after the device is restarted. |
 | REQ-DB-100 | T | A database created by the previous schema version is opened by the current build; every previously stored question, tag, assignment and account is readable afterwards. |
+| REQ-DB-110 | T | Inserting, for one question, an alternative answer that differs from one it already holds only by case is rejected by the database, not only by the user interface; the same text against a different question is accepted. |
 
 ### 4.7 Design constraints
 
@@ -946,26 +977,26 @@ This document is a configuration item under [MF-CMP-001](configuration-managemen
 |---|---|---|
 | External interfaces (`EXT`) | 3.1 | 7 |
 | Authentication and session (`AUTH`) | 3.2.1 | 8 |
-| Questions (`QST`) | 3.2.2 | 9 |
+| Questions (`QST`) | 3.2.2 | 11 |
 | Tags (`TAG`) | 3.2.3 | 11 |
-| Search and filtering (`SRCH`) | 3.2.4 | 16 |
+| Search and filtering (`SRCH`) | 3.2.4 | 17 |
 | Question-set import (`IMP`) | 3.2.5 | 13 |
 | Gameplay (`GAME`) | 3.2.6 | 12 |
 | Usability (`USE`) | 3.3 | 8 |
 | Performance (`PERF`) | 3.4 | 6 |
-| Logical database (`DB`) | 3.5 | 10 |
+| Logical database (`DB`) | 3.5 | 11 |
 | Design constraints (`CON`) | 3.6 | 5 |
 | Standards compliance (`STD`) | 3.7 | 3 |
 | Security (`SEC`) | 3.8.1 | 6 |
 | Reliability and availability (`REL`) | 3.8.2 | 4 |
 | Portability and maintainability (`POR`) | 3.8.3 | 4 |
-| **Total** | | **122** |
+| **Total** | | **126** |
 
 The total counts every identifier the document defines, including REQ-USE-70, withdrawn in
-version 1.0 and kept as *Obsolete* under [5.2](#52-baseline-and-change-control); **121**
+version 1.0 and kept as *Obsolete* under [5.2](#52-baseline-and-change-control); **125**
 requirements are in force.
 
-Priority distribution: 88 High, 33 Medium, 1 Low. The High requirements are those without which
+Priority distribution: 88 High, 37 Medium, 1 Low. The High requirements are those without which
 the product does not meet the purpose of [1.1](#11-purpose); together they form the minimum
 acceptable product.
 
@@ -995,7 +1026,7 @@ here so that every requirement has a stated origin.
 | SN-06 | The application works with no connectivity and sends nothing anywhere. | REQ-CON-10, REQ-CON-20, REQ-CON-30, REQ-CON-40, REQ-CON-50, REQ-EXT-50, REQ-EXT-60, REQ-DB-10, REQ-SEC-40, REQ-SEC-60 |
 | SN-07 | A password stored on the device cannot be recovered from the device's storage. | REQ-SEC-10, REQ-SEC-20, REQ-SEC-30, REQ-SEC-50, REQ-SEC-60, REQ-EXT-60, REQ-DB-10 |
 | SN-08 | The application is comfortable to read in the same lighting conditions as the rest of the device. | REQ-USE-60 |
-| SN-09 | A learner practises a chosen set of questions until the whole set is known, rather than reading it through once. | REQ-GAME-10 … REQ-GAME-120, REQ-SRCH-130, REQ-SRCH-140, REQ-QST-90, REQ-TAG-110, REQ-EXT-10 |
+| SN-09 | A learner practises a chosen set of questions until the whole set is known, rather than reading it through once. | REQ-GAME-10 … REQ-GAME-120, REQ-SRCH-130, REQ-SRCH-140, REQ-QST-90, REQ-QST-100, REQ-TAG-110, REQ-EXT-10 |
 | SN-10 | A learner finds usable topics in the application from the first launch, without preparing or importing a file first. | REQ-IMP-110, REQ-IMP-120, REQ-IMP-130 |
 
 ### A.2 Forward trace — requirements to verification
@@ -1021,13 +1052,13 @@ otherwise not be **complete** in the sense of clause 5.2.6.
 
 | Requirement | Why it was added |
 |---|---|
-| REQ-AUTH-50, REQ-AUTH-60, REQ-QST-20, REQ-TAG-20, REQ-DB-80 | No need statement defines behaviour for empty input or for names differing only by case; without these, a mistyped capital creates a second account or a duplicate tag. |
+| REQ-AUTH-50, REQ-AUTH-60, REQ-QST-20, REQ-QST-110, REQ-TAG-20, REQ-DB-80 | No need statement defines behaviour for empty input or for names differing only by case; without these, a mistyped capital creates a second account or a duplicate tag, and an alternative answer could be recorded against a question the game will never ask. |
 | REQ-SRCH-40, REQ-SRCH-70, REQ-SRCH-80 | The empty-criteria case, letter case, and when results refresh are otherwise undefined. |
 | REQ-USE-80 | A swipe leaves no mark on the screen; without this, the only way to discover a destructive gesture is to perform it. |
 | REQ-IMP-90 | A file interface must state what it refuses, or every malformed file becomes an unhandled failure. |
 | REQ-USE-10 … REQ-USE-50 | Usability needs a verifiable form; these five are the properties that make the product safe and predictable. |
 | REQ-PERF-10 … REQ-PERF-60 | Without numbers, "usable at size" cannot be verified. |
-| REQ-DB-30, REQ-DB-50, REQ-DB-90, REQ-DB-100 | Key stability, integrity enforcement, durability and schema evolution are implied by "the data is kept" but never stated. |
+| REQ-DB-30, REQ-DB-50, REQ-DB-90, REQ-DB-100, REQ-DB-110 | Key stability, integrity enforcement, durability, schema evolution and the uniqueness of a question's accepted wordings are implied by "the data is kept" but never stated. |
 | REQ-STD-10, REQ-STD-20 | Platform conformance and this document's own conformance are otherwise unstated. |
 | REQ-REL-10 … REQ-REL-40 | Robustness and atomicity are what make the integrity rules of 3.5.3 hold in practice. |
 | REQ-POR-10 … REQ-POR-40 | No platform baseline, build reproducibility or testability property is stated by any need. |
@@ -1073,6 +1104,7 @@ change to this document under [5.2](#52-baseline-and-change-control).
 | **D-29** | How does the product come to hold the topics the team wants every installation to have? | **Question-set files inside the package, loaded when the database is created**, in the format of MF-IFS-001 and through the same parser and merge rules as an import, and verified when the product is built. | *Rows in the seed script* — SQL states a tag by identifier and cannot be checked against the import format, so a topic added that way is unreviewable and silently breaks the moment the seeded identifiers move. *A screen offering the carried sets* — turns the team's default content into a user task, leaving every installation empty until the user finds it. *Downloading them on first run* — contradicts SN-06. | REQ-IMP-110, REQ-IMP-120, REQ-IMP-130 |
 | **D-30** | Must a user type `%` to find a word inside a question? | **No.** What the user types is enclosed in `%` before matching, and a `%` already at either end is absorbed rather than doubled. `_` is never inserted. | *Matching the text exactly as typed* — the commonest search of all, a word standing somewhere in a question, then returned nothing unless the user knew the SQL wildcard and typed two of them, and every search screen had to carry the help text of REQ-USE-70 to teach it. *Enclosing in `_` as well* — would demand a character that need not be there and make a search for a whole tag name impossible. *Escaping what the user types* — decided against in D-08, and unnecessary: the enclosing pair is what an ordinary search needs, and the wildcards stay available for the searches that need them. The residual cost is that a pattern can no longer be anchored to the beginning or the end of a value; `_` and an inner `%` still fix characters relative to one another. | REQ-SRCH-160, REQ-EXT-40, REQ-USE-70 *(withdrawn by this decision)* |
 | **D-31** | May a user turn off the tags shown within a question in a result list? | **Yes**, through a remembered choice in the home screen's menu, applying to every presentation of the search; the tags offered *beneath* the search field are unaffected, and the default is to show them. | *No choice at all* — a learner reading long question texts on a narrow screen is made to read a strip of tags under every one of them, which is what the setting exists to stop. *Hiding the offered tags with them* — those are the search's controls, and a criterion already chosen could then not be removed, leaving the user with a result they cannot widen. *Asking each time, or holding the choice only while the screen is open* — a user who has decided how the list should read has decided it for good, not for this sitting. *A control on the screen itself* — costs height on every screen forever to serve a decision made once. *A separate choice per screen* — the two presentations would then disagree, which REQ-SRCH-150 exists to prevent. | REQ-SRCH-170, REQ-SRCH-110, REQ-SRCH-150 |
+| **D-32** | How is a fact that has more than one right wording recorded and marked? | **A list of alternative answers held against the question**, beside the one answer it shows; every wording is accepted equally, and an import adds alternatives to a stored question without touching its answer. | *One answer only* — `4` marked wrong for a question answered `four` teaches the spelling, not the fact, which is the whole objection to exact equality already made in D-28. *Separators inside the answer text* — `four/4` needs a character that may not appear in any answer, and an answer holding it would silently split; it would also be shown to the learner as if it were the wording to learn. *Fuzzy matching instead* — rejected in D-28 and no help here: `4` and `four` are not near each other by any string measure, while `CO` and `CO2` are. *Ranking the wordings* — a "best" answer that scores higher would make the same knowledge worth different amounts depending on how it was typed. *Overwriting alternatives on import, as answers are kept rather than overwritten* — an alternative only ever widens what is accepted, so adding is always safe and replacing could discard a wording the user added by hand. | REQ-QST-100, REQ-QST-110, REQ-GAME-80, REQ-IMP-60, REQ-IMP-70, REQ-DB-110 |
 
 ---
 
@@ -1081,7 +1113,8 @@ change to this document under [5.2](#52-baseline-and-change-control).
 | Term | Meaning |
 |---|---|
 | **Account** | A user name and credential pair stored by MemForce; the unit of sign-in. Not a boundary between users' content — see [1.6](#16-limitations). |
-| **Answer** | The optional text recorded against a question. |
+| **Alternative answer** | A further wording of a question's answer that the game accepts as correct as well, recorded against that question (REQ-QST-100, REQ-GAME-80). |
+| **Answer** | The optional text recorded against a question; the one wording MemForce shows. |
 | **API level** | The Android platform version identifier. |
 | **Assignment** | The relation between one question and one tag; a QuestionTags record. |
 | **Correct answers** | In a game, the number of *different* questions answered correctly at least once; the middle of the three numbers of REQ-GAME-90. |
@@ -1091,7 +1124,7 @@ change to this document under [5.2](#52-baseline-and-change-control).
 | **M:N** | A many-to-many relationship between two entities. |
 | **PBKDF2** | Password-Based Key Derivation Function 2 — the iterated derivation used for stored credentials. |
 | **Perfect victory** | A victory in which the streak also equals the number of questions the game began with, which happens only when nothing was answered wrongly or skipped (REQ-GAME-120). |
-| **Question** | The unit of study material: a question text, an optional answer text, and any number of tags. |
+| **Question** | The unit of study material: a question text, an optional answer text, any number of alternative answers to that answer, and any number of tags. |
 | **Question set** | A JSON file holding a batch of questions and tags, defined by [MF-IFS-001](question-import-format.md). |
 | **Reference device** | The device class against which the limits of [3.4](#34-performance-requirements) are measured — assumption A-4. |
 | **Reference volume** | The dataset size against which those limits are measured — defined in [3.4](#34-performance-requirements). |
@@ -1148,6 +1181,6 @@ several organisations is omitted.
 |---|---|---|---|---|
 | T-1 | Information items of clause 7 (BRS, StRS, SyRS, SRS) | Only the **SRS** is produced. Stakeholder needs are recorded in [A.1](#a1-stakeholder-needs). | There is one stakeholder group and no acquirer to negotiate with; the product is software only, so a system-level specification would restate the software one. | A later change of stakeholder would find the needs stated compactly rather than argued in full; A.1 is then the item to expand first. |
 | T-2 | Requirement attributes of clause 5.2.8.2 | Identification, type, priority, source and verification method are carried; *version number*, *owner*, *risk* and *difficulty* are not. | One owner, and per-requirement versions duplicate the document version held under [MF-CMP-001](configuration-management.md). Risk and difficulty inform planning, which is not this document's purpose. | Requirement-level history is only recoverable from the repository history of this file. |
-| T-3 | Requirements management measurement (clause 6.5) | Volatility is not measured; changes are visible in the document history. | At 122 requirements under one owner, the measure would cost more than it informs. | Requirement churn is not quantified; if the set grows past a few hundred, this should be revisited. |
+| T-3 | Requirements management measurement (clause 6.5) | Volatility is not measured; changes are visible in the document history. | At 126 requirements under one owner, the measure would cost more than it informs. | Requirement churn is not quantified; if the set grows past a few hundred, this should be revisited. |
 | T-4 | Concept of operations and operational concept annexes | Not produced as separate items; the operational context is given in [1.3](#13-product-perspective), [1.4](#14-product-functions) and [5.1](#51-the-problem-being-solved). | A single-user application on one device has no operational environment beyond the device itself. | None material at this scale. |
 | T-5 | Formal review and approval records | Approval is recorded by the baseline label in [MF-CMP-001](configuration-management.md) rather than by a signature page. | No separate acquirer or quality organisation exists to sign. | Approval authority and date are traceable through the repository history only. |

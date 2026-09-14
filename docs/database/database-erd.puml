@@ -16,7 +16,7 @@ skinparam class {
   ArrowColor #333333
 }
 
-title MemForce - on-device SQLite schema (memforce.db, DATABASE_VERSION 1)
+title MemForce - on-device SQLite schema (memforce.db, DATABASE_VERSION 2)
 
 ' ============================ identity / auth ============================
 together {
@@ -43,6 +43,13 @@ together {
     --
     * name : TEXT <<UNIQUE, NOCASE>>
   }
+
+  entity "alternative_answers" as alternative_answers <<global>> {
+    * _id : INTEGER <<PK>> <<AUTOINCREMENT>>
+    --
+    * question_id : INTEGER <<FK>>
+    * answer : TEXT <<UNIQUE per question, NOCASE>>
+  }
 }
 
 ' ============================ junction / bridge ============================
@@ -59,6 +66,7 @@ together {
 ' Both junction columns are NOT NULL, so both parent sides are mandatory.
 questions ||--o{ question_tags : "ON DELETE CASCADE"
 tags      ||--o{ question_tags : "ON DELETE CASCADE"
+questions ||--o{ alternative_answers : "ON DELETE CASCADE"
 
 ' ============================ notes ============================
 legend bottom
@@ -66,7 +74,11 @@ legend bottom
   <b>*</b> = mandatory (NOT NULL).  _id is an INTEGER PRIMARY KEY (rowid alias) and can never hold NULL.
   --
   <b>Explicit indexes</b>
-  idx_question_tags_tag       ON question_tags(tag_id)
+  idx_question_tags_tag          ON question_tags(tag_id)
+  idx_alternative_answers_answer ON alternative_answers(question_id, answer COLLATE NOCASE)  UNIQUE
+  --
+  <b>Alternative answers</b>  Further wordings of questions.answer that the game accepts as
+  correct as well. The row order is the ascending _id, which is the order they were stored in.
   --
   <b>Scope</b>  Every table is global; no table carries a user_id, so all content is shared by
   every user. users has no foreign key relationship to any other table; it backs sign-in only.

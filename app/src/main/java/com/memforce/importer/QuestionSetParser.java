@@ -26,8 +26,16 @@ import java.util.Set;
  */
 public final class QuestionSetParser {
 
-    /** The only {@code formatVersion} this app can read. */
-    public static final String SUPPORTED_FORMAT_VERSION = "1.0";
+    /** The newest {@code formatVersion}, the one the template and the carried sets declare. */
+    public static final String CURRENT_FORMAT_VERSION = "1.1";
+
+    /**
+     * Every {@code formatVersion} this app can read, oldest first. A minor version only adds
+     * optional fields, so an older file stays readable and the fields of the newest version are
+     * accepted whichever of these a file declares.
+     */
+    public static final List<String> SUPPORTED_FORMAT_VERSIONS =
+            Collections.unmodifiableList(Arrays.asList("1.0", CURRENT_FORMAT_VERSION));
 
     public static final int MAX_NAME_LENGTH = 120;
     public static final int MAX_DESCRIPTION_LENGTH = 500;
@@ -42,10 +50,12 @@ public final class QuestionSetParser {
     private static final String QUESTIONS = "questions";
     private static final String QUESTION = "question";
     private static final String ANSWER = "answer";
+    private static final String ALTERNATIVE_ANSWERS = "alternativeAnswers";
 
     private static final Set<String> SET_FIELDS =
             fields(FORMAT_VERSION, NAME, DESCRIPTION, TAGS, QUESTIONS);
-    private static final Set<String> QUESTION_FIELDS = fields(QUESTION, ANSWER, TAGS);
+    private static final Set<String> QUESTION_FIELDS =
+            fields(QUESTION, ANSWER, ALTERNATIVE_ANSWERS, TAGS);
 
     /** A byte order mark survives a UTF-8 read and would make the JSON unparseable. */
     private static final char BYTE_ORDER_MARK = '\uFEFF';
@@ -115,15 +125,15 @@ public final class QuestionSetParser {
     private String readFormatVersion(JSONObject root) {
         if (!root.has(FORMAT_VERSION)) {
             errors.add(ValidationError.at(Reason.MISSING_FIELD, FORMAT_VERSION));
-            return SUPPORTED_FORMAT_VERSION;
+            return CURRENT_FORMAT_VERSION;
         }
         Object raw = root.opt(FORMAT_VERSION);
         if (!(raw instanceof String)) {
             errors.add(ValidationError.at(Reason.WRONG_TYPE, FORMAT_VERSION));
-            return SUPPORTED_FORMAT_VERSION;
+            return CURRENT_FORMAT_VERSION;
         }
         String version = (String) raw;
-        if (!SUPPORTED_FORMAT_VERSION.equals(version)) {
+        if (!SUPPORTED_FORMAT_VERSIONS.contains(version)) {
             errors.add(ValidationError.detailed(Reason.UNSUPPORTED_VERSION, FORMAT_VERSION, version));
         }
         return version;
@@ -233,9 +243,14 @@ public final class QuestionSetParser {
     private QuestionSetEntry readQuestion(JSONObject object, String path) {
         rejectUnknownFields(object, QUESTION_FIELDS, path);
         String text = readQuestionText(object, path);
+        int errorsBeforeAnswer = errors.size();
         String answer = readAnswer(object, path);
+        // A faulty answer has already been reported; treating it as given keeps the alternatives
+        // from adding a second complaint about the same field.
+        boolean answered = answer != null || errors.size() > errorsBeforeAnswer;
+        List<String> alternatives = readAlternativeAnswers(object, path, answered);
         List<String> tags = readTags(object, path(path, TAGS));
-        return text == null ? null : new QuestionSetEntry(text, answer, tags);
+        return text == null ? null : new QuestionSetEntry(text, answer, alternatives, tags);
     }
 
     @Nullable
@@ -282,6 +297,54 @@ public final class QuestionSetParser {
         }
         String stripped = strip(value);
         return stripped.isEmpty() ? null : stripped;
+    }
+
+    /**
+     * Reads the further wordings a game accepts beside the answer. They only mean something
+     * against an answer to vary, so the schema makes the field depend on {@code answer} and this
+     * extends that to an answer left blank, which counts as absent everywhere else too.
+     *
+     * @param answered whether the question carries an answer these can be alternatives to
+     */
+    @NonNull
+    private List<String> readAlternativeAnswers(JSONObject object, String path, boolean answered) {
+        List<String> answers = new ArrayList<>();
+        String location = path(path, ALTERNATIVE_ANSWERS);
+        if (!object.has(ALTERNATIVE_ANSWERS)) {
+            return answers;
+        }
+        if (!answered) {
+            errors.add(ValidationError.at(Reason.ALTERNATIVES_WITHOUT_ANSWER, location));
+        }
+        Object raw = object.opt(ALTERNATIVE_ANSWERS);
+        if (!(raw instanceof JSONArray)) {
+            errors.add(ValidationError.at(Reason.WRONG_TYPE, location));
+            return answers;
+        }
+        JSONArray array = (JSONArray) raw;
+        Set<String> seen = new HashSet<>();
+        for (int i = 0; i < array.length(); i++) {
+            String itemLocation = location + "[" + i + "]";
+            Object item = array.opt(i);
+            if (!(item instanceof String)) {
+                errors.add(ValidationError.at(Reason.WRONG_TYPE, itemLocation));
+                continue;
+            }
+            String value = (String) item;
+            if (value.length() > MAX_ANSWER_LENGTH) {
+                errors.add(ValidationError.tooLong(itemLocation, MAX_ANSWER_LENGTH));
+                continue;
+            }
+            String stripped = strip(value);
+            if (stripped.isEmpty()) {
+                errors.add(ValidationError.at(Reason.BLANK, itemLocation));
+            } else if (!seen.add(stripped)) {
+                errors.add(ValidationError.detailed(Reason.DUPLICATE_ANSWER, itemLocation, stripped));
+            } else {
+                answers.add(stripped);
+            }
+        }
+        return answers;
     }
 
     private static String path(String prefix, String field) {

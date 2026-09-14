@@ -46,9 +46,28 @@ public class BundledQuestionSetsTest {
             QuestionSet set = parse(file);
 
             assertEquals(file + " declares an unsupported format version",
-                    QuestionSetParser.SUPPORTED_FORMAT_VERSION, set.getFormatVersion());
+                    QuestionSetParser.CURRENT_FORMAT_VERSION, set.getFormatVersion());
             assertNotNull(file + " has no name", set.getName());
             assertNotNull(file + " has no description", set.getDescription());
+        }
+    }
+
+    /**
+     * An alternative repeating the answer is dropped when the set is stored, so one in the file is
+     * a mistake in the file: it promises a wording the question already accepts. The check runs
+     * over the parsed entries rather than the merged ones, because merging is what removes them.
+     */
+    @Test
+    public void noBundledAlternativeRepeatsItsAnswer() throws Exception {
+        for (File file : files()) {
+            for (QuestionSetEntry entry : parse(file).getQuestions()) {
+                Set<String> accepted = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+                accepted.add(String.valueOf(entry.getAnswer()));
+                for (String alternative : entry.getAlternativeAnswers()) {
+                    assertTrue(file + " repeats " + alternative + " for " + entry.getQuestion(),
+                            accepted.add(alternative));
+                }
+            }
         }
     }
 
@@ -92,6 +111,12 @@ public class BundledQuestionSetsTest {
         assertEquals("the league has 30 teams", 30, set.getQuestions().size());
         assertEquals(new TreeSet<>(Arrays.asList("eastern-conference", "western-conference")),
                 new TreeSet<>(questionTags(set)));
+
+        for (QuestionSetEntry entry : set.getQuestions()) {
+            assertEquals(entry.getQuestion() + " should accept the division with and without "
+                            + "\"The\" and the word \"Division\"",
+                    2, entry.getAlternativeAnswers().size());
+        }
     }
 
     @Test
@@ -107,6 +132,18 @@ public class BundledQuestionSetsTest {
         for (QuestionSetEntry entry : set.getQuestions()) {
             assertNotNull(entry.getQuestion() + " has no answer", entry.getAnswer());
         }
+        assertEquals(Arrays.asList("St. Paul", "St Paul"),
+                entry(set, "What is the capital of Minnesota?").getAlternativeAnswers());
+    }
+
+    private static QuestionSetEntry entry(QuestionSet set, String question) {
+        for (QuestionSetEntry entry : set.getQuestions()) {
+            if (entry.getQuestion().equals(question)) {
+                return entry;
+            }
+        }
+        fail("the set does not ask " + question);
+        throw new AssertionError("unreachable");
     }
 
     private static List<String> questionTags(QuestionSet set) {

@@ -49,7 +49,7 @@ Platform baseline: `minSdk` 24, `compileSdk` and `targetSdk` 34, Java 17, Gradle
 | --- | --- |
 | Sign in | Signs in; an unknown user name is registered on first use |
 | Main menu | Shows who is signed in; carries the search; turns the tags within each result on or off; leads to questions, tags and the game lobby; signs out |
-| Questions | The same search with swipe actions; add, edit, delete; assign tags; import a question set |
+| Questions | The same search with swipe actions; add, edit, delete; give an answer and any alternative wordings of it; assign tags; import a question set |
 | Tags | Each tag with how many questions carry it, and the total; order by name, most used, or least used; swipe left to delete, right to send its questions to the lobby; add, edit |
 | Game lobby | The questions gathered for the next game; remove one or clear it; start the game |
 | Game | Asks the questions and marks the answers; shows streak, correct and total |
@@ -82,19 +82,20 @@ search field stay, because they are the controls that narrow and widen the searc
 
 ## Data model
 
-Four tables in `memforce.db`, in application-private storage. Questions and tags are global: no
+Five tables in `memforce.db`, in application-private storage. Questions and tags are global: no
 content row carries a user, so everyone signed in on the device sees the same library.
 
 ```
-users          (_id, name UNIQUE NOCASE, password_hash, salt)
-questions      (_id, name, answer NULL)
-tags           (_id, name UNIQUE NOCASE)
-question_tags  (question_id, tag_id)   PK(question_id, tag_id), both ON DELETE CASCADE
+users               (_id, name UNIQUE NOCASE, password_hash, salt)
+questions           (_id, name, answer NULL)
+alternative_answers (_id, question_id, answer)   UNIQUE(question_id, answer NOCASE), ON DELETE CASCADE
+tags                (_id, name UNIQUE NOCASE)
+question_tags       (question_id, tag_id)   PK(question_id, tag_id), both ON DELETE CASCADE
 ```
 
 Deleting a tag removes it from every question that carries it; deleting a question removes its
-tag assignments and leaves the tags. Foreign keys are switched on for every connection, which
-SQLite does not do by default.
+tag assignments and its alternative answers, and leaves the tags. Foreign keys are switched on for
+every connection, which SQLite does not do by default.
 
 The game lobby is not a table. It is a set of question ids kept in the preferences store
 (`memforce_lobby`), beside the signed-in identity (`memforce_session`), not in `memforce.db`. It
@@ -112,15 +113,16 @@ generated [PNG](docs/database/database-erd.png) and [SVG](docs/database/database
 
 Typing questions in one at a time doesn't scale for a whole topic. MemForce defines a JSON
 **question set** format — with tags at both the set level (applied to every question) and the
-question level (applied to just one) — that can be filled in from a template and then imported.
+question level (applied to just one), and an optional `alternativeAnswers` list per question — that
+can be filled in from a template and then imported.
 See [docs/question-import-format.md](docs/question-import-format.md) for the format, schema,
 template and example.
 
 **Questions → Import** picks such a file. It is validated as a whole first, so a file that breaks
 the format is reported — the first ten problems and a count of any others — and nothing is
 written. The counts to be applied are shown before anything is stored. Missing tags are created;
-a question whose text already exists (ignoring case) gains the file's tags instead of being stored
-a second time, and its answer is kept.
+a question whose text already exists (ignoring case) gains the file's tags and alternative answers
+instead of being stored a second time, and its answer is kept.
 
 ## Gameplay
 
@@ -133,18 +135,22 @@ Starting a game shuffles the questions once and asks them from a queue that neve
 every answer the question goes to the back, so a wrong one comes round again. Progress shows as
 `streak / correct / total` — answers right in a row, different questions answered correctly at least
 once, and questions in the run. An answer matches after trimming, collapsing runs of spaces and
-ignoring case; a blank answer is a skip and counts as wrong. **Victory** is every question answered
-correctly; a **perfect victory** is that in one unbroken streak. A question stored without an answer
-cannot be marked, so the game leaves it out and says so before starting. A run lives only in memory:
-leaving the game, or returning after the app was restarted, goes back to the lobby.
+ignoring case; a blank answer is a skip and counts as wrong. A question may also carry
+**alternative answers** — `4` beside `four`, `CO₂` beside `carbon dioxide` — and every one of them
+is marked correct just as the answer is, so knowing the fact is not punished for the spelling; the
+feedback after a wrong answer names the answer and then the alternatives. **Victory** is every
+question answered correctly; a **perfect victory** is that in one unbroken streak. A question stored
+without an answer cannot be marked, so the game leaves it out and says so before starting. A run
+lives only in memory: leaving the game, or returning after the app was restarted, goes back to the
+lobby.
 
 ## First launch
 
 Creating the database seeds a small demo library — 25 questions, 9 tags — so the screens have
 something to show, plus two demo accounts (`ana` and `marko`). On top of that it loads every
 question set bundled with the build (see [Bundled question sets](#bundled-question-sets)), so a
-fresh install already holds real topics: **105 questions and 21 tags** in total. The demo
-*accounts* should not ship in a release build; this is recorded as anomaly
+fresh install already holds real topics: **105 questions, 21 tags and 93 alternative answers** in
+total. The demo *accounts* should not ship in a release build; this is recorded as anomaly
 [A-05](docs/verification-and-validation.md#92-open-anomalies) with the other known deviations.
 
 ## Bundled question sets

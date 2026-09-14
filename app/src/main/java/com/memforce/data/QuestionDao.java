@@ -21,6 +21,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class QuestionDao {
 
@@ -114,12 +116,13 @@ public class QuestionDao {
     }
 
     /**
-     * Reads the questions a condition selects together with their tag names.
+     * Reads the questions a condition selects together with their tag names and the alternative
+     * answers they accept.
      *
-     * <p>The tag names are read by a second statement rather than by a {@code GROUP_CONCAT} over a
-     * join: SQLite before 3.44 cannot order the values an aggregate collects, and a tag name may
-     * itself contain the separator such a concatenation would use. Two statements keep the tag
-     * order defined and keep names with punctuation intact.
+     * <p>Both lists are read by a further statement rather than by a {@code GROUP_CONCAT} over a
+     * join: SQLite before 3.44 cannot order the values an aggregate collects, and a tag name or an
+     * answer may itself contain the separator such a concatenation would use. Separate statements
+     * keep the order defined and keep values with punctuation intact.
      *
      * @param predicate a condition over the question table aliased {@code q}
      */
@@ -153,24 +156,45 @@ public class QuestionDao {
                 + "SELECT q." + DbContract.Questions._ID
                 + " FROM " + DbContract.Questions.TABLE + " q WHERE " + predicate + ")"
                 + " ORDER BY t." + DbContract.Tags.NAME + " COLLATE NOCASE ASC";
-        try (Cursor cursor = db.rawQuery(tagSql, args)) {
-            while (cursor.moveToNext()) {
-                List<String> names = tagNames.get(cursor.getLong(0));
-                if (names == null) {
-                    names = new ArrayList<>();
-                    tagNames.put(cursor.getLong(0), names);
-                }
-                names.add(cursor.getString(1));
-            }
-        }
+        collect(db, tagSql, args, tagNames);
+
+        // Ordered by row id, which is the order the alternatives were stored in.
+        Map<Long, List<String>> alternatives = new HashMap<>();
+        String alternativeSql = "SELECT a." + DbContract.AlternativeAnswers.QUESTION_ID
+                + ", a." + DbContract.AlternativeAnswers.ANSWER
+                + " FROM " + DbContract.AlternativeAnswers.TABLE + " a"
+                + " WHERE a." + DbContract.AlternativeAnswers.QUESTION_ID + " IN ("
+                + "SELECT q." + DbContract.Questions._ID
+                + " FROM " + DbContract.Questions.TABLE + " q WHERE " + predicate + ")"
+                + " ORDER BY a." + DbContract.AlternativeAnswers._ID + " ASC";
+        collect(db, alternativeSql, args, alternatives);
 
         List<Question> questions = new ArrayList<>(rows.size());
         for (Map.Entry<Long, String[]> row : rows.entrySet()) {
             List<String> names = tagNames.get(row.getKey());
+            List<String> accepted = alternatives.get(row.getKey());
             questions.add(new Question(row.getKey(), row.getValue()[0], row.getValue()[1],
+                    accepted == null ? Collections.<String>emptyList() : accepted,
                     names == null ? Collections.<String>emptyList() : names));
         }
         return questions;
+    }
+
+    /** Reads an (question id, text) statement into a list per question, keeping its order. */
+    private void collect(SQLiteDatabase db,
+                         String sql,
+                         String[] args,
+                         Map<Long, List<String>> into) {
+        try (Cursor cursor = db.rawQuery(sql, args)) {
+            while (cursor.moveToNext()) {
+                List<String> values = into.get(cursor.getLong(0));
+                if (values == null) {
+                    values = new ArrayList<>();
+                    into.put(cursor.getLong(0), values);
+                }
+                values.add(cursor.getString(1));
+            }
+        }
     }
 
     @NonNull
@@ -195,6 +219,7 @@ public class QuestionDao {
      */
     public long insert(@NonNull String name,
                        @Nullable String answer,
+                       @NonNull List<String> alternativeAnswers,
                        @NonNull List<Long> tagIds) {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
@@ -202,6 +227,7 @@ public class QuestionDao {
             long id = db.insert(DbContract.Questions.TABLE, null, toValues(name, answer));
             if (id != -1) {
                 replaceTags(db, id, tagIds);
+                writeAlternativeAnswers(db, id, answer, alternativeAnswers);
             }
             db.setTransactionSuccessful();
             return id;
@@ -213,6 +239,7 @@ public class QuestionDao {
     public void update(long id,
                        @NonNull String name,
                        @Nullable String answer,
+                       @NonNull List<String> alternativeAnswers,
                        @NonNull List<Long> tagIds) {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
@@ -220,6 +247,10 @@ public class QuestionDao {
             db.update(DbContract.Questions.TABLE, toValues(name, answer),
                     DbContract.Questions._ID + " = ?", new String[]{String.valueOf(id)});
             replaceTags(db, id, tagIds);
+            db.delete(DbContract.AlternativeAnswers.TABLE,
+                    DbContract.AlternativeAnswers.QUESTION_ID + " = ?",
+                    new String[]{String.valueOf(id)});
+            writeAlternativeAnswers(db, id, answer, alternativeAnswers);
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
@@ -239,6 +270,30 @@ public class QuestionDao {
     }
 
     /**
+     * Adds alternative answers a question does not accept yet and keeps the ones it has. An
+     * alternative is additive, as a tag is: it widens what counts as correct and so can never
+     * destroy work already done, which is why an import may apply it to an existing question while
+     * the stored answer itself is left alone.
+     */
+    public void addAlternativeAnswers(long questionId,
+                                      @NonNull List<String> alternativeAnswers) {
+        writeAlternativeAnswers(helper.getWritableDatabase(), questionId,
+                storedAnswer(questionId), alternativeAnswers);
+    }
+
+    @Nullable
+    private String storedAnswer(long questionId) {
+        try (Cursor cursor = helper.getReadableDatabase().query(
+                DbContract.Questions.TABLE,
+                new String[]{DbContract.Questions.ANSWER},
+                DbContract.Questions._ID + " = ?",
+                new String[]{String.valueOf(questionId)},
+                null, null, null)) {
+            return cursor.moveToFirst() && !cursor.isNull(0) ? cursor.getString(0) : null;
+        }
+    }
+
+    /**
      * Stores an answer only for a question that has none, so an existing answer is never lost.
      *
      * @return true when the answer was stored
@@ -254,7 +309,7 @@ public class QuestionDao {
                 new String[]{String.valueOf(id)}) > 0;
     }
 
-    /** Tag assignments are removed by the schema's cascade rules. */
+    /** Tag assignments and alternative answers are removed by the schema's cascade rules. */
     public void delete(long id) {
         helper.getWritableDatabase().delete(
                 DbContract.Questions.TABLE,
@@ -267,6 +322,37 @@ public class QuestionDao {
         values.put(DbContract.Questions.NAME, name);
         values.put(DbContract.Questions.ANSWER, answer);
         return values;
+    }
+
+    /**
+     * Writes the alternatives that widen what a question accepts. A blank entry, one repeating the
+     * answer, and one repeating an earlier alternative add nothing a game would mark differently,
+     * so they are left out; letter case is disregarded throughout, exactly as marking disregards
+     * it. The unique index holds the same rule at the storage level, so a row already present is
+     * ignored rather than raised.
+     */
+    private void writeAlternativeAnswers(SQLiteDatabase db,
+                                         long questionId,
+                                         @Nullable String answer,
+                                         List<String> alternativeAnswers) {
+        Set<String> seen = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        if (answer != null && !answer.trim().isEmpty()) {
+            seen.add(answer.trim());
+        }
+        for (String alternative : alternativeAnswers) {
+            if (alternative == null) {
+                continue;
+            }
+            String value = alternative.trim();
+            if (value.isEmpty() || !seen.add(value)) {
+                continue;
+            }
+            ContentValues values = new ContentValues();
+            values.put(DbContract.AlternativeAnswers.QUESTION_ID, questionId);
+            values.put(DbContract.AlternativeAnswers.ANSWER, value);
+            db.insertWithOnConflict(DbContract.AlternativeAnswers.TABLE, null, values,
+                    SQLiteDatabase.CONFLICT_IGNORE);
+        }
     }
 
     private void replaceTags(SQLiteDatabase db, long questionId, List<Long> tagIds) {

@@ -1,6 +1,7 @@
 package com.memforce.ui.question;
 
 import android.net.Uri;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -161,9 +162,14 @@ public final class QuestionSetImportFlow {
                         R.plurals.import_error_too_long, error.getLimit(), location, error.getLimit());
             case DUPLICATE_TAG:
                 return activity.getString(R.string.import_error_duplicate_tag, location, detail);
+            case DUPLICATE_ANSWER:
+                return activity.getString(R.string.import_error_duplicate_answer, location, detail);
+            case ALTERNATIVES_WITHOUT_ANSWER:
+                return activity.getString(
+                        R.string.import_error_alternatives_without_answer, location);
             case UNSUPPORTED_VERSION:
                 return activity.getString(R.string.import_error_unsupported_version, detail,
-                        QuestionSetParser.SUPPORTED_FORMAT_VERSION);
+                        TextUtils.join(", ", QuestionSetParser.SUPPORTED_FORMAT_VERSIONS));
             case NO_QUESTIONS:
                 return activity.getString(R.string.import_error_no_questions);
             default:

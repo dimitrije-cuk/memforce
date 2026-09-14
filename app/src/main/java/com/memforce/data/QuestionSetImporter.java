@@ -21,7 +21,7 @@ import java.util.TreeSet;
  * Writes a parsed question set to the database, as described in
  * {@code docs/question-import-format.md}: every question is tagged with the union of the set level
  * and its own tags, tags that do not exist yet are created, and a question whose text already
- * exists gains the file's tags instead of being stored a second time.
+ * exists gains the file's tags and alternative answers instead of being stored a second time.
  */
 public class QuestionSetImporter {
 
@@ -42,7 +42,7 @@ public class QuestionSetImporter {
             return questionsToCreate;
         }
 
-        /** Questions the app already has; they only gain the tags of this file. */
+        /** Questions the app already has; they only gain the tags and alternative answers of this file. */
         public int getQuestionsToMerge() {
             return questionsToMerge;
         }
@@ -152,7 +152,8 @@ public class QuestionSetImporter {
 
                 Long existingId = questionDao.findIdByName(question.getQuestion());
                 if (existingId == null) {
-                    if (questionDao.insert(question.getQuestion(), question.getAnswer(), ids) == -1L) {
+                    if (questionDao.insert(question.getQuestion(), question.getAnswer(),
+                            question.getAlternativeAnswers(), ids) == -1L) {
                         throw new IllegalStateException(
                                 "Cannot store the question " + question.getQuestion());
                     }
@@ -162,6 +163,8 @@ public class QuestionSetImporter {
                     if (question.getAnswer() != null) {
                         questionDao.fillMissingAnswer(existingId, question.getAnswer());
                     }
+                    questionDao.addAlternativeAnswers(
+                            existingId, question.getAlternativeAnswers());
                     merged++;
                 }
             }

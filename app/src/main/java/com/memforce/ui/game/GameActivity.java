@@ -3,6 +3,7 @@ package com.memforce.ui.game;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 
@@ -93,17 +94,31 @@ public class GameActivity extends AppCompatActivity {
         binding.primaryButton.setText(R.string.action_next);
     }
 
+    /**
+     * The wording of the answer, followed by the further wordings that would have been accepted,
+     * so a player told they were wrong can see how wide the question actually is.
+     */
     @NonNull
     private String feedbackFor(@NonNull GameSession.Outcome outcome, @NonNull GameQuestion asked) {
         switch (outcome) {
             case CORRECT:
                 return getString(R.string.game_correct);
             case SKIPPED:
-                return getString(R.string.game_skipped, asked.getAnswer());
+                return withAlternatives(getString(R.string.game_skipped, asked.getAnswer()), asked);
             case INCORRECT:
             default:
-                return getString(R.string.game_incorrect, asked.getAnswer());
+                return withAlternatives(
+                        getString(R.string.game_incorrect, asked.getAnswer()), asked);
         }
+    }
+
+    @NonNull
+    private String withAlternatives(@NonNull String feedback, @NonNull GameQuestion asked) {
+        if (asked.getAlternativeAnswers().isEmpty()) {
+            return feedback;
+        }
+        return feedback + "\n" + getString(R.string.game_also_accepted,
+                TextUtils.join(", ", asked.getAlternativeAnswers()));
     }
 
     private void askNext() {

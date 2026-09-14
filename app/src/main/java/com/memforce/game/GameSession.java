@@ -114,7 +114,7 @@ public final class GameSession {
         queue.addLast(asked);
         attempts++;
 
-        boolean correct = AnswerMatcher.matches(asked.getAnswer(), answer);
+        boolean correct = AnswerMatcher.matchesAny(asked.getAcceptedAnswers(), answer);
         if (correct) {
             streak++;
             mastered.add(asked.getId());
